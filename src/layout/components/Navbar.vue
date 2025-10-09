@@ -43,10 +43,10 @@
           </div>
         </el-tooltip>
         <!-- <el-tooltip content="Github" effect="dark" placement="bottom">
-          <  id="ruoyi-git" class="right-menu-item hover-effect" />
-        </el-tooltip> -->
+          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
+        </el-tooltip>
 
-        <!-- <el-tooltip :content="proxy.$t('navbar.document')" effect="dark" placement="bottom">
+        <el-tooltip :content="proxy.$t('navbar.document')" effect="dark" placement="bottom">
           <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
         </el-tooltip> -->
 
@@ -97,14 +97,9 @@ import { getTenantList } from '@/api/login';
 import { dynamicClear, dynamicTenant } from '@/api/system/tenant';
 import { TenantVO } from '@/api/types';
 import notice from './notice/index.vue';
-// import router from '@/router';
+import router from '@/router';
 import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
-// 1. 在 script setup 顶部导入 useRouter
-import { useRouter } from 'vue-router';
-// 导入 storeToRefs（你的代码中用了 storeToRefs 但没导入，需补充）
-import { storeToRefs } from 'pinia';
-// 2. 调用 useRouter() 获取路由实例（替代 proxy.$router）
-const router = useRouter();
+
 const appStore = useAppStore();
 const userStore = useUserStore();
 const settingsStore = useSettingsStore();
@@ -132,7 +127,7 @@ const dynamicTenantEvent = async (tenantId: string) => {
   if (companyName.value != null && companyName.value !== '') {
     await dynamicTenant(tenantId);
     dynamic.value = true;
-    await router.push('/');
+    await proxy?.$router.push('/');
     await proxy?.$tab.closeAllPage();
     await proxy?.$tab.refreshPage();
   }
@@ -141,7 +136,7 @@ const dynamicTenantEvent = async (tenantId: string) => {
 const dynamicClearEvent = async () => {
   await dynamicClear();
   dynamic.value = false;
-  await router.push('/');
+  await proxy?.$router.push('/');
   await proxy?.$tab.closeAllPage();
   await proxy?.$tab.refreshPage();
 };

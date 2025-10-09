@@ -42,7 +42,6 @@ const newsList = ref([]) as any;
 const getTableData = async () => {
   state.loading = true;
   newsList.value = noticeStore.state.notices;
-  console.log("🚀 ~ getTableData ~ newsList.value:", newsList.value)
   state.loading = false;
 };
 

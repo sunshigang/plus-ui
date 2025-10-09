@@ -1,5 +1,5 @@
 import { to } from 'await-to-js';
-import { getToken, removeToken, setToken } from '@/utils/auth';//与 @/utils/auth 工具配合，实现 token 的本地存储（setToken/getToken）
+import { getToken, removeToken, setToken } from '@/utils/auth';
 import { login as loginApi, logout as logoutApi, getInfo as getUserInfo } from '@/api/login';
 import { LoginData } from '@/api/types';
 import defAva from '@/assets/images/profile.jpg';

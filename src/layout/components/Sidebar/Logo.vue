@@ -34,7 +34,7 @@ defineProps({
   }
 });
 
-const title = ref('规划管理应用系统');
+const title = ref('RuoYi-Vue-Plus111122');
 const settingsStore = useSettingsStore();
 const sideTheme = computed(() => settingsStore.sideTheme);
 </script>
@@ -63,7 +63,7 @@ const sideTheme = computed(() => settingsStore.sideTheme);
     width: 100%;
 
     & .sidebar-logo {
-      width: 38px;
+      width: 32px;
       height: 32px;
       vertical-align: middle;
       margin-right: 12px;
@@ -75,7 +75,7 @@ const sideTheme = computed(() => settingsStore.sideTheme);
       color: #fff;
       font-weight: 600;
       line-height: 50px;
-      font-size: 20px;
+      font-size: 14px;
       font-family:
         Avenir,
         Helvetica Neue,
