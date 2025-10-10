@@ -1,50 +1,43 @@
 <template>
   <div class="login">
+    <img src="../assets/images/login-img.png" class="login-img" />
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
       <div class="title-box">
         <h3 class="title">{{ title }}</h3>
         <lang-select />
       </div>
       <el-form-item v-if="tenantEnabled" prop="tenantId">
-        <el-select v-model="loginForm.tenantId" filterable :placeholder="proxy.$t('login.selectPlaceholder')" style="width: 100%">
-          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId"></el-option>
+        <el-select v-model="loginForm.tenantId" filterable :placeholder="proxy.$t('login.selectPlaceholder')"
+          style="width: 100%">
+          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName"
+            :value="item.tenantId"></el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
         </el-select>
       </el-form-item>
       <el-form-item prop="username">
-        <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off" :placeholder="proxy.$t('login.username')">
+        <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off"
+          :placeholder="proxy.$t('login.username')">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
       <el-form-item prop="password">
-        <el-input
-          v-model="loginForm.password"
-          type="password"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('login.password')"
-          @keyup.enter="handleLogin"
-        >
+        <el-input v-model="loginForm.password" type="password" size="large" auto-complete="off"
+          :placeholder="proxy.$t('login.password')" @keyup.enter="handleLogin">
           <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
       <el-form-item v-if="captchaEnabled" prop="code">
-        <el-input
-          v-model="loginForm.code"
-          size="large"
-          auto-complete="off"
-          :placeholder="proxy.$t('login.code')"
-          style="width: 63%"
-          @keyup.enter="handleLogin"
-        >
+        <el-input v-model="loginForm.code" size="large" auto-complete="off" :placeholder="proxy.$t('login.code')"
+          style="width: 63%" @keyup.enter="handleLogin">
           <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
         </el-input>
         <div class="login-code">
           <img :src="codeUrl" class="login-code-img" @click="getCode" />
         </div>
       </el-form-item>
-      <el-checkbox v-model="loginForm.rememberMe" style="margin: 0 0 25px 0">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
-      <el-form-item style="float: right">
+      <el-checkbox v-model="loginForm.rememberMe"
+        style="margin: 0 0 25px 0">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
+      <!-- <el-form-item style="float: right">
         <el-button circle :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
           <svg-icon icon-class="wechat" />
         </el-button>
@@ -60,7 +53,7 @@
         <el-button circle :title="proxy.$t('login.social.github')" @click="doSocialLogin('github')">
           <svg-icon icon-class="github" />
         </el-button>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item style="width: 100%">
         <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleLogin">
           <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
@@ -236,8 +229,10 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-image: url('../assets/images/login-background.jpg');
-  background-size: cover;
+  // background-image: url('../assets/images/login-background.png');
+  // background-size: cover;
+  background: url('../assets/images/login-background.png') no-repeat;
+  background-size: 100% 100%;
 }
 
 .title-box {
@@ -246,7 +241,9 @@ onMounted(() => {
   .title {
     margin: 0px auto 30px auto;
     text-align: center;
-    color: #707070;
+    font-weight: 500;
+    font-size: 24px;
+    color: rgba(0, 0, 0, 0.85);
   }
 
   :deep(.lang-select--style) {
@@ -255,14 +252,23 @@ onMounted(() => {
   }
 }
 
+.login-img {
+  width: 450px;
+  height: 450px;
+}
+
 .login-form {
   border-radius: 6px;
   background: #ffffff;
-  width: 400px;
+  width: 450px;
+  height: 450px;
   padding: 25px 25px 5px 25px;
   z-index: 1;
+  border-radius: 0px 15px 15px 0px;
+
   .el-input {
     height: 40px;
+
     input {
       height: 40px;
     }
