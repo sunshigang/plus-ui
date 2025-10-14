@@ -1,6 +1,7 @@
 <template>
   <div class="p-2">
-    <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
@@ -11,64 +12,83 @@
               <el-input v-model="queryParams.projectCode" placeholder="请输入项目代码" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="所属行政区划" prop="administrativeRegion">
-              <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
-              <el-input v-model="queryParams.scenicArea" placeholder="请输入涉及风景名胜区名称" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.scenicArea" placeholder="请输入涉及风景名胜区名称" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="建设单位名称" prop="constructionUnit">
-              <el-input v-model="queryParams.constructionUnit" placeholder="请输入建设单位名称" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.constructionUnit" placeholder="请输入建设单位名称" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="组织机构代码" prop="organizationCode">
-              <el-input v-model="queryParams.organizationCode" placeholder="请输入组织机构代码" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.organizationCode" placeholder="请输入组织机构代码" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="经办人" prop="contactPerson">
               <el-input v-model="queryParams.contactPerson" placeholder="请输入经办人" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="经办人联系方式" prop="contactPhone">
-              <el-input v-model="queryParams.contactPhone" placeholder="请输入经办人联系方式" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.contactPhone" placeholder="请输入经办人联系方式" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="保护等级等" prop="protectionLevel">
-              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级等" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级等" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目用地" prop="projectPurpose">
-              <el-input v-model="queryParams.projectPurpose" placeholder="请输入项目用地" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.projectPurpose" placeholder="请输入项目用地" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="建设项目总投资" prop="projectInvestment">
-              <el-input v-model="queryParams.projectInvestment" placeholder="请输入建设项目总投资" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.projectInvestment" placeholder="请输入建设项目总投资" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="规划依据" prop="planningBasis">
-              <el-input v-model="queryParams.planningBasis" placeholder="请输入规划依据" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.planningBasis" placeholder="请输入规划依据" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-              <el-input v-model="queryParams.otherExplanations" placeholder="请输入其他需要说明的情况" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.otherExplanations" placeholder="请输入其他需要说明的情况" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="选址方案URL" prop="locationPlan">
-              <el-input v-model="queryParams.locationPlan" placeholder="请输入选址方案URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.locationPlan" placeholder="请输入选址方案URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="专家评审意见URL" prop="expertOpinions">
-              <el-input v-model="queryParams.expertOpinions" placeholder="请输入专家评审意见URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.expertOpinions" placeholder="请输入专家评审意见URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="会议材料URL" prop="meetingMaterials">
-              <el-input v-model="queryParams.meetingMaterials" placeholder="请输入会议材料URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.meetingMaterials" placeholder="请输入会议材料URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="选址方案核准申报表URL" prop="siteSelectionReport">
-              <el-input v-model="queryParams.siteSelectionReport" placeholder="请输入选址方案核准申报表URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.siteSelectionReport" placeholder="请输入选址方案核准申报表URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="立项文件URL" prop="approvalDocuments">
-              <el-input v-model="queryParams.approvalDocuments" placeholder="请输入立项文件URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.approvalDocuments" placeholder="请输入立项文件URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目用地红线图URL" prop="projectRedLine">
-              <el-input v-model="queryParams.projectRedLine" placeholder="请输入项目用地红线图URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.projectRedLine" placeholder="请输入项目用地红线图URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目红线矢量数据URL" prop="redLineCoordinate">
-              <el-input v-model="queryParams.redLineCoordinate" placeholder="请输入项目红线矢量数据URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.redLineCoordinate" placeholder="请输入项目红线矢量数据URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目三维模型URL" prop="threeDModel">
-              <el-input v-model="queryParams.threeDModel" placeholder="请输入项目三维模型URL" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.threeDModel" placeholder="请输入项目三维模型URL" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="模型坐标" prop="modelCoordinate">
-              <el-input v-model="queryParams.modelCoordinate" placeholder="请输入模型坐标" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.modelCoordinate" placeholder="请输入模型坐标" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -83,16 +103,20 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['system:info:add']">新增</el-button>
+            <el-button type="primary" plain icon="Plus" @click="handleAdd"
+              v-hasPermi="['system:info:add']">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()" v-hasPermi="['system:info:edit']">修改</el-button>
+            <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()"
+              v-hasPermi="['system:info:edit']">修改</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()" v-hasPermi="['system:info:remove']">删除</el-button>
+            <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()"
+              v-hasPermi="['system:info:remove']">删除</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="warning" plain icon="Download" @click="handleExport" v-hasPermi="['system:info:export']">导出</el-button>
+            <el-button type="warning" plain icon="Download" @click="handleExport"
+              v-hasPermi="['system:info:export']">导出</el-button>
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
@@ -129,20 +153,23 @@
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-tooltip content="修改" placement="top">
-              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['system:info:edit']"></el-button>
+              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+                v-hasPermi="['system:info:edit']"></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['system:info:remove']"></el-button>
+              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
+                v-hasPermi="['system:info:remove']"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
 
-      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
     </el-card>
     <!-- 添加或修改【请填写功能名称】对话框 -->
-    <el-dialog :title="dialog.title" v-model="dialog.visible" width="500px" append-to-body>
-      <el-form ref="infoFormRef" :model="form" :rules="rules" label-width="80px">
+    <el-dialog :title="dialog.title" v-model="dialog.visible" width="1000px" append-to-body>
+      <el-form ref="infoFormRef" :model="form" :rules="rules" label-width="178px">
         <el-form-item label="建设活动" prop="projectName">
           <el-input v-model="form.projectName" placeholder="请输入建设活动" />
         </el-form-item>
@@ -183,13 +210,13 @@
           <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" />
         </el-form-item>
         <el-form-item label="规划依据" prop="planningBasis">
-            <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="建设内容涉及规模">
-          <editor v-model="form.constructionContent" :min-height="192"/>
+          <editor v-model="form.constructionContent" :min-height="192" />
         </el-form-item>
         <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-            <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="选址方案URL" prop="locationPlan">
           <el-input v-model="form.locationPlan" placeholder="请输入选址方案URL" />
@@ -210,7 +237,7 @@
           <el-input v-model="form.projectRedLine" placeholder="请输入项目用地红线图URL" />
         </el-form-item>
         <el-form-item label="项目红线矢量数据URL" prop="redLineCoordinate">
-            <el-input v-model="form.redLineCoordinate" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.redLineCoordinate" type="textarea" placeholder="请输入内容" />
         </el-form-item>
         <el-form-item label="项目三维模型URL" prop="threeDModel">
           <el-input v-model="form.threeDModel" placeholder="请输入项目三维模型URL" />
@@ -281,7 +308,7 @@ const initFormData: InfoForm = {
   modelCoordinate: undefined
 }
 const data = reactive<PageData<InfoForm, InfoQuery>>({
-  form: {...initFormData},
+  form: { ...initFormData },
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -396,7 +423,7 @@ const cancel = () => {
 
 /** 表单重置 */
 const reset = () => {
-  form.value = {...initFormData};
+  form.value = { ...initFormData };
   infoFormRef.value?.resetFields();
 }
 
@@ -423,7 +450,7 @@ const handleSelectionChange = (selection: InfoVO[]) => {
 const handleAdd = () => {
   reset();
   dialog.visible = true;
-  dialog.title = "添加【请填写功能名称】";
+  dialog.title = "添加一般项目信息";
 }
 
 /** 修改按钮操作 */
@@ -433,7 +460,7 @@ const handleUpdate = async (row?: InfoVO) => {
   const res = await getInfo(_id);
   Object.assign(form.value, res.data);
   dialog.visible = true;
-  dialog.title = "修改【请填写功能名称】";
+  dialog.title = "修改一般项目信息";
 }
 
 /** 提交按钮 */
@@ -442,9 +469,9 @@ const submitForm = () => {
     if (valid) {
       buttonLoading.value = true;
       if (form.value.id) {
-        await updateInfo(form.value).finally(() =>  buttonLoading.value = false);
+        await updateInfo(form.value).finally(() => buttonLoading.value = false);
       } else {
-        await addInfo(form.value).finally(() =>  buttonLoading.value = false);
+        await addInfo(form.value).finally(() => buttonLoading.value = false);
       }
       proxy?.$modal.msgSuccess("操作成功");
       dialog.visible = false;
@@ -473,3 +500,9 @@ onMounted(() => {
   getList();
 });
 </script>
+<style lang="scss" scoped>
+:deep(.el-form--inline .el-form-item__label)  {
+  width: 180px !important; // !important 可选，用于覆盖全局样式的优先级
+  text-align: right; // 可选：让标签右对齐，避免文字与输入框间距异常
+}
+</style>

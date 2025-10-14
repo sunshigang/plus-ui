@@ -450,6 +450,7 @@ const getList = async () => {
 /** 查询部门下拉树结构 */
 const getDeptTree = async () => {
   const res = await api.deptTreeSelect();
+  console.log("🚀 ~ getDeptTree ~ res:", res)
   deptOptions.value = res.data;
   enabledDeptOptions.value = filterDisabledDept(res.data);
 };

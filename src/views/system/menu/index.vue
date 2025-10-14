@@ -1,6 +1,7 @@
 <template>
   <div class="p-2">
-    <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
@@ -9,7 +10,8 @@
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-select v-model="queryParams.status" placeholder="菜单状态" clearable>
-                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
+                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label"
+                  :value="dict.value" />
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -25,26 +27,20 @@
       <template #header>
         <el-row :gutter="10">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:menu:add']" type="primary" plain icon="Plus" @click="handleAdd()">新增 </el-button>
+            <el-button v-hasPermi="['system:menu:add']" type="primary" plain icon="Plus" @click="handleAdd()">新增
+            </el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="danger" plain icon="Delete" @click="handleCascadeDelete" :loading="deleteLoading">级联删除</el-button>
+            <el-button type="danger" plain icon="Delete" @click="handleCascadeDelete"
+              :loading="deleteLoading">级联删除</el-button>
           </el-col>
           <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
         </el-row>
       </template>
 
-      <el-table
-        ref="menuTableRef"
-        v-loading="loading"
-        :data="menuList"
-        row-key="menuId"
-        border
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        :default-expand-all="false"
-        lazy
-        :load="getChildrenList"
-      >
+      <el-table ref="menuTableRef" v-loading="loading" :data="menuList" row-key="menuId" border
+        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" :default-expand-all="false" lazy
+        :load="getChildrenList">
         <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="160"></el-table-column>
         <el-table-column prop="icon" label="图标" align="center" width="100">
           <template #default="scope">
@@ -67,13 +63,16 @@
         <el-table-column fixed="right" label="操作" width="180">
           <template #default="scope">
             <el-tooltip content="修改" placement="top">
-              <el-button v-hasPermi="['system:menu:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)" />
+              <el-button v-hasPermi="['system:menu:edit']" link type="primary" icon="Edit"
+                @click="handleUpdate(scope.row)" />
             </el-tooltip>
             <el-tooltip content="新增" placement="top">
-              <el-button v-hasPermi="['system:menu:add']" link type="primary" icon="Plus" @click="handleAdd(scope.row)" />
+              <el-button v-hasPermi="['system:menu:add']" link type="primary" icon="Plus"
+                @click="handleAdd(scope.row)" />
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:menu:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)" />
+              <el-button v-hasPermi="['system:menu:remove']" link type="primary" icon="Delete"
+                @click="handleDelete(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
@@ -85,14 +84,9 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="上级菜单">
-              <el-tree-select
-                v-model="form.parentId"
-                :data="menuOptions"
-                :props="{ value: 'menuId', label: 'menuName', children: 'children' } as any"
-                value-key="menuId"
-                placeholder="选择上级菜单"
-                check-strictly
-              />
+              <el-tree-select v-model="form.parentId" :data="menuOptions"
+                :props="{ value: 'menuId', label: 'menuName', children: 'children' } as any" value-key="menuId"
+                placeholder="选择上级菜单" check-strictly />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -127,8 +121,7 @@
                   <el-tooltip content="选择是外链则路由地址需要以`http(s)://`开头" placement="top">
                     <el-icon>
                       <question-filled />
-                    </el-icon> </el-tooltip
-                  >是否外链
+                    </el-icon> </el-tooltip>是否外链
                 </span>
               </template>
               <el-radio-group v-model="form.isFrame">
@@ -228,7 +221,8 @@
                 </span>
               </template>
               <el-radio-group v-model="form.visible">
-                <el-radio v-for="dict in sys_show_hide" :key="dict.value" :value="dict.value">{{ dict.label }} </el-radio>
+                <el-radio v-for="dict in sys_show_hide" :key="dict.value" :value="dict.value">{{ dict.label }}
+                </el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -262,17 +256,9 @@
     </el-dialog>
 
     <el-dialog v-model="deleteDialog.visible" :title="deleteDialog.title" destroy-on-close append-to-bod width="750px">
-      <el-tree
-        ref="menuTreeRef"
-        class="tree-border"
-        :data="menuOptions"
-        show-checkbox
-        node-key="menuId"
-        :check-strictly="false"
-        empty-text="加载中，请稍候"
-        :default-expanded-keys="[0]"
-        :props="{ value: 'menuId', label: 'menuName', children: 'children' } as any"
-      />
+      <el-tree ref="menuTreeRef" class="tree-border" :data="menuOptions" show-checkbox node-key="menuId"
+        :check-strictly="false" empty-text="加载中，请稍候" :default-expanded-keys="[0]"
+        :props="{ value: 'menuId', label: 'menuName', children: 'children' } as any" />
       <template #footer>
         <div class="dialog-footer">
           <el-button type="primary" @click="submitDeleteForm" :loading="deleteLoading">确 定</el-button>
@@ -456,12 +442,36 @@ const submitForm = () => {
     }
   });
 };
-/** 删除按钮操作 */
+/** 删除按钮操作
 const handleDelete = async (row: MenuVO) => {
   await proxy?.$modal.confirm('是否确认删除名称为"' + row.menuName + '"的数据项?');
   await delMenu(row.menuId);
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
+};
+*/
+/**  */
+const handleDelete = async (row: MenuVO) => {
+  // 1. 前置校验：当前菜单是否有子菜单（从已缓存的 menuChildrenListMap 中获取）
+  const hasChildren = menuChildrenListMap.value[row.menuId]?.length > 0;
+  if (hasChildren) {
+    // 有子菜单：提示用户先删除子菜单，不发送删除请求
+    proxy?.$modal.msgWarning('当前菜单存在子菜单，请先删除所有子菜单后再删除！');
+    return; // 终止后续操作
+  }
+
+  // 2. 无子女菜单：执行原有的确认和删除逻辑
+  await proxy?.$modal.confirm('是否确认删除名称为"' + row.menuName + '"的数据项?');
+
+  try {
+    // 3. 发送删除请求（添加 try/catch 捕获潜在网络错误）
+    await delMenu(row.menuId);
+    await getList(); // 重新加载菜单列表，更新界面
+    proxy?.$modal.msgSuccess('删除成功');
+  } catch (error) {
+    // 4. 捕获后端其他未知错误（如网络异常、权限不足等）
+    proxy?.$modal.msgError('删除失败：' + (error as Error).message);
+  }
 };
 
 const deleteLoading = ref<boolean>(false);

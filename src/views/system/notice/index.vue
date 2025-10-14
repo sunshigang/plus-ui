@@ -172,6 +172,7 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await listNotice(queryParams.value);
+  console.log("🚀 ~ getList ~ res:", res)
   noticeList.value = res.rows;
   total.value = res.total;
   loading.value = false;
