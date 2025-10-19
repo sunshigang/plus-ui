@@ -39,13 +39,13 @@ const props = defineProps({
   /* 编辑器的内容 */
   modelValue: propTypes.string,
   /* 高度 */
-  height: propTypes.number.def(400),
+  height: propTypes.number.def(200),
   /* 最小高度 */
-  minHeight: propTypes.number.def(400),
+  minHeight: propTypes.number.def(200),
   /* 只读 */
   readOnly: propTypes.bool.def(false),
   /* 上传文件大小限制(MB) */
-  fileSize: propTypes.number.def(5),
+  fileSize: propTypes.number.def(500),
   /* 类型（base64格式、url格式） */
   type: propTypes.string.def('url')
 });

@@ -9,6 +9,7 @@ import { InfoVO, InfoForm, InfoQuery } from '@/api/project/normal/types';
  */
 
 export const listInfo = (query?: InfoQuery): AxiosPromise<InfoVO[]> => {
+  console.log("🚀 ~ listInfo ~ query:", query)
   return request({
     url: '/project/list',
     method: 'get',

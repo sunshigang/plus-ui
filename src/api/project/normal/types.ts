@@ -1,6 +1,6 @@
 export interface InfoVO {
   /**
-   * 
+   *
    */
   id: string | number;
 
@@ -63,7 +63,14 @@ export interface InfoVO {
    * 项目用地
    */
   projectPurpose: string;
-
+  /**
+   * 创建时间
+   */
+  createTimeFrom: string;
+  /**
+   * 结束时间
+   */
+  createTimeTo: string;
   /**
    * 建设项目总投资（万元）
    */
@@ -128,12 +135,13 @@ export interface InfoVO {
    * 模型坐标（格式：X0,Y0,Z0,X1,Y1,Z1）
    */
   modelCoordinate: string;
+  createTime?: string;
 
 }
 
 export interface InfoForm extends BaseEntity {
   /**
-   * 
+   *
    */
   id?: string | number;
 
@@ -196,7 +204,10 @@ export interface InfoForm extends BaseEntity {
    * 项目用地
    */
   projectPurpose?: string;
-
+  /**
+   * 创建时间
+   */
+  projectCreatedtime?: string;
   /**
    * 建设项目总投资（万元）
    */
@@ -261,6 +272,12 @@ export interface InfoForm extends BaseEntity {
    * 模型坐标（格式：X0,Y0,Z0,X1,Y1,Z1）
    */
   modelCoordinate?: string;
+  /**
+   * 创建时间
+   */
+  createTimeFrom?: string;
+  createTimeTo?: string;
+  createTime?: string;
 
 }
 
@@ -391,10 +408,15 @@ export interface InfoQuery extends PageQuery {
    */
   modelCoordinate?: string;
 
-    /**
-     * 日期范围参数
-     */
-    params?: any;
+  /**
+   * 日期范围参数
+   */
+  createTimeFrom?: string;
+  /**
+   * 结束时间
+   */
+  createTimeTo?: string;
+  createTime?: string;
 }
 
 
