@@ -151,19 +151,61 @@
         <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
         <el-table-column label="其他需要说明的情况" align="center" prop="otherExplanations" />
         <el-table-column label="选址方案" align="center" prop="locationPlan">
-          <!-- <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.url"
-              :preview-src-list="[scope.row.url]" />
-            <span v-text="scope.row.url" />
-          </template> -->
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.locationPlan"
+              :preview-src-list="[scope.row.locationPlan]" />
+            <span v-text="scope.row.locationPlan" />
+          </template>
         </el-table-column>
-        <el-table-column label="专家评审意见" align="center" prop="expertOpinions" />
-        <el-table-column label="会议材料" align="center" prop="meetingMaterials" />
-        <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport" />
-        <el-table-column label="立项文件L" align="center" prop="approvalDocuments" />
-        <el-table-column label="项目用地红线图" align="center" prop="projectRedLine" />
-        <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
-        <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
+        <el-table-column label="专家评审意见" align="center" prop="expertOpinions">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.expertOpinions"
+              :preview-src-list="[scope.row.expertOpinions]" />
+            <span v-text="scope.row.expertOpinions" />
+          </template>
+        </el-table-column>
+        <el-table-column label="会议材料" align="center" prop="meetingMaterials">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.meetingMaterials"
+              :preview-src-list="[scope.row.meetingMaterials]" />
+            <span v-text="scope.row.meetingMaterials" />
+          </template>
+        </el-table-column>
+        <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.siteSelectionReport"
+              :preview-src-list="[scope.row.siteSelectionReport]" />
+            <span v-text="scope.row.siteSelectionReport" />
+          </template>
+        </el-table-column>
+        <el-table-column label="立项文件" align="center" prop="approvalDocuments">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.approvalDocuments"
+              :preview-src-list="[scope.row.approvalDocuments]" />
+            <span v-text="scope.row.approvalDocuments" />
+          </template>
+        </el-table-column>
+        <el-table-column label="项目用地红线图" align="center" prop="projectRedLine">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.projectRedLine"
+              :preview-src-list="[scope.row.projectRedLine]" />
+            <span v-text="scope.row.projectRedLine" />
+          </template>
+        </el-table-column>
+        <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.redLineCoordinate"
+              :preview-src-list="[scope.row.redLineCoordinate]" />
+            <span v-text="scope.row.redLineCoordinate" />
+          </template>
+        </el-table-column>
+        <el-table-column label="项目三维模型" align="center" prop="threeDModel">
+          <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.threeDModel"
+              :preview-src-list="[scope.row.threeDModel]" />
+            <span v-text="scope.row.threeDModel" />
+          </template>
+        </el-table-column>
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">

@@ -22,7 +22,7 @@
       </el-form-item>
       <el-form-item prop="password">
         <el-input v-model="loginForm.password" type="password" size="large" auto-complete="off"
-          :placeholder="proxy.$t('login.password')" @keyup.enter="handleLogin">
+          :placeholder="proxy.$t('login.password')"  show-password @keyup.enter="handleLogin">
           <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
@@ -66,7 +66,7 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span>
+      <!-- <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span> -->
     </div>
   </div>
 </template>
@@ -142,6 +142,8 @@ const handleLogin = () => {
         localStorage.removeItem('password');
         localStorage.removeItem('rememberMe');
       }
+
+        console.log("🚀 ~ handleLogin ~ localStorage:", localStorage)
       // 调用action的登录方法
       const [err] = await to(userStore.login(loginForm.value));
       if (!err) {
