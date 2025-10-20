@@ -142,6 +142,7 @@
         <el-table-column label="经办人" align="center" prop="contactPerson" />
         <el-table-column label="经办人联系方式" align="center" prop="contactPhone" />
         <el-table-column label="保护等级等" align="center" prop="protectionLevel" />
+        <el-table-column label="状态" align="center" prop="status" />
         <el-table-column label="项目类型" align="center" prop="projectType" />
         <el-table-column label="拟选位置" align="center" prop="projectPurpose" width="150" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="100" />
@@ -149,7 +150,13 @@
         <el-table-column label="规划依据" align="center" prop="planningBasis" width="150" />
         <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
         <el-table-column label="其他需要说明的情况" align="center" prop="otherExplanations" />
-        <el-table-column label="选址方案" align="center" prop="locationPlan" />
+        <el-table-column label="选址方案" align="center" prop="locationPlan">
+          <!-- <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.url"
+              :preview-src-list="[scope.row.url]" />
+            <span v-text="scope.row.url" />
+          </template> -->
+        </el-table-column>
         <el-table-column label="专家评审意见" align="center" prop="expertOpinions" />
         <el-table-column label="会议材料" align="center" prop="meetingMaterials" />
         <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport" />
@@ -425,6 +432,7 @@
               </div>
             </li>
           </transition-group>
+          <el-button link type="primary" icon="Download">模型规范与模板下载</el-button>
         </el-form-item>
         <el-form-item label="模型坐标" prop="modelCoordinate">
           <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" />
@@ -432,8 +440,10 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button :loading="buttonLoading" type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <el-button @click="cancel">取消</el-button>
+          <el-button type="warning" @click="cancel">重置</el-button>
+          <el-button type="success" @click="cancel">暂存</el-button>
+          <el-button :loading="buttonLoading" type="primary" @click="submitForm">确定</el-button>
         </div>
       </template>
     </el-dialog>
@@ -441,13 +451,14 @@
 </template>
 
 <script setup name="Info" lang="ts">
-import { listInfo, getInfo, delInfo, addInfo, updateInfo } from '@/api/project/normal/index';
+import { listInfo, getInfo, stageInfo, delInfo, addInfo, updateInfo } from '@/api/project/normal/index';
 import { delOss, listByIds } from '@/api/system/oss';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
+import ImagePreview from '@/components/ImagePreview/index.vue';
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const dateRangeCreateTime = ref<[DateModelType, DateModelType]>(['', '']);
+const dateRangeCreateTime = ref<[string, string]>(['', '']);
 const infoList = ref<InfoVO[]>([]);
 const buttonLoading = ref(false);
 const loading = ref(true);
@@ -516,7 +527,7 @@ const uploadLoading = reactive<Record<FileFieldType, boolean>>({
   threeDModel: false
 });
 
-
+const previewListResource = ref(false);
 
 
 
@@ -538,7 +549,7 @@ const props = defineProps({
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型, 例如['png', 'jpg', 'jpeg']
-  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf']),
+  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'shx']),
   // 是否显示提示
   isShowTip: propTypes.bool.def(true),
   // 禁用组件（仅查看文件）
@@ -733,6 +744,7 @@ const initFormData: InfoForm = {
   contactPerson: undefined,
   contactPhone: undefined,
   protectionLevel: undefined,
+  status: undefined,
   projectType: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -748,7 +760,8 @@ const initFormData: InfoForm = {
   projectRedLine: undefined,
   redLineCoordinate: undefined,
   threeDModel: undefined,
-  modelCoordinate: undefined
+  modelCoordinate: undefined,
+  majorFlag: false,
 }
 const data = reactive<PageData<InfoForm, InfoQuery>>({
   form: { ...initFormData },
@@ -765,6 +778,7 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     contactPerson: undefined,
     contactPhone: undefined,
     protectionLevel: undefined,
+    status: undefined,
     projectType: undefined,
     projectPurpose: undefined,
     projectInvestment: undefined,
@@ -780,6 +794,9 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     redLineCoordinate: undefined,
     threeDModel: undefined,
     modelCoordinate: undefined,
+    createTimeFrom: undefined,
+    createTimeTo: undefined,
+    majorFlag: false,
     // params: {
     // }
   },
@@ -814,36 +831,36 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     constructionContent: [
       { required: true, message: "建设内容涉及规模不能为空", trigger: "blur" }
     ],
-    otherExplanations: [
-      { required: true, message: "其他需要说明的情况不能为空", trigger: "blur" }
-    ],
-    locationPlan: [
-      { required: true, message: "选址方案不能为空", trigger: "blur" }
-    ],
-    expertOpinions: [
-      { required: true, message: "专家评审意见不能为空", trigger: "blur" }
-    ],
-    meetingMaterials: [
-      { required: true, message: "会议材料不能为空", trigger: "blur" }
-    ],
-    siteSelectionReport: [
-      { required: true, message: "选址方案核准申报表不能为空", trigger: "blur" }
-    ],
-    approvalDocuments: [
-      { required: true, message: "立项文件不能为空", trigger: "blur" }
-    ],
-    projectRedLine: [
-      { required: true, message: "项目用地红线图不能为空", trigger: "blur" }
-    ],
-    redLineCoordinate: [
-      { required: true, message: "项目红线矢量数据不能为空", trigger: "blur" }
-    ],
-    threeDModel: [
-      { required: true, message: "项目三维模型不能为空", trigger: "blur" }
-    ],
-    modelCoordinate: [
-      { required: true, message: "模型坐标不能为空", trigger: "blur" }
-    ]
+    // otherExplanations: [
+    //   { required: true, message: "其他需要说明的情况不能为空", trigger: "blur" }
+    // ],
+    // locationPlan: [
+    //   { required: true, message: "选址方案不能为空", trigger: "blur" }
+    // ],
+    // expertOpinions: [
+    //   { required: true, message: "专家评审意见不能为空", trigger: "blur" }
+    // ],
+    // meetingMaterials: [
+    //   { required: true, message: "会议材料不能为空", trigger: "blur" }
+    // ],
+    // siteSelectionReport: [
+    //   { required: true, message: "选址方案核准申报表不能为空", trigger: "blur" }
+    // ],
+    // approvalDocuments: [
+    //   { required: true, message: "立项文件不能为空", trigger: "blur" }
+    // ],
+    // projectRedLine: [
+    //   { required: true, message: "项目用地红线图不能为空", trigger: "blur" }
+    // ],
+    // redLineCoordinate: [
+    //   { required: true, message: "项目红线矢量数据不能为空", trigger: "blur" }
+    // ],
+    // threeDModel: [
+    //   { required: true, message: "项目三维模型不能为空", trigger: "blur" }
+    // ],
+    // modelCoordinate: [
+    //   { required: true, message: "模型坐标不能为空", trigger: "blur" }
+    // ]
   }
 });
 
@@ -853,6 +870,7 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await listInfo(queryParams.value);
+  console.log("🚀 ~ getList ~ res:", res)
   infoList.value = res.rows;
   total.value = res.total;
   loading.value = false;
@@ -1064,7 +1082,7 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
     threeDModel: '项目三维模型'
   }[field];
   if (!proxy?.$modal) {
-    proxy?.$message.error('操作失败：模态框组件未加载');
+    ElMessage.error('操作失败：模态框组件未加载');
     return;
   }
   try {

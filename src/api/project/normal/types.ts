@@ -140,6 +140,8 @@ export interface InfoVO {
 }
 
 export interface InfoForm extends BaseEntity {
+  status?: string;
+  majorFlag?: boolean;
   /**
    *
    */
@@ -282,6 +284,7 @@ export interface InfoForm extends BaseEntity {
 }
 
 export interface InfoQuery extends PageQuery {
+  status?: string;
 
   /**
    * 建设活动（建设项目）名称
@@ -417,6 +420,7 @@ export interface InfoQuery extends PageQuery {
    */
   createTimeTo?: string;
   createTime?: string;
+  majorFlag?: boolean;
 }
 
 

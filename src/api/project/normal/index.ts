@@ -9,7 +9,6 @@ import { InfoVO, InfoForm, InfoQuery } from '@/api/project/normal/types';
  */
 
 export const listInfo = (query?: InfoQuery): AxiosPromise<InfoVO[]> => {
-  console.log("🚀 ~ listInfo ~ query:", query)
   return request({
     url: '/project/list',
     method: 'get',
@@ -34,7 +33,7 @@ export const getInfo = (id: string | number): AxiosPromise<InfoVO> => {
  */
 export const addInfo = (data: InfoForm) => {
   return request({
-    url: '/project',
+    url: '/project/submit',
     method: 'post',
     data: data
   });
@@ -60,5 +59,16 @@ export const delInfo = (id: string | number | Array<string | number>) => {
   return request({
     url: '/project/' + id,
     method: 'delete'
+  });
+};
+/**
+ * 项目暂存
+ * @param id
+ */
+export const stageInfo = (data: InfoForm) => {
+  return request({
+    url: '/project/stage',
+    method: 'post',
+    data: data
   });
 };

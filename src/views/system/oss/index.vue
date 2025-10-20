@@ -191,8 +191,11 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await proxy?.getConfigKey('sys.oss.previewListResource');
+  console.log("🚀 ~ getList ~ res:", res)
   previewListResource.value = res?.data === undefined ? true : res.data === 'true';
+  console.log("🚀 ~ getList ~ previewListResource.value:", previewListResource.value)
   const response = await listOss(proxy?.addDateRange(queryParams.value, dateRangeCreateTime.value, 'CreateTime'));
+  console.log("🚀 ~ getList ~ response:", response)
   ossList.value = response.rows;
   total.value = response.total;
   loading.value = false;
