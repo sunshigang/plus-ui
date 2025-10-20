@@ -5,7 +5,9 @@
         <h2>规划管理应用系统</h2>
         <h3>方岩风景名胜区简介</h3>
         <p>
-          方岩风景名胜区，是以丹崖翠谷、绝壁洞穴、奇峰峭壁、飞瀑碧潭为风景资源特色，书院文化和胡公信仰为文化特色；以生态保护、科普教育、观光体验和休闲度假为主要功能的国家级风景名胜区。方岩风景名胜区共有景源 86 处，其中一级景源 13 处，二级景源 32 处，三级景源41处。主要景点有大坑、方岩、寿山谷、大寮、石鼓寮、胡公祠、五峰书院、驻霞峰、母子樟、南岩、小坑、鸡鸣峰、公岩、桃花峰、覆釜峰、瀑布峰、固厚峰、小寮、罗汉古洞、千人坑、胡公读书堂、飞崖洞、狮峰、婆岩、烧焦岩、试剑石、五峰双桐、龙湫瀑、天墨水瀑、桃花珠瀑、泉石膏盲、云谷洞、石马坑、五云洞、鸳鸯瀑、石钟、石笋、金鼓洞、石鼓、五色洞等景观资源点缀其间，构成了方岩风景名胜区独特的自然风光。
+          方岩风景名胜区，是以丹崖翠谷、绝壁洞穴、奇峰峭壁、飞瀑碧潭为风景资源特色，书院文化和胡公信仰为文化特色；以生态保护、科普教育、观光体验和休闲度假为主要功能的国家级风景名胜区。方岩风景名胜区共有景源 86 处，其中一级景源
+          13 处，二级景源 32
+          处，三级景源41处。主要景点有大坑、方岩、寿山谷、大寮、石鼓寮、胡公祠、五峰书院、驻霞峰、母子樟、南岩、小坑、鸡鸣峰、公岩、桃花峰、覆釜峰、瀑布峰、固厚峰、小寮、罗汉古洞、千人坑、胡公读书堂、飞崖洞、狮峰、婆岩、烧焦岩、试剑石、五峰双桐、龙湫瀑、天墨水瀑、桃花珠瀑、泉石膏盲、云谷洞、石马坑、五云洞、鸳鸯瀑、石钟、石笋、金鼓洞、石鼓、五色洞等景观资源点缀其间，构成了方岩风景名胜区独特的自然风光。
         </p>
         <h3>景源分布情况统计</h3>
         <div ref="sourcePie" class="chart-container"></div>
@@ -27,6 +29,7 @@
         <h3>主要景点轮播图</h3>
         <el-carousel ref="carouselRef" :interval="3000" autoplay class="carousel-container">
           <el-carousel-item v-for="(item, index) in carouselImages" :key="index" class="carousel-item">
+            <span class="carousel-text">{{ item.alt }}</span>
             <img :src="item.url" :alt="item.alt" class="carousel-img">
           </el-carousel-item>
         </el-carousel>
@@ -391,31 +394,41 @@ const goTarget = (url: string) => {
   padding: 10px;
   box-sizing: border-box;
 }
+
 .carousel-container {
   width: 100%;
-  height: 500px;  // 容器高度固定
+  height: 500px; // 容器高度固定
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  padding: 0 !important;  // 移除可能的内边距
+  padding: 0 !important; // 移除可能的内边距
 
   // 穿透修改 Element 轮播组件的内部容器样式
   ::v-deep .el-carousel__container {
-    height: 100% !important;  // 让轮播内部容器占满高度
+    height: 100% !important; // 让轮播内部容器占满高度
   }
 }
+
 // 轮播项样式
 .carousel-item {
   width: 100% !important;
-  height: 100% !important;  // 轮播项占满容器
+  height: 100% !important; // 轮播项占满容器
 }
+
 // 图片样式优化
 .carousel-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;  // 图片覆盖容器，保持比例裁剪
-  object-position: center;  // 图片居中显示（避免裁剪到关键内容）
-  display: block;  // 消除图片底部的空白缝隙
+  object-fit: cover; // 图片覆盖容器，保持比例裁剪
+  object-position: center; // 图片居中显示（避免裁剪到关键内容）
+  display: block; // 消除图片底部的空白缝隙
+}
+.carousel-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #409eff;
 }
 </style>
