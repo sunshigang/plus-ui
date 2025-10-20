@@ -422,7 +422,7 @@ const goTarget = (url: string) => {
   height: 100%;
   object-fit: cover; // 图片覆盖容器，保持比例裁剪
   object-position: center; // 图片居中显示（避免裁剪到关键内容）
-  display: block; // 消除图片底部的空白缝隙
+  display: block;
 }
 .carousel-text {
   display: flex;
