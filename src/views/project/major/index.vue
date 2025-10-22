@@ -1867,7 +1867,7 @@ onMounted(async () => { // 注意添加async关键字
     // 等待用户信息返回（处理异步）
     const userProfile = await getUserProfile();
     // 提取部门名称（根据返回结构，userProfile.data中包含deptName）
-    userDept.value = userProfile.data.deptName || '';
+    userDept.value = userProfile.data.user.deptName || '';
     console.log('当前用户部门：', userDept.value);
 
     // 根据部门设置默认查询条件（例如：市林业局默认看“管委会通过”的项目）
