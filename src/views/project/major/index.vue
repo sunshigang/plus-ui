@@ -169,6 +169,47 @@
         <el-table-column label="创建时间" align="center" prop="createTime" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="230">
           <template #default="scope">
+            <!-- 获取当前登录用户角色 -->
+            <template v-if="userDept === '建设单位'">
+              <!-- 建设单位操作按钮逻辑 -->
+              <el-tooltip content="信息填报" placement="top" v-if="scope.row.status === '填报中'">
+                <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+                  v-hasPermi="['system:info:edit']"></el-button>
+              </el-tooltip>
+              <el-tooltip content="二次填报" placement="top" v-if="['管委会驳回', '林业局驳回'].includes(scope.row.status)">
+                <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+                  v-hasPermi="['system:info:edit']"></el-button>
+              </el-tooltip>
+              <el-tooltip content="查看" placement="top" v-if="['管委会待审核', '管委会通过', '林业局通过'].includes(scope.row.status)">
+                <el-button link type="primary" icon="View" @click="handleView(scope.row)"
+                  v-hasPermi="['system:info:view']"></el-button>
+              </el-tooltip>
+            </template>
+            <!-- 管委会操作逻辑 -->
+            <template v-if="userDept === '管委会'">
+              <el-tooltip content="审核" placement="top" v-if="scope.row.status === '管委会待审核'">
+                <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
+                  v-hasPermi="['system:info:audit']"></el-button>
+              </el-tooltip>
+              <el-tooltip content="查看" placement="top" v-if="scope.row.status !== '管委会待审核'">
+                <el-button link type="primary" icon="View" @click="handleView(scope.row)"
+                  v-hasPermi="['system:info:view']"></el-button>
+              </el-tooltip>
+            </template>
+
+            <!-- 市林业局操作逻辑 -->
+            <template v-if="userDept === '市林业局'">
+              <el-tooltip content="审核" placement="top" v-if="scope.row.status === '管委会通过'">
+                <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
+                  v-hasPermi="['system:info:audit']"></el-button>
+              </el-tooltip>
+              <el-tooltip content="查看" placement="top" v-if="scope.row.status !== '管委会通过'">
+                <el-button link type="primary" icon="View" @click="handleView(scope.row)"
+                  v-hasPermi="['system:info:view']"></el-button>
+              </el-tooltip>
+            </template>
+          </template>
+          <!-- <template #default="scope">
             <el-tooltip content="详情查看" placement="top">
               <el-button link type="primary" icon="View" @click="handleView(scope.row)"
                 v-hasPermi="['system:info:view']"></el-button>
@@ -177,10 +218,6 @@
               <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
                 v-hasPermi="['system:info:audit']"></el-button>
             </el-tooltip>
-            <!-- <el-tooltip content="审核" placement="top" v-if="canAudit(scope.row)">
-              <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
-                v-hasPermi="['system:info:audit']"></el-button>
-            </el-tooltip> -->
             <el-tooltip content="修改" placement="top">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                 v-hasPermi="['system:info:edit']"></el-button>
@@ -193,7 +230,7 @@
               <el-button link type="primary" icon="Share" @click="handleShare(scope.row)"
                 v-hasPermi="['system:info:share']"></el-button>
             </el-tooltip>
-          </template>
+          </template> -->
         </el-table-column>
       </el-table>
 
@@ -997,6 +1034,7 @@ const handleAudit = async (row: InfoForm) => {
   // 获取项目详情
   const res = await getInfo(row.id);
   const projectData = res.data;
+  console.log('projectData', projectData)
 
   // 填充项目基本信息
   Object.assign(auditForm, {
@@ -1823,14 +1861,27 @@ const handleExport = () => {
     ...queryParams.value
   }, `info_${new Date().getTime()}.xlsx`)
 }
+const userDept = ref('');
+onMounted(async () => { // 注意添加async关键字
+  try {
+    // 等待用户信息返回（处理异步）
+    const userProfile = await getUserProfile();
+    // 提取部门名称（根据返回结构，userProfile.data中包含deptName）
+    userDept.value = userProfile.data.deptName || '';
+    console.log('当前用户部门：', userDept.value);
 
-onMounted(() => {
-  // const userRole = proxy?.$store.getters.role;
-  // if (userRole === 'forestry') {
-  //   // 市林业局默认看“管委会已通过”的项目
-  //   queryParams.value.status = '管委会已通过';
-  // }
-  getList();
+    // 根据部门设置默认查询条件（例如：市林业局默认看“管委会通过”的项目）
+    if (userDept.value === '市林业局') {
+      queryParams.value.status = '管委会通过';
+    }
+
+    // 加载项目列表
+    getList();
+  } catch (err) {
+    console.error('获取用户信息失败：', err);
+    // 即使获取失败，仍尝试加载列表（可选）
+    getList();
+  }
 });
 </script>
 <style lang="scss" scoped>
