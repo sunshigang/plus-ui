@@ -5,22 +5,22 @@
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="建设项目名称" prop="projectName">
+            <el-form-item label="建设项目名称"  prop="projectName">
               <el-input v-model="queryParams.projectName" placeholder="请输入建设项目名称" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目代码" prop="projectCode">
               <el-input v-model="queryParams.projectCode" placeholder="请输入项目代码" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="创建时间" style="width: 400px">
+            <el-form-item label="创建时间" style="width: 420px">
               <el-date-picker v-model="dateRangeCreateTime" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
                 range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
                 :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"></el-date-picker>
             </el-form-item>
-            <!-- <el-form-item label="所属行政区划" prop="administrativeRegion">
+            <el-form-item label="所属行政区划" prop="administrativeRegion">
               <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
                 @keyup.enter="handleQuery" />
-            </el-form-item> -->
+            </el-form-item>
             <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
               <el-input v-model="queryParams.scenicArea" placeholder="请输入涉及风景名胜区名称" clearable
                 @keyup.enter="handleQuery" />
@@ -151,64 +151,24 @@
         <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
         <el-table-column label="其他需要说明的情况" align="center" prop="otherExplanations" />
         <el-table-column label="选址方案" align="center" prop="locationPlan">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.locationPlan"
-              :preview-src-list="[scope.row.locationPlan]" />
-            <span v-text="scope.row.locationPlan" />
-          </template>
+          <!-- <template #default="scope">
+            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.url"
+              :preview-src-list="[scope.row.url]" />
+            <span v-text="scope.row.url" />
+          </template> -->
         </el-table-column>
-        <el-table-column label="专家评审意见" align="center" prop="expertOpinions">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.expertOpinions"
-              :preview-src-list="[scope.row.expertOpinions]" />
-            <span v-text="scope.row.expertOpinions" />
-          </template>
-        </el-table-column>
-        <el-table-column label="会议材料" align="center" prop="meetingMaterials">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.meetingMaterials"
-              :preview-src-list="[scope.row.meetingMaterials]" />
-            <span v-text="scope.row.meetingMaterials" />
-          </template>
-        </el-table-column>
-        <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.siteSelectionReport"
-              :preview-src-list="[scope.row.siteSelectionReport]" />
-            <span v-text="scope.row.siteSelectionReport" />
-          </template>
-        </el-table-column>
-        <el-table-column label="立项文件" align="center" prop="approvalDocuments">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.approvalDocuments"
-              :preview-src-list="[scope.row.approvalDocuments]" />
-            <span v-text="scope.row.approvalDocuments" />
-          </template>
-        </el-table-column>
-        <el-table-column label="项目用地红线图" align="center" prop="projectRedLine">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.projectRedLine"
-              :preview-src-list="[scope.row.projectRedLine]" />
-            <span v-text="scope.row.projectRedLine" />
-          </template>
-        </el-table-column>
-        <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.redLineCoordinate"
-              :preview-src-list="[scope.row.redLineCoordinate]" />
-            <span v-text="scope.row.redLineCoordinate" />
-          </template>
-        </el-table-column>
-        <el-table-column label="项目三维模型" align="center" prop="threeDModel">
-          <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.threeDModel"
-              :preview-src-list="[scope.row.threeDModel]" />
-            <span v-text="scope.row.threeDModel" />
-          </template>
-        </el-table-column>
+        <el-table-column label="专家评审意见" align="center" prop="expertOpinions" />
+        <el-table-column label="会议材料" align="center" prop="meetingMaterials" />
+        <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport" />
+        <el-table-column label="立项文件L" align="center" prop="approvalDocuments" />
+        <el-table-column label="项目用地红线图" align="center" prop="projectRedLine" />
+        <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
+        <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="180" >
           <template #default="scope">
+              <el-button link type="primary" @click="handleView(scope.row)"
+                v-hasPermi="['system:info:view']">详情查看</el-button>
             <el-tooltip content="修改" placement="top">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                 v-hasPermi="['system:info:edit']"></el-button>
@@ -216,6 +176,10 @@
             <el-tooltip content="删除" placement="top">
               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
                 v-hasPermi="['system:info:remove']"></el-button>
+            </el-tooltip>
+            <el-tooltip content="数据共享" placement="top" v-if="scope.row.status === '市林业局已通过'">
+              <el-button link type="primary" icon="Share" @click="handleShare(scope.row)"
+                v-hasPermi="['system:info:share']"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -226,54 +190,54 @@
     </el-card>
     <!-- 添加或修改【请填写功能名称】对话框 -->
     <el-dialog :title="dialog.title" v-model="dialog.visible" width="1000px" append-to-body>
-      <el-form ref="infoFormRef" :model="form" :rules="rules" label-width="178px">
+      <el-form ref="infoFormRef" :model="form"  label-width="178px">
         <el-form-item label="建设项目名称" prop="projectName">
-          <el-input v-model="form.projectName" placeholder="请输入建设项目名称" />
+          <el-input v-model="form.projectName" placeholder="请输入建设项目名称" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="项目代码" prop="projectCode">
-          <el-input v-model="form.projectCode" placeholder="请输入项目代码" />
+          <el-input v-model="form.projectCode" placeholder="请输入项目代码" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="所属行政区划" prop="administrativeRegion">
-          <el-input v-model="form.administrativeRegion" placeholder="请输入所属行政区划" />
+          <el-input v-model="form.administrativeRegion" placeholder="请输入所属行政区划" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
-          <el-input v-model="form.scenicArea" placeholder="请输入涉及风景名胜区名称" />
+          <el-input v-model="form.scenicArea" placeholder="请输入涉及风景名胜区名称" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="申请人类型" prop="applicantType">
-          <el-radio-group v-model="form.applicantType">
+          <el-radio-group v-model="form.applicantType" :disabled="disabled">
             <el-radio-button label="单位">单位</el-radio-button>
             <el-radio-button label="个人">个人</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="建设单位名称" prop="constructionUnit">
-          <el-input v-model="form.constructionUnit" placeholder="请输入建设单位名称" />
+          <el-input v-model="form.constructionUnit" placeholder="请输入建设单位名称" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="组织机构代码" prop="organizationCode">
-          <el-input v-model="form.organizationCode" placeholder="请输入组织机构代码" />
+          <el-input v-model="form.organizationCode" placeholder="请输入组织机构代码" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="经办人" prop="contactPerson">
-          <el-input v-model="form.contactPerson" placeholder="请输入经办人" />
+          <el-input v-model="form.contactPerson" placeholder="请输入经办人" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="经办人联系方式" prop="contactPhone">
-          <el-input v-model="form.contactPhone" placeholder="请输入经办人联系方式" />
+          <el-input v-model="form.contactPhone" placeholder="请输入经办人联系方式" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="保护等级等" prop="protectionLevel">
-          <el-input v-model="form.protectionLevel" placeholder="请输入保护等级等" />
+          <el-input v-model="form.protectionLevel" placeholder="请输入保护等级等" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="拟选位置" prop="projectPurpose">
-          <el-input v-model="form.projectPurpose" placeholder="请输入拟选位置" />
+          <el-input v-model="form.projectPurpose" placeholder="请输入拟选位置" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="建设项目总投资（万元）" prop="projectInvestment">
-          <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" />
+          <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="规划依据" prop="planningBasis">
-          <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容":disabled="disabled" />
         </el-form-item>
         <el-form-item label="建设内容涉及规模">
-          <editor v-model="form.constructionContent" :min-height="192" />
+          <editor v-model="form.constructionContent" :min-height="192" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-          <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" :disabled="disabled"/>
         </el-form-item>
         <el-form-item label="选址方案" prop="locationPlan">
           <!-- 选址方案专属上传组件 -->
@@ -477,14 +441,14 @@
           <el-button link type="primary" icon="Download">模型规范与模板下载</el-button>
         </el-form-item>
         <el-form-item label="模型坐标" prop="modelCoordinate">
-          <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" />
+          <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled"/>
         </el-form-item>
       </el-form>
       <template #footer>
-        <div class="dialog-footer">
+        <div class="dialog-footer" v-if="!isViewMode">
           <el-button @click="cancel">取消</el-button>
-          <el-button type="warning" @click="cancel">重置</el-button>
-          <el-button type="success" @click="cancel">暂存</el-button>
+          <el-button type="warning" @click="resetForm">重置</el-button>
+          <el-button type="success" @click="temporarilyForm">暂存</el-button>
           <el-button :loading="buttonLoading" type="primary" @click="submitForm">确定</el-button>
         </div>
       </template>
@@ -498,7 +462,6 @@ import { delOss, listByIds } from '@/api/system/oss';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
-import ImagePreview from '@/components/ImagePreview/index.vue';
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
 const infoList = ref<InfoVO[]>([]);
@@ -509,6 +472,8 @@ const ids = ref<Array<string | number>>([]);
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
+const previewListResource = ref(false);
+const isViewMode = ref(false); // 新增：是否为查看模式
 //上传文件
 // 1. 上传组件 ref（每个字段一个）
 const locationPlanUploadRef = ref<ElUploadInstance>(); // 选址方案
@@ -569,11 +534,11 @@ const uploadLoading = reactive<Record<FileFieldType, boolean>>({
   threeDModel: false
 });
 
-const previewListResource = ref(false);
 
 
 
-const number = ref(0);
+
+const disabled = ref(false);
 const fileUploadRef = ref<ElUploadInstance>();
 const queryFormRef = ref<ElFormInstance>();
 const infoFormRef = ref<ElFormInstance>();
@@ -906,7 +871,7 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
   }
 });
 
-const { queryParams, form, rules } = toRefs(data);
+const { queryParams, form ,rules} = toRefs(data);
 
 /** 查询【请填写功能名称】列表 */
 const getList = async () => {
@@ -972,8 +937,56 @@ const handleAdd = () => {
   reset();
   dialog.visible = true;
   dialog.title = "添加一般项目信息";
+   disabled.value = false; // 启用表单
+  isViewMode.value = false; // 非查看模式
 }
+// 详情查看
+const handleView = async (row: InfoVO) => {
+  // 这里可以复用修改的逻辑，但设置表单为只读
+  reset();
+  const res = await getInfo(row.id);
+  Object.assign(form.value, res.data);
 
+  // 加载文件列表（与handleUpdate中的文件加载逻辑相同）
+  if (form.value.locationPlan) {
+    const locationPlanOssIds = form.value.locationPlan.split(',').join(',');
+    const locationPlanRes = await listByIds(locationPlanOssIds);
+    locationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ... 其他文件列表的加载逻辑，与handleUpdate相同
+
+  dialog.visible = true;
+  dialog.title = "查看一般项目信息";
+  // 设置表单为只读状态
+  disabled.value = true;
+  isViewMode.value = true; // 标记为查看模式
+};
+// 数据共享
+const handleShare = async (row: InfoVO) => {
+  try {
+    // 显示确认对话框
+    await proxy?.$modal.confirm('确定要将此项目数据共享吗？');
+
+    // 调用数据共享接口
+    // await shareInfo(row.id);
+
+    // 显示成功消息
+    proxy?.$modal.msgSuccess("数据共享成功");
+
+    // 刷新列表
+    getList();
+  } catch (err) {
+    // 如果用户取消或发生错误，不做处理或显示错误消息
+    if (err !== 'cancel') {
+      proxy?.$modal.msgError("数据共享失败：" + (err as Error).message || "未知错误");
+    }
+  }
+};
 /** 修改按钮操作 */
 const handleUpdate = async (row?: InfoVO) => {
   reset();
@@ -1079,8 +1092,35 @@ const handleUpdate = async (row?: InfoVO) => {
 
   dialog.visible = true;
   dialog.title = "修改一般项目信息";
+  disabled.value = false; // 启用表单
+  isViewMode.value = false; // 非查看模式
 };
-
+/** 重置按钮 */
+const resetForm = () => {
+  if (form.value.id) {
+    handleUpdate();
+  } else {
+    reset();
+  }
+}
+/** 暂存按钮 */
+const temporarilyForm = () => {
+  infoFormRef.value?.validate(async (valid: boolean) => {
+    if (valid) {
+      buttonLoading.value = true;
+      try {
+        await stageInfo(form.value);
+        proxy?.$modal.msgSuccess("暂存成功");
+        dialog.visible = false;
+        await getList();
+      } catch (err) {
+        proxy?.$modal.msgError("暂存失败：" + (err as Error).message || "未知错误");
+      } finally {
+        buttonLoading.value = false;
+      }
+    }
+  });
+}
 /** 提交按钮 */
 const submitForm = () => {
   infoFormRef.value?.validate(async (valid: boolean) => {

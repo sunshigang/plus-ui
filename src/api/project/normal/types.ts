@@ -1,4 +1,12 @@
 export interface InfoVO {
+  forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
+  managementFeedbackFiles?: string;   // 管委会审批反馈文件
+  managementApprovalTime?: string; // 新增：管理审批时间
+  managementFeedback?: string; // 新增：管理审批反馈
+  forestryApprovalStatus?: string; // 新增：林业审批状态
+  forestryApprovalTime?: string; // 新增：林业审批时间
+  forestryFeedback?: string; // 新增：林业审批反馈
+  managementApprovalStatus?: string; // 新增该属性
   /**
    *
    */
@@ -136,10 +144,19 @@ export interface InfoVO {
    */
   modelCoordinate: string;
   createTime?: string;
+  status?: string;
 
 }
 
 export interface InfoForm extends BaseEntity {
+  forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
+  managementFeedbackFiles?: string;   // 管委会审批反馈文件
+  managementApprovalTime?: string; // 新增：管理审批时间
+  managementFeedback?: string; // 新增：管理审批反馈
+  forestryApprovalStatus?: string; // 新增：林业审批状态
+  forestryApprovalTime?: string; // 新增：林业审批时间
+  forestryFeedback?: string; // 新增：林业审批反馈
+  managementApprovalStatus?: string; // 新增该属性
   status?: string;
   majorFlag?: boolean;
   /**
@@ -280,7 +297,7 @@ export interface InfoForm extends BaseEntity {
   createTimeFrom?: string;
   createTimeTo?: string;
   createTime?: string;
-
+  modelPreview?: string;
 }
 
 export interface InfoQuery extends PageQuery {
@@ -421,6 +438,14 @@ export interface InfoQuery extends PageQuery {
   createTimeTo?: string;
   createTime?: string;
   majorFlag?: boolean;
+  modelPreview?: string;
+}
+export interface AuditData {
+  projectId: string | number;
+  auditResult: '通过' | '驳回';
+  feedback: string;
+  feedbackFiles: string;
+  auditType: 'forestry' | 'management';
 }
 
 

@@ -146,8 +146,10 @@ const handleLogin = () => {
         console.log("🚀 ~ handleLogin ~ localStorage:", localStorage)
       // 调用action的登录方法
       const [err] = await to(userStore.login(loginForm.value));
+      console.log("🚀 ~ handleLogin ~ [err]:", [err])
       if (!err) {
         const redirectUrl = redirect.value || '/';
+        console.log("🚀 ~ handleLogin ~ redirectUrl:", redirectUrl)
         await router.push(redirectUrl);
         loading.value = false;
       } else {
@@ -179,6 +181,7 @@ const getCode = async () => {
 const getLoginData = () => {
   const tenantId = localStorage.getItem('tenantId');
   const username = localStorage.getItem('username');
+  console.log("🚀 ~ getLoginData ~ username:", username)
   const password = localStorage.getItem('password');
   const rememberMe = localStorage.getItem('rememberMe');
   loginForm.value = {
@@ -187,6 +190,7 @@ const getLoginData = () => {
     password: password === null ? String(loginForm.value.password) : String(password),
     rememberMe: rememberMe === null ? false : Boolean(rememberMe)
   } as LoginData;
+  console.log("🚀 ~ getLoginData ~ loginForm.value:", loginForm.value)
 };
 
 /**

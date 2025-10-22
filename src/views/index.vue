@@ -168,65 +168,95 @@ const initProtectionPie = () => {
 
   const chart = echarts.init(protectionPie.value);
 
-  // 保护分级数据
-  const data = [
-    { name: '一级保护区', value: 34.06 },
-    { name: '二级保护区', value: 53.06 },
-    { name: '三级保护区', value: 59.96 }
+  // 资源分级保护数据（区分方岩片区和五指岩片区）
+  const protectionData = [
+    {
+      level: '一级保护区',
+      fangyan: 27.88,  // 方岩片区面积
+      wuzhiyan: 6.18,  // 五指岩片区面积
+      total: 34.06,    // 总面积
+      ratio: 23.16     // 占比
+    },
+    {
+      level: '二级保护区',
+      fangyan: 35.07,
+      wuzhiyan: 17.99,
+      total: 53.06,
+      ratio: 36.07
+    },
+    {
+      level: '三级保护区',
+      fangyan: 35.63,
+      wuzhiyan: 24.33,
+      total: 59.96,
+      ratio: 40.77
+    }
   ];
 
-  // 配置项
+  // 柱状图配置项
   const option = {
     title: {
-      text: '资源分级保护面积',
+      text: '资源分级保护面积（按片区划分）',
       left: 'center'
     },
     tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} km² ({d}%)'
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: any[]) => {
+        const level = params[0].name;
+        const item = protectionData.find(i => i.level === level);
+        if (!item) return '';
+        return `
+          <div>${level}</div>
+          <div>总面积：${item.total} km²（${item.ratio}%）</div>
+          <div>方岩片区：${item.fangyan} km²</div>
+          <div>五指岩片区：${item.wuzhiyan} km²</div>
+        `;
+      }
     },
     legend: {
-      orient: 'vertical',
-      left: 'left',
-      data: ['一级保护区', '二级保护区', '三级保护区']
+      data: ['方岩片区', '五指岩片区'],
+      top: 30
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: protectionData.map(item => item.level), // x轴为保护区等级
+      axisLabel: { fontSize: 14 }
+    },
+    yAxis: {
+      type: 'value',
+      name: '面积（km²）',
+      nameLocation: 'middle',
+      nameGap: 30
     },
     series: [
       {
-        name: '保护区等级',
-        type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#fff',
-          borderWidth: 2
-        },
-        label: {
-          show: false,
-          position: 'center'
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 18,
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: {
-          show: false
-        },
-        data: data
+        name: '方岩片区',
+        type: 'bar',
+        data: protectionData.map(item => item.fangyan),
+        itemStyle: { color: '#d58592' }, // 蓝色：方岩片区
+        barWidth: '15%'
+      },
+      {
+        name: '五指岩片区',
+        type: 'bar',
+        data: protectionData.map(item => item.wuzhiyan),
+        itemStyle: { color: '#67C23A' }, // 绿色：五指岩片区
+        barWidth: '15%'
       }
     ]
   };
 
   chart.setOption(option);
-
-  // 响应窗口大小变化
-  window.addEventListener('resize', () => {
-    chart.resize();
-  });
+  window.addEventListener('resize', () => chart.resize());
 };
+
 const initLandUseBar = () => {
   if (!landUseBar.value) return;
   const chart = echarts.init(landUseBar.value);
@@ -271,7 +301,6 @@ const initLandUseBar = () => {
       data: landUseData.map(item => item.name),
       axisLabel: {
         interval: 0,
-        rotate: 30, // 文字倾斜30度，避免重叠
         fontSize: 12
       }
     },
@@ -286,14 +315,14 @@ const initLandUseBar = () => {
         name: '现状',
         type: 'bar',
         data: landUseData.map(item => item.currentArea),
-        itemStyle: { color: '#409EFF' }, // 蓝色：现状
+        itemStyle: { color: '#20e3ff' }, // 蓝色：现状
         barWidth: '30%'
       },
       {
         name: '规划',
         type: 'bar',
         data: landUseData.map(item => item.planArea),
-        itemStyle: { color: '#67C23A' }, // 绿色：规划
+        itemStyle: { color: '#c0da75' }, // 绿色：规划
         barWidth: '30%'
       }
     ]
@@ -424,6 +453,7 @@ const goTarget = (url: string) => {
   object-position: center; // 图片居中显示（避免裁剪到关键内容）
   display: block;
 }
+
 .carousel-text {
   display: flex;
   justify-content: center;

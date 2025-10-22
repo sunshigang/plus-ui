@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import { InfoVO, InfoForm, InfoQuery } from '@/api/project/normal/types';
+import { InfoVO, InfoForm, InfoQuery ,AuditData} from '@/api/project/normal/types';
 
 /**
  * 查询【请填写功能名称】列表
@@ -63,11 +63,33 @@ export const delInfo = (id: string | number | Array<string | number>) => {
 };
 /**
  * 项目暂存
- * @param id
+ * @param data
  */
 export const stageInfo = (data: InfoForm) => {
   return request({
     url: '/project/stage',
+    method: 'post',
+    data: data
+  });
+};
+/**
+ * 管委会审批
+ * @param data
+ */
+export const gwhApprove = (data: AuditData) => {
+  return request({
+    url: '/project/gwhApprove',
+    method: 'post',
+    data: data
+  });
+};
+/**
+ * 林业局审批
+ * @param data
+ */
+export const lyjApprove = (data: AuditData) => {
+  return request({
+    url: '/project/lyjApprove',
     method: 'post',
     data: data
   });
