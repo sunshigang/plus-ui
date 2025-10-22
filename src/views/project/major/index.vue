@@ -40,8 +40,8 @@
               <el-input v-model="queryParams.contactPhone" placeholder="请输入经办人联系方式" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="保护等级等" prop="protectionLevel">
-              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级等" clearable
+            <el-form-item label="保护等级" prop="protectionLevel">
+              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="拟选位置" prop="projectPurpose">
@@ -137,13 +137,14 @@
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
         <el-table-column label="涉及风景名胜区名称" align="center" prop="scenicArea" width="150" />
         <el-table-column label="单位或个人" align="center" prop="applicantType" />
+        <el-table-column label="状态" align="center" prop="status" />
+        <el-table-column label="项目类型" align="center" prop="projectType" />
+        <el-table-column label="项目用途" align="center" prop="projectUsage" />
         <el-table-column label="建设单位名称" align="center" prop="constructionUnit" width="150" />
         <el-table-column label="组织机构代码" align="center" prop="organizationCode" width="150" />
         <el-table-column label="经办人" align="center" prop="contactPerson" />
         <el-table-column label="经办人联系方式" align="center" prop="contactPhone" />
-        <el-table-column label="保护等级等" align="center" prop="protectionLevel" />
-        <el-table-column label="状态" align="center" prop="status" />
-        <el-table-column label="项目类型" align="center" prop="projectType" />
+        <el-table-column label="保护等级" align="center" prop="protectionLevel" />
         <el-table-column label="拟选位置" align="center" prop="projectPurpose" width="150" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="100" />
         <el-table-column label="建设项目总投资（万元）" align="center" prop="projectInvestment" />
@@ -165,6 +166,7 @@
         <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
         <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
+        <el-table-column label="创建时间" align="center" prop="createTime" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="230">
           <template #default="scope">
             <el-tooltip content="详情查看" placement="top">
@@ -205,7 +207,7 @@
         <!-- 上部分：项目基础信息 -->
         <div class="section project-basic-info">
           <h3 class="section-title">项目基础信息</h3>
-          <el-form ref="infoFormRef" :model="form" label-width="178px">
+          <el-form ref="infoFormRef" :model="form" label-width="178px" :rules="rules">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="建设项目名称" prop="projectName">
@@ -227,6 +229,18 @@
               <el-col :span="12">
                 <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
                   <el-input v-model="form.scenicArea" placeholder="请输入涉及风景名胜区名称" :disabled="disabled" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="项目类型" prop="projectType">
+                  <el-input v-model="form.projectType" placeholder="请输入项目类型" :disabled="disabled" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目用途" prop="projectUsage">
+                  <el-input v-model="form.projectUsage" placeholder="请输入项目用途" :disabled="disabled" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -264,8 +278,8 @@
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item label="保护等级等" prop="protectionLevel">
-                  <el-input v-model="form.protectionLevel" placeholder="请输入保护等级等" :disabled="disabled" />
+                <el-form-item label="保护等级" prop="protectionLevel">
+                  <el-input v-model="form.protectionLevel" placeholder="请输入保护等级" :disabled="disabled" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -613,9 +627,10 @@
             <el-descriptions-item label="组织机构代码">{{ auditForm.organizationCode }}</el-descriptions-item>
             <el-descriptions-item label="经办人">{{ auditForm.contactPerson }}</el-descriptions-item>
             <el-descriptions-item label="经办人联系方式">{{ auditForm.contactPhone }}</el-descriptions-item>
-            <el-descriptions-item label="保护等级等">{{ auditForm.protectionLevel }}</el-descriptions-item>
+            <el-descriptions-item label="保护等级">{{ auditForm.protectionLevel }}</el-descriptions-item>
             <el-descriptions-item label="状态">{{ auditForm.status }}</el-descriptions-item>
             <el-descriptions-item label="项目类型">{{ auditForm.projectType }}</el-descriptions-item>
+            <el-descriptions-item label="项目用途">{{ auditForm.projectUsage }}</el-descriptions-item>
             <el-descriptions-item label="拟选位置">{{ auditForm.projectPurpose }}</el-descriptions-item>
             <el-descriptions-item label="建设项目总投资（万元）">{{ auditForm.projectInvestment }}</el-descriptions-item>
             <el-descriptions-item label="规划依据">{{ auditForm.planningBasis }}</el-descriptions-item>
@@ -841,6 +856,9 @@ const multiple = ref(true);
 const total = ref(0);
 const previewListResource = ref(false);
 const isViewMode = ref(false); // 新增：是否为查看模式
+
+
+
 //上传文件
 // 1. 上传组件 ref（每个字段一个）
 const locationPlanUploadRef = ref<ElUploadInstance>(); // 选址方案
@@ -940,6 +958,7 @@ const auditForm = reactive({
   protectionLevel: '',
   status: '', // 补充：项目状态
   projectType: '', // 补充：项目类型
+  projectUsage: '', // 补充：项目用途
   projectPurpose: '',
   projectInvestment: '',
   planningBasis: '', // 补充：规划依据
@@ -948,17 +967,18 @@ const auditForm = reactive({
   feedback: '', // 审核反馈意见
   auditResult: '', // 审核结果：通过/驳回
   modelCoordinate: '',
-  auditType: '' as 'forestry' | 'management'
+  auditType: '' as 'forestry' | 'management',
+  createTime: ''
 });
 const auditFormRef = ref<ElFormInstance>();
 
 // 判断是否可以审核
 const canAudit = (row: InfoForm) => {
-  const res =  getUserProfile();
-  // console.log('canAudit,res',res)
-  // // 获取当前登录用户角色
+  const res = getUserProfile();
+  console.log('canAudit,res', res)
+  // 获取当前登录用户角色
   // const userRole = proxy?.store.getters.role;
-  // console.log('canAudit,userRole',userRole)
+  // console.log('canAudit,userRole', userRole)
   // // 1. 管委会用户：只能审核“待审核”或“管委会已驳回后重新提交”的项目
   // if (userRole === 'management' && ['待审核', '管委会已驳回'].includes(row.status)) {
   //   return true;
@@ -992,6 +1012,7 @@ const handleAudit = async (row: InfoForm) => {
     protectionLevel: projectData.protectionLevel,
     status: projectData.status, // 已匹配补充的属性
     projectType: projectData.projectType, // 已匹配补充的属性
+    projectUsage: projectData.projectUsage,
     projectPurpose: projectData.projectPurpose,
     projectInvestment: projectData.projectInvestment,
     planningBasis: projectData.planningBasis, // 已匹配补充的属性
@@ -1173,7 +1194,7 @@ const props = defineProps({
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型, 例如['png', 'jpg', 'jpeg']
-  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'shx']),
+  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak']),
   // 是否显示提示
   isShowTip: propTypes.bool.def(true),
   // 禁用组件（仅查看文件）
@@ -1383,6 +1404,7 @@ const initFormData: InfoForm = {
   protectionLevel: undefined,
   status: undefined,
   projectType: undefined,
+  projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
   projectInvestment: undefined,
@@ -1426,6 +1448,7 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     protectionLevel: undefined,
     status: undefined,
     projectType: undefined,
+    projectUsage: undefined,
     projectPurpose: undefined,
     projectInvestment: undefined,
     planningBasis: undefined,
@@ -1448,36 +1471,39 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     // }
   },
   rules: {
+    projectName: [
+      { required: true, message: "建设项目名称不能为空", trigger: "blur" }
+    ],
     administrativeRegion: [
       { required: true, message: "所属行政区划不能为空", trigger: "blur" }
     ],
     scenicArea: [
       { required: true, message: "涉及风景名胜区名称不能为空", trigger: "blur" }
     ],
-    organizationCode: [
-      { required: true, message: "组织机构代码不能为空", trigger: "blur" }
-    ],
-    contactPerson: [
-      { required: true, message: "经办人不能为空", trigger: "blur" }
-    ],
-    protectionLevel: [
-      { required: true, message: "保护等级等不能为空", trigger: "blur" }
-    ],
-    projectType: [
-      { required: true, message: "项目类型不能为空", trigger: "change" }
-    ],
-    projectPurpose: [
-      { required: true, message: "拟选位置不能为空", trigger: "blur" }
-    ],
-    projectInvestment: [
-      { required: true, message: "建设项目总投资不能为空", trigger: "blur" }
-    ],
-    planningBasis: [
-      { required: true, message: "规划依据不能为空", trigger: "blur" }
-    ],
-    constructionContent: [
-      { required: true, message: "建设内容涉及规模不能为空", trigger: "blur" }
-    ],
+    // organizationCode: [
+    //   { required: true, message: "组织机构代码不能为空", trigger: "blur" }
+    // ],
+    // contactPerson: [
+    //   { required: true, message: "经办人不能为空", trigger: "blur" }
+    // ],
+    // protectionLevel: [
+    //   { required: true, message: "保护等级不能为空", trigger: "blur" }
+    // ],
+    // projectType: [
+    //   { required: true, message: "项目类型不能为空", trigger: "change" }
+    // ],
+    // projectPurpose: [
+    //   { required: true, message: "拟选位置不能为空", trigger: "blur" }
+    // ],
+    // projectInvestment: [
+    //   { required: true, message: "建设项目总投资不能为空", trigger: "blur" }
+    // ],
+    // planningBasis: [
+    //   { required: true, message: "规划依据不能为空", trigger: "blur" }
+    // ],
+    // constructionContent: [
+    //   { required: true, message: "建设内容涉及规模不能为空", trigger: "blur" }
+    // ],
     // otherExplanations: [
     //   { required: true, message: "其他需要说明的情况不能为空", trigger: "blur" }
     // ],

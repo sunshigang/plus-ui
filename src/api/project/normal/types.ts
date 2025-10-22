@@ -1,4 +1,5 @@
 export interface InfoVO {
+  projectUsage?: string; //项目类型
   forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
   managementFeedbackFiles?: string;   // 管委会审批反馈文件
   managementApprovalTime?: string; // 新增：管理审批时间
@@ -149,6 +150,7 @@ export interface InfoVO {
 }
 
 export interface InfoForm extends BaseEntity {
+  projectUsage?: string;//项目用途
   forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
   managementFeedbackFiles?: string;   // 管委会审批反馈文件
   managementApprovalTime?: string; // 新增：管理审批时间
@@ -301,6 +303,7 @@ export interface InfoForm extends BaseEntity {
 }
 
 export interface InfoQuery extends PageQuery {
+  projectUsage?: string;
   status?: string;
 
   /**
