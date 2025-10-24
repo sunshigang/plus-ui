@@ -28,9 +28,15 @@ export default defineConfig(({ mode, command }) => {
           changeOrigin: true,
           ws: true,
           rewrite: (path) => path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')
+        },
+        '/api/weather': {
+          target: 'https://api.openweathermap.org', // 目标接口域名
+          changeOrigin: true, // 允许跨域
+          rewrite: (path) => path.replace(/^\/api\/weather/, '') // 去掉代理前缀
         }
       }
     },
+
     css: {
       preprocessorOptions: {
         scss: {

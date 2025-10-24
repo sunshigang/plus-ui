@@ -18,3 +18,36 @@ onMounted(() => {
   });
 });
 </script>
+<style>
+@font-face {
+  font-family: 'PangMenZhenDao';
+  src: url(./static/font/PangMenZhenDao.ttf);
+}
+
+@font-face {
+  font-family: 'xianglifang';
+  src: url('./static/font/xianglifangheiti.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'ZCOOL QingKe HuangYou';
+  src: url('./static/font/站酷文艺体.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SourceHanSansCN-Medium';
+  src: url(./static/font/SourceHanSansCN-Medium.otf);
+}
+
+@font-face {
+  font-family: 'SourceHanSansCN-Regular';
+  src: url(./static/font/SourceHanSansCN-Regular.otf);
+}
+
+@font-face {
+  font-family: 'DINPro';
+  src: url(./static/font/DINPro-Regular.otf);
+}
+</style>

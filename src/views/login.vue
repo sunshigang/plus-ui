@@ -81,6 +81,7 @@ import { HttpStatus } from '@/enums/RespEnum';
 import { useI18n } from 'vue-i18n';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+console.log("🚀 ~ proxy:", proxy)
 
 const title = import.meta.env.VITE_APP_TITLE;
 const userStore = useUserStore();
@@ -146,7 +147,6 @@ const handleLogin = () => {
         console.log("🚀 ~ handleLogin ~ localStorage:", localStorage)
       // 调用action的登录方法
       const [err] = await to(userStore.login(loginForm.value));
-      console.log("🚀 ~ handleLogin ~ [err]:", [err])
       if (!err) {
         const redirectUrl = redirect.value || '/';
         console.log("🚀 ~ handleLogin ~ redirectUrl:", redirectUrl)
