@@ -445,10 +445,11 @@ export interface InfoQuery extends PageQuery {
 }
 export interface AuditData {
   projectId: string | number;
-  auditResult: '通过' | '驳回';
-  feedback: string;
-  feedbackFiles: string;
+  approveResult: '通过' | '驳回';
+  approvalReason: string;
+  approvalAttachment: string;
   auditType: 'forestry' | 'management';
+
 }
 
 

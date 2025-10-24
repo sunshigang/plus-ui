@@ -23,16 +23,17 @@ export default defineConfig(({ mode, command }) => {
       port: Number(env.VITE_APP_PORT),
       open: true,
       proxy: {
+        '/api/weather': {
+          target: 'https://api.openweathermap.org', // 目标接口域名
+          changeOrigin: true, // 允许跨域
+          rewrite: (path) => path.replace(/^\/api\/weather/, ''),
+          secure: false
+        },
         [env.VITE_APP_BASE_API]: {
           target: 'http://47.96.251.128:25010',
           changeOrigin: true,
           ws: true,
           rewrite: (path) => path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')
-        },
-        '/api/weather': {
-          target: 'https://api.openweathermap.org', // 目标接口域名
-          changeOrigin: true, // 允许跨域
-          rewrite: (path) => path.replace(/^\/api\/weather/, '') // 去掉代理前缀
         }
       }
     },

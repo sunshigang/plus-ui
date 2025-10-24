@@ -169,8 +169,12 @@
         <el-table-column label="创建时间" align="center" prop="createTime" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="230">
           <template #default="scope">
+            <!-- <el-tooltip content="修改" placement="top">
+              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+                v-hasPermi="['system:info:edit']"></el-button>
+            </el-tooltip> -->
             <!-- 获取当前登录用户角色 -->
-            <template v-if="userDept === '建设单位'">
+            <template v-if="userDept === '建设公司'">
               <!-- 建设单位操作按钮逻辑 -->
               <el-tooltip content="信息填报" placement="top" v-if="scope.row.status === '填报中'">
                 <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
@@ -204,6 +208,17 @@
                   v-hasPermi="['system:info:audit']"></el-button>
               </el-tooltip>
               <el-tooltip content="查看" placement="top" v-if="scope.row.status !== '管委会通过'">
+                <el-button link type="primary" icon="View" @click="handleView(scope.row)"
+                  v-hasPermi="['system:info:view']"></el-button>
+              </el-tooltip>
+            </template>
+            <!-- 省林业局操作逻辑 -->
+            <template v-if="userDept === '省林业局'">
+              <el-tooltip content="审核" placement="top" v-if="scope.row.status === '林业局通过'">
+                <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
+                  v-hasPermi="['system:info:audit']"></el-button>
+              </el-tooltip>
+              <el-tooltip content="查看" placement="top" v-if="scope.row.status !== '林业局通过'">
                 <el-button link type="primary" icon="View" @click="handleView(scope.row)"
                   v-hasPermi="['system:info:view']"></el-button>
               </el-tooltip>
@@ -876,6 +891,7 @@
 <script setup name="Info" lang="ts">
 import { listInfo, getInfo, stageInfo, delInfo, addInfo, updateInfo, gwhApprove, lyjApprove } from '@/api/project/normal/index';
 import { getUserProfile } from '@/api/system/user/index';
+import { getInfo as getUserInfo } from '@/api/login';
 import { delOss, listByIds } from '@/api/system/oss';
 import { InfoVO, InfoQuery, InfoForm, AuditData } from '@/api/project/normal/types';
 import { UserInfo } from '@/api/system/user/types';
@@ -1010,21 +1026,47 @@ const auditForm = reactive({
 const auditFormRef = ref<ElFormInstance>();
 
 // 判断是否可以审核
-const canAudit = (row: InfoForm) => {
-  const res = getUserProfile();
-  console.log('canAudit,res', res)
-  // 获取当前登录用户角色
-  // const userRole = proxy?.store.getters.role;
-  // console.log('canAudit,userRole', userRole)
-  // // 1. 管委会用户：只能审核“待审核”或“管委会已驳回后重新提交”的项目
-  // if (userRole === 'management' && ['待审核', '管委会已驳回'].includes(row.status)) {
-  //   return true;
-  // }
-  // // 2. 市林业局用户：只能审核“管委会已通过”且未进行过二次审核的项目
-  // if (userRole === 'forestry' && row.managementApprovalStatus === '通过' && !row.forestryApprovalStatus) {
-  //   return true;
-  // }
+const canAudit = async (row: InfoForm) => {
+  try {
+    const res = await getUserInfo();
+    if (!res || !res.data || !res.data.roles || res.data.roles.length === 0) {
+      console.error('用户角色信息无效');
+      return false;
+    }
+    const userRole = res.data.roles[0];
+    console.log('canAudit,res', userRole);
+
+    // 后续权限判断逻辑
+    if (userRole === 'mca' && ['待审核', '管委会已驳回'].includes(row.status)) {
+      return true;
+    } else if (userRole === 'constructor' && row.status === '填报中') {
+      return true;
+    } else if (userRole === 'clb_audit' && row.managementApprovalStatus === '通过' && !row.forestryApprovalStatus) {
+      return true;
+    } else if (userRole === 'plb_approve' && row.status === '省林业局待审核') {
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error('获取用户角色失败：', err);
+    return false;
+  }
 };
+// const canAudit = (row: InfoForm) => {
+//   const res = getUserInfo();
+//   console.log('canAudit,res', res)
+//   // 获取当前登录用户角色
+//   // const userRole = proxy?.store.getters.role;
+//   // console.log('canAudit,userRole', userRole)
+//   // // 1. 管委会用户：只能审核“待审核”或“管委会已驳回后重新提交”的项目
+//   // if (userRole === 'management' && ['待审核', '管委会已驳回'].includes(row.status)) {
+//   //   return true;
+//   // }
+//   // // 2. 市林业局用户：只能审核“管委会已通过”且未进行过二次审核的项目
+//   // if (userRole === 'forestry' && row.managementApprovalStatus === '通过' && !row.forestryApprovalStatus) {
+//   //   return true;
+//   // }
+// };
 
 // 修改审核相关方法，区分一次审批和二次审批
 const handleAudit = async (row: InfoForm) => {
@@ -1180,9 +1222,9 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
     // 准备审核数据
     const auditData: AuditData = {
       projectId: auditForm.projectId,
-      auditResult: result,
-      feedback: auditForm.feedback,
-      feedbackFiles: listToString(feedbackFileList.value),
+      approveResult: result,
+      approvalReason: auditForm.feedback,
+      approvalAttachment: listToString(feedbackFileList.value),
       auditType: auditForm.auditType // 区分审批类型
     };
 
@@ -1761,6 +1803,7 @@ const temporarilyForm = () => {
     if (valid) {
       buttonLoading.value = true;
       try {
+        form.value.status = '填报中';
         await stageInfo(form.value);
         proxy?.$modal.msgSuccess("暂存成功");
         dialog.visible = false;
@@ -1778,14 +1821,22 @@ const submitForm = () => {
   infoFormRef.value?.validate(async (valid: boolean) => {
     if (valid) {
       buttonLoading.value = true;
-      if (form.value.id) {
-        await updateInfo(form.value).finally(() => buttonLoading.value = false);
-      } else {
-        await addInfo(form.value).finally(() => buttonLoading.value = false);
+      try {
+        // 关键：设置状态为“填报中”
+        form.value.status = '填报中';
+        if (form.value.id) {
+          await updateInfo(form.value);
+        } else {
+          await addInfo(form.value);
+        }
+        proxy?.$modal.msgSuccess("操作成功");
+        dialog.visible = false;
+        await getList();
+      } catch (err) {
+        proxy?.$modal.msgError("操作失败：" + (err as Error).message || "未知错误");
+      } finally {
+        buttonLoading.value = false;
       }
-      proxy?.$modal.msgSuccess("操作成功");
-      dialog.visible = false;
-      await getList();
     }
   });
 }
@@ -1871,8 +1922,14 @@ onMounted(async () => { // 注意添加async关键字
     console.log('当前用户部门：', userDept.value);
 
     // 根据部门设置默认查询条件（例如：市林业局默认看“管委会通过”的项目）
-    if (userDept.value === '市林业局') {
+    if (userDept.value === '建设公司') {
+      queryParams.value.status = '填报中';
+    } else if (userDept.value === '管委会') {
+      queryParams.value.status = '管委会待审核';
+    } else if (userDept.value === '市林业局') {
       queryParams.value.status = '管委会通过';
+    } else if (userDept.value === '省林业局') {
+      queryParams.value.status = '林业局通过';
     }
 
     // 加载项目列表
