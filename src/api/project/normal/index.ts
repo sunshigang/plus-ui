@@ -50,6 +50,13 @@ export const updateInfo = (data: InfoForm) => {
     data: data
   });
 };
+export const submitInfo = (data: InfoForm) => {
+  return request({
+    url: '/project/submit',
+    method: 'post',
+    data: data
+  });
+};
 
 /**
  * 删除【请填写功能名称】

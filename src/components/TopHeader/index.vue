@@ -167,7 +167,7 @@ const loginOut = () => {
         position: absolute;
         width: 5rem;
         height: 5rem;
-        right: 20%;
+        right: 22%;
         top: 0%;
         background: url(../../static/image/left/sceneRoaming.png) no-repeat;
         background-size: cover;

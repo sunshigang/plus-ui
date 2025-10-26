@@ -43,7 +43,7 @@
     left: 36%;
     font-family: 'PangMenZhenDao';
     font-weight: normal;
-    font-size: 3rem;
+    font-size: 3.5rem;
     color: #FDFFE5;
     text-align: left;
     font-style: normal;

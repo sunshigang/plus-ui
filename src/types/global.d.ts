@@ -27,6 +27,7 @@ declare global {
      * 是否显示
      */
     visible: boolean;
+    onClose?: () => void; // 新增 onClose 回调属性
   }
 
   declare interface UploadOption {

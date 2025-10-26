@@ -448,8 +448,6 @@ export interface AuditData {
   approveResult: '通过' | '驳回';
   approvalReason: string;
   approvalAttachment: string;
-  auditType: 'forestry' | 'management';
-
 }
 
 
