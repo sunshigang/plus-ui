@@ -43,14 +43,14 @@
     left: 36%;
     font-family: 'PangMenZhenDao';
     font-weight: normal;
-    font-size: 3.5rem;
+    font-size: 4rem;
     color: #FDFFE5;
     text-align: left;
     font-style: normal;
-    background: radial-gradient(0deg,#FFFFFF 15%,#F3EFAE 100%);
+    background: radial-gradient(0deg, #FFFFFF 15%, #F3EFAE 100%);
     line-height: 5.1rem;
     text-align: center;
-    
+
 }
 
 .bottom {

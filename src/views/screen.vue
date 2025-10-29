@@ -63,7 +63,7 @@ const sendMsgUE = (data) => {
         return;
     }
     try {
-        iframeRef.value.contentWindow.postMessage(data, "*");
+        iframeRef.value.contentWindow.postMessage(JSON.stringify(data), "*");
     } catch (error) {
         console.error('发送iframe消息失败（可能是跨域问题）', error, data);
     }
@@ -72,53 +72,42 @@ const sendMsgUE = (data) => {
  * 接送其他页面发送UE消息
  */
 //备注信息弹窗
-function convertCoordinates (coordsArray) {
-    return coordsArray.map(coord => `${coord[1]},${coord[0]},0`);
+function transformWKT (wktStr) {
+    const arr = wktStr.split(',');
+    const resultArr = [];
+
+    // 判断数组长度是否为偶数且至少有两个元素
+    if (arr.length === 2) {
+        // 只有一组经纬度，直接加0
+        resultArr.push(`${arr[0]},${arr[1]},0`);
+    } else {
+        // 多组经纬度，按之前逻辑处理
+        for (let i = 0; i < arr.length; i += 2) {
+            const lat = arr[i];
+            const lon = arr[i + 1];
+            resultArr.push(`${lon},${lat},0`);
+        }
+    }
+
+    return resultArr;
 }
-bus.on('add-note', data => {
-    console.log("🚀 ~ data:", data.wkt)
-
-    if (data.type == 'point') {
-        const wktStr = `${data.wkt[0]},${data.wkt[1]},0`;
-        sendMsgUE({
-            "Command": "CreateVectorLayer_Point",
-            "Args": {
-                "ID": data.id,
-                "Name": data.layerName,
-                "CoordType": 0,
-                "Locations": [wktStr]
-            }
-        });
-    } else if (data.type == 'polyline') {
-        //data.wkt=[ [28.9273970470134, 120.18830537796022],[28.926134052715568, 120.18957674503328],[28.92570209574455, 120.18750071525575],[28.926833631383644, 120.1869320869446]]
-        data.wkt = convertCoordinates(data.wkt);
-        sendMsgUE({
-            "Command": "CreateVectorLayer_Line",
-            "Args": {
-                "ID": data.id,
-                "Color": "FF0000FF",
-                "Size": 1.0,
-                "CoordType": 0,
-                "Locations": data.wkt
-            }
-        });
-    } else {
-        data.wkt = convertCoordinates(data.wkt);
-        sendMsgUE({
-            "Command": "CreateVectorLayer_Area",
-            "Args": {
-                "ID": data.id,
-                "Color": "FFB500FF",
-                "CoordType": 0,
-                "Locations": data.wkt
-            }
-        });
-    }
-})
+let dataWkt = []
 bus.on('remarkMessage', data => {
-    console.log("🚀 ~ data:", data)
+    dataWkt = transformWKT(data.wkt);
     if (data.type == 'point') {
         if (data.checked) {
+            console.log("🚀 ~ data.wkt:", data.wkt)
+            console.log("🚀 ~ data.layerName:", data.id)
+            console.log("🚀 ~ data.layerName:", data.layerName)
+            sendMsgUE({
+                "Command": "CreateVectorLayer_Point",
+                "Args": {
+                    "ID": data.id,
+                    "Name": data.layerName,
+                    "CoordType": 0,
+                    "Locations": dataWkt
+                }
+            });
             sendMsgUE({
                 "Command": "ShowVectorLayer",
                 "Args": {
@@ -140,6 +129,16 @@ bus.on('remarkMessage', data => {
     } else if (data.type == 'polyline') {
         if (data.checked) {
             sendMsgUE({
+                "Command": "CreateVectorLayer_Line",
+                "Args": {
+                    "ID": data.id,
+                    "Color": "FF0000FF",
+                    "Size": 1.0,
+                    "CoordType": 0,
+                    "Locations": dataWkt
+                }
+            });
+            sendMsgUE({
                 "Command": "ShowVectorLayer",
                 "Args": {
                     "ID": data.id,
@@ -159,6 +158,15 @@ bus.on('remarkMessage', data => {
         }
     } else {
         if (data.checked) {
+            sendMsgUE({
+                "Command": "CreateVectorLayer_Area",
+                "Args": {
+                    "ID": data.id,
+                    "Color": "FFB500FF",
+                    "CoordType": 0,
+                    "Locations": dataWkt
+                }
+            });
             sendMsgUE({
                 "Command": "ShowVectorLayer",
                 "Args": {
@@ -180,10 +188,7 @@ bus.on('remarkMessage', data => {
     }
 
 })
-// 搜索
-bus.on('search-relic', data => {
-    console.log('search-relic', data)
-})
+
 // 2. 简化cultureTypeMessage事件
 bus.on('cultureTypeMessage', data => {
     const poiType = cultureTypeMap[data.id];
@@ -207,67 +212,73 @@ bus.on('scene-roaming-clicked', data => {
     console.log('scene-roaming-clicked', data)
     if (data) {
         sendMsgUE({
-            "Command": "ShowVectorLayer",
+            "Command": "StartRoaming",
             "Args": {
-                "ID": "Area1",
-                "Show": true,
-                "Type": "Area"
+                "ID": "场景漫游",
+                "State": "Start"
             }
         });
         sendMsgUE({
-            "Command": "ShowVectorLayer",
+            "Command": "OnStartRoaming",
             "Args": {
-                "ID": "Line1",
-                "Show": true,
-                "Type": "Line"
-            }
-        });
-        sendMsgUE({
-            "Command": "ShowVectorLayer",
-            "Args": {
-                "ID": "Point1",
-                "Show": true,
-                "Type": "Point"
+                "ID": "场景漫游",
+                "State": "Start"
             }
         });
     } else {
         sendMsgUE({
-            "Command": "ShowVectorLayer",
+            "Command": "OnStartRoaming",
             "Args": {
-                "ID": "Area1",
-                "Show": false,
-                "Type": "Area"
-            }
-        });
-        sendMsgUE({
-            "Command": "ShowVectorLayer",
-            "Args": {
-                "ID": "Line1",
-                "Show": false,
-                "Type": "Line"
-            }
-        });
-        sendMsgUE({
-            "Command": "ShowVectorLayer",
-            "Args": {
-                "ID": "Point1",
-                "Show": false,
-                "Type": "Point"
+                "ID": "场景漫游",
+                "State": "Stop"
             }
         });
     }
 })
+bus.on('attraction-body-clicked', data => {
+    console.log('attraction-body-clicked', data)
+    sendMsgUE({
+        "Command": "SwitchCamera",
+        "Args": {
+            "ID": data,
+            "Duration": 1.0
+        }
+    });
+});
 const handleVectorLayer = (data) => {
     mapSwitch.value = !data
 };
 const handleSchemeReview = (data) => {
     if (data) mapSwitch.value = true
 };
-const handleMessage = (e) => {
-    console.log(e.data)
-};
+
 const handleSearchRelic = (data) => {
-    console.log('search-relic', data)
+    const hasParking = data.includes('停车场');
+    if (hasParking) {
+        sendMsgUE({
+            "Command": "FocusPOI",
+            "Args": {
+                "ID": `ParkingPOI_${data}`, // 假设停车场对应ScenePOI前缀
+                "Type": "Parking"
+            }
+        });
+    } else {
+        // 不包含时，发送原有两个命令
+        sendMsgUE({
+            "Command": "FocusPOI",
+            "Args": {
+                "ID": `ScenePOI_${data}`,
+                "Type": "ALL"
+            }
+        });
+        sendMsgUE({
+            "Command": "FocusPOI",
+            "Args": {
+                "ID": `CulturePOI_${data}`,
+                "Type": "ALL"
+            }
+        });
+    }
 };
 const handleFunctionPanel = (data) => {
     if (data.index === 0) {
@@ -289,19 +300,6 @@ const handleFunctionPanel = (data) => {
             });
         }
     } else if (data.index === 1) {
-        // 加载并下载模型到场景
-        // sendMsgUE({
-        //     "Command": "LoadAssets",
-        //     "Args": {
-        //         "ID": "Assets1",
-        //         "Name": "gelou.pak",
-        //         "State": 0,
-        //         "Angle": 0,
-        //         "CoordType": 0,
-        //         "Location": "120.18821,28.923133,0",
-        //         "Scale": "1,1,1"
-        //     }
-        // });
         if (data.isSelected) {
             sendMsgUE({
                 "Command": "SwitchSplitScreenState",
@@ -319,12 +317,14 @@ const handleFunctionPanel = (data) => {
         }
     } else if (data.index === 2) {
         if (data.isSelected) {
-            sendMsgUE({
-                "Command": "SwitchSpaceTime",
-                "Args": {
-                    "Type": "2025"
-                }
-            });
+            bus.on('time-change', year => {
+                sendMsgUE({
+                    "Command": "SwitchSpaceTime",
+                    "Args": {
+                        "Type": year.toString()
+                    }
+                });
+            })
         } else {
             sendMsgUE({
                 "Command": "SwitchSpaceTime",
@@ -342,12 +342,7 @@ onMounted(() => {
     bus.on('scheme-review-clicked', handleSchemeReview);
     bus.on('search-relic', handleSearchRelic);
     bus.on('function-panel-clicked', handleFunctionPanel);
-    window.addEventListener('message', handleMessage);
-    // 初始化发送主镜头指令
-    sendMsgUE({
-        "Command": "SwitchCamera",
-        "Args": { "ID": "Main", "Duration": 1.0 }
-    });
+
 
 
 
@@ -360,9 +355,8 @@ onUnmounted(() => {
     bus.off('search-relic', handleSearchRelic);
     bus.off('cultureTypeMessage'); // 简化事件无需命名函数，直接off
     bus.off('attractionTypeMessage');
-    bus.off('scene-roaming-clicked');
+    // bus.off('scene-roaming-clicked');
     bus.off('function-panel-clicked', handleFunctionPanel);
-    window.removeEventListener('message', handleMessage);
 });
 
 </script>

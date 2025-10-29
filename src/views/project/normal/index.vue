@@ -5,7 +5,7 @@
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="建设项目名称"  prop="projectName">
+            <el-form-item label="建设项目名称" prop="projectName">
               <el-input v-model="queryParams.projectName" placeholder="请输入建设项目名称" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
@@ -165,10 +165,10 @@
         <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
         <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="180" >
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="180">
           <template #default="scope">
-              <el-button link type="primary" @click="handleView(scope.row)"
-                v-hasPermi="['system:info:view']">详情查看</el-button>
+            <el-button link type="primary" @click="handleView(scope.row)"
+              v-hasPermi="['system:info:view']">详情查看</el-button>
             <el-tooltip content="修改" placement="top">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                 v-hasPermi="['system:info:edit']"></el-button>
@@ -190,18 +190,18 @@
     </el-card>
     <!-- 添加或修改【请填写功能名称】对话框 -->
     <el-dialog :title="dialog.title" v-model="dialog.visible" width="1000px" append-to-body>
-      <el-form ref="infoFormRef" :model="form"  label-width="178px">
+      <el-form ref="infoFormRef" :model="form" label-width="178px">
         <el-form-item label="建设项目名称" prop="projectName">
-          <el-input v-model="form.projectName" placeholder="请输入建设项目名称" :disabled="disabled"/>
+          <el-input v-model="form.projectName" placeholder="请输入建设项目名称" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="项目代码" prop="projectCode">
-          <el-input v-model="form.projectCode" placeholder="请输入项目代码" :disabled="disabled"/>
+          <el-input v-model="form.projectCode" placeholder="请输入项目代码" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="所属行政区划" prop="administrativeRegion">
-          <el-input v-model="form.administrativeRegion" placeholder="请输入所属行政区划" :disabled="disabled"/>
+          <el-input v-model="form.administrativeRegion" placeholder="请输入所属行政区划" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
-          <el-input v-model="form.scenicArea" placeholder="请输入涉及风景名胜区名称" :disabled="disabled"/>
+          <el-input v-model="form.scenicArea" placeholder="请输入涉及风景名胜区名称" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="申请人类型" prop="applicantType">
           <el-radio-group v-model="form.applicantType" :disabled="disabled">
@@ -210,34 +210,34 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="建设单位名称" prop="constructionUnit">
-          <el-input v-model="form.constructionUnit" placeholder="请输入建设单位名称" :disabled="disabled"/>
+          <el-input v-model="form.constructionUnit" placeholder="请输入建设单位名称" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="组织机构代码" prop="organizationCode">
-          <el-input v-model="form.organizationCode" placeholder="请输入组织机构代码" :disabled="disabled"/>
+          <el-input v-model="form.organizationCode" placeholder="请输入组织机构代码" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="经办人" prop="contactPerson">
-          <el-input v-model="form.contactPerson" placeholder="请输入经办人" :disabled="disabled"/>
+          <el-input v-model="form.contactPerson" placeholder="请输入经办人" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="经办人联系方式" prop="contactPhone">
-          <el-input v-model="form.contactPhone" placeholder="请输入经办人联系方式" :disabled="disabled"/>
+          <el-input v-model="form.contactPhone" placeholder="请输入经办人联系方式" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="保护等级等" prop="protectionLevel">
-          <el-input v-model="form.protectionLevel" placeholder="请输入保护等级等" :disabled="disabled"/>
+          <el-input v-model="form.protectionLevel" placeholder="请输入保护等级等" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="拟选位置" prop="projectPurpose">
-          <el-input v-model="form.projectPurpose" placeholder="请输入拟选位置" :disabled="disabled"/>
+          <el-input v-model="form.projectPurpose" placeholder="请输入拟选位置" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="建设项目总投资（万元）" prop="projectInvestment">
-          <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" :disabled="disabled"/>
+          <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="规划依据" prop="planningBasis">
-          <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容":disabled="disabled" />
+          <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="建设内容涉及规模">
-          <editor v-model="form.constructionContent" :min-height="192" :disabled="disabled"/>
-        </el-form-item>
+          <editor v-model="form.constructionContent" :min-height="192" />
+        </el-form-item>·
         <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-          <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" :disabled="disabled"/>
+          <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" :disabled="disabled" />
         </el-form-item>
         <el-form-item label="选址方案" prop="locationPlan">
           <!-- 选址方案专属上传组件 -->
@@ -441,7 +441,7 @@
           <el-button link type="primary" icon="Download">模型规范与模板下载</el-button>
         </el-form-item>
         <el-form-item label="模型坐标" prop="modelCoordinate">
-          <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled"/>
+          <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -871,7 +871,7 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
   }
 });
 
-const { queryParams, form ,rules} = toRefs(data);
+const { queryParams, form, rules } = toRefs(data);
 
 /** 查询【请填写功能名称】列表 */
 const getList = async () => {
@@ -937,17 +937,11 @@ const handleAdd = () => {
   reset();
   dialog.visible = true;
   dialog.title = "添加一般项目信息";
-   disabled.value = false; // 启用表单
+  disabled.value = false; // 启用表单
   isViewMode.value = false; // 非查看模式
 }
-// 详情查看
-const handleView = async (row: InfoVO) => {
-  // 这里可以复用修改的逻辑，但设置表单为只读
-  reset();
-  const res = await getInfo(row.id);
-  Object.assign(form.value, res.data);
-
-  // 加载文件列表（与handleUpdate中的文件加载逻辑相同）
+const loadAllFileLists = async (projectData: InfoForm) => {
+  // ---------- 1. 选址方案 ----------
   if (form.value.locationPlan) {
     const locationPlanOssIds = form.value.locationPlan.split(',').join(',');
     const locationPlanRes = await listByIds(locationPlanOssIds);
@@ -958,7 +952,98 @@ const handleView = async (row: InfoVO) => {
       uid: new Date().getTime() + Math.random()
     }));
   }
-  // ... 其他文件列表的加载逻辑，与handleUpdate相同
+  // ---------- 2. 专家评审意见（新增，原遗漏） ----------
+  if (form.value.expertOpinions) {
+    const expertOpinionsOssIds = form.value.expertOpinions.split(',').join(',');
+    const expertOpinionsRes = await listByIds(expertOpinionsOssIds);
+    expertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 3. 会议材料（新增，原遗漏） ----------
+  if (form.value.meetingMaterials) {
+    const meetingMaterialsOssIds = form.value.meetingMaterials.split(',').join(',');
+    const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
+    meetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 4. 选址方案核准申报表（新增，原遗漏） ----------
+  if (form.value.siteSelectionReport) {
+    const siteSelectionReportOssIds = form.value.siteSelectionReport.split(',').join(',');
+    const siteSelectionReportRes = await listByIds(siteSelectionReportOssIds);
+    siteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 5. 立项文件（新增，原遗漏） ----------
+  if (form.value.approvalDocuments) {
+    const approvalDocumentsOssIds = form.value.approvalDocuments.split(',').join(',');
+    const approvalDocumentsRes = await listByIds(approvalDocumentsOssIds);
+    approvalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 6. 项目用地红线图（新增，原遗漏） ----------
+  if (form.value.projectRedLine) {
+    const projectRedLineOssIds = form.value.projectRedLine.split(',').join(',');
+    const projectRedLineRes = await listByIds(projectRedLineOssIds);
+    projectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 7. 项目红线矢量数据（新增，原遗漏） ----------
+  if (form.value.redLineCoordinate) {
+    const redLineCoordinateOssIds = form.value.redLineCoordinate.split(',').join(',');
+    const redLineCoordinateRes = await listByIds(redLineCoordinateOssIds);
+    redLineCoordinateFileList.value = redLineCoordinateRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+
+  // ---------- 8. 项目三维模型（新增，原遗漏） ----------
+  if (form.value.threeDModel) {
+    const threeDModelOssIds = form.value.threeDModel.split(',').join(',');
+    const threeDModelRes = await listByIds(threeDModelOssIds);
+    threeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+};
+
+// 详情查看
+const handleView = async (row: InfoVO) => {
+  // 这里可以复用修改的逻辑，但设置表单为只读
+  reset();
+  const res = await getInfo(row.id);
+  Object.assign(form.value, res.data);
+  await loadAllFileLists(form.value);
 
   dialog.visible = true;
   dialog.title = "查看一般项目信息";
@@ -993,103 +1078,7 @@ const handleUpdate = async (row?: InfoVO) => {
   const _id = row?.id || ids.value[0];
   const res = await getInfo(_id);
   Object.assign(form.value, res.data);
-
-  // ---------- 选址方案 ----------
-  if (form.value.locationPlan) {
-    const locationPlanOssIds = form.value.locationPlan.split(',').join(',');
-    const locationPlanRes = await listByIds(locationPlanOssIds);
-    locationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 专家评审意见 ----------
-  if (form.value.expertOpinions) {
-    const expertOpinionsOssIds = form.value.expertOpinions.split(',').join(',');
-    const expertOpinionsRes = await listByIds(expertOpinionsOssIds);
-    expertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 会议材料 ----------
-  if (form.value.meetingMaterials) {
-    const meetingMaterialsOssIds = form.value.meetingMaterials.split(',').join(',');
-    const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
-    meetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 选址方案核准申报表 ----------
-  if (form.value.siteSelectionReport) {
-    const siteSelectionReportOssIds = form.value.siteSelectionReport.split(',').join(',');
-    const siteSelectionReportRes = await listByIds(siteSelectionReportOssIds);
-    siteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 立项文件 ----------
-  if (form.value.approvalDocuments) {
-    const approvalDocumentsOssIds = form.value.approvalDocuments.split(',').join(',');
-    const approvalDocumentsRes = await listByIds(approvalDocumentsOssIds);
-    approvalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 项目用地红线图 ----------
-  if (form.value.projectRedLine) {
-    const projectRedLineOssIds = form.value.projectRedLine.split(',').join(',');
-    const projectRedLineRes = await listByIds(projectRedLineOssIds);
-    projectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 项目红线矢量数据 ----------
-  if (form.value.redLineCoordinate) {
-    const redLineCoordinateOssIds = form.value.redLineCoordinate.split(',').join(',');
-    const redLineCoordinateRes = await listByIds(redLineCoordinateOssIds);
-    redLineCoordinateFileList.value = redLineCoordinateRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // ---------- 项目三维模型 ----------
-  if (form.value.threeDModel) {
-    const threeDModelOssIds = form.value.threeDModel.split(',').join(',');
-    const threeDModelRes = await listByIds(threeDModelOssIds);
-    threeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
+  await loadAllFileLists(form.value);
   dialog.visible = true;
   dialog.title = "修改一般项目信息";
   disabled.value = false; // 启用表单

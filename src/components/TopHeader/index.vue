@@ -1,7 +1,6 @@
 <template>
     <div id="top-header">
         <span class="time">{{ currentTime }}</span>
-        <div class="sceneRoaming" @click="clickSceneRoaming"></div>
         <div class="top-right">
             <img class="todayWeatherIcon" :src="weather.imgPath" />
             <div v-if="weather.main == 'Clouds'" class="todayWeatherMain">阴天</div>
@@ -10,10 +9,22 @@
             <div v-if="weather.main == 'Snow'" class="todayWeatherMain">雪天</div>
             <div class="todayWeatherTemp">{{ weather.temp }}°C</div>
         </div>
-        <!-- <div class="loginOutPanel" @mouseenter="showLogout = true" @mouseleave="showLogout = fasle">
-            <div class="loginOutLabel"></div>
-            <div v-if="showLogout" @click="loginOut" class="loginOut">退出</div>
-        </div> -->
+    </div>
+    <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
+        v-hasPermi="['screen:function:roam']"></div>
+    <div v-show="sceneRoamingShow" class="attractionBody">
+        <div class="mainShot" @click="handleShotClick('mainShot', 'Main')"
+            :class="{ mainShoted: activeShotId === 'mainShot' }">主镜头
+        </div>
+        <div class="wuFengShot" @click="handleShotClick('wuFengShot', 'WFSY_00001')"
+            :class="{ wuFengShoted: activeShotId === 'wuFengShot' }">
+            五峰书院</div>
+        <div class="filmShot" @click="handleShotClick('filmShot', 'YSC_00001')"
+            :class="{ filmShoted: activeShotId === 'filmShot' }">石鼓寮影视城
+        </div>
+        <div class="huGongShot" @click="handleShotClick('huGongShot', 'HGC_00001')"
+            :class="{ huGongShoted: activeShotId === 'huGongShot' }">胡公祠
+        </div>
     </div>
 </template>
 
@@ -30,6 +41,8 @@ const { proxy } = getCurrentInstance()
 const data = reactive({
     currentTime: "2025.06.01 16:46:00", // 一个空格
 });
+const sceneRoamingShow = ref(true)
+const activeShotId = ref('');
 const weatherData = reactive({
     weather: {
         imgPath: '', // 初始为空，避免渲染错误
@@ -46,9 +59,26 @@ const sceneRoamingStart = ref(false)
 const clickSceneRoaming = () => {
     // 触发事件总线，通知其他组件
     sceneRoamingStart.value = !sceneRoamingStart.value
+    console.log("🚀 ~ clickSceneRoaming ~ sceneRoamingStart.value:", sceneRoamingStart.value)
     bus.emit('scene-roaming-clicked', sceneRoamingStart.value)
 }
+const handleShotClick = (shotId, shotName) => {
+    activeShotId.value = shotId; // 更新当前选中的按钮ID（控制样式）
+    bus.emit('attraction-body-clicked', shotName); // 发送总线事件，传入镜头名称
+};
 onMounted(() => {
+    bus.on('scheme-review-clicked', data => {
+        if (data) {
+            sceneRoamingShow.value = true
+        }
+    })
+    bus.on('vector-layer-clicked', data => {
+        if (data) {
+            sceneRoamingShow.value = false
+        } else {
+            sceneRoamingShow.value = true
+        }
+    })
     getCurrentTime();
     // 1. 时间更新定时器：赋值给 timer
     timer = setInterval(() => {
@@ -162,19 +192,6 @@ const loginOut = () => {
 
     }
 
-    .sceneRoaming {
-        pointer-events: auto;
-        position: absolute;
-        width: 5rem;
-        height: 5rem;
-        right: 22%;
-        top: 0%;
-        background: url(../../static/image/left/sceneRoaming.png) no-repeat;
-        background-size: cover;
-        z-index: 2;
-        cursor: pointer;
-    }
-
     .top-right {
         position: absolute;
         right: 12%;
@@ -214,5 +231,103 @@ const loginOut = () => {
 .el-dropdown:focus-visible,
 .el-tooltip__trigger:focus-visible {
     outline: 0px !important;
+}
+
+.sceneRoaming {
+    pointer-events: auto;
+    position: absolute;
+    width: 8.6rem;
+    height: 8.7rem;
+    left: 11%;
+    top: 7%;
+    background: url(../../static/image/left/sceneRoaming.png) no-repeat;
+    background-size: cover;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.attractionBody {
+    pointer-events: auto;
+    position: absolute;
+    width: 37rem;
+    height: 3.5rem;
+    left: 78%;
+    top: 9%;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .mainShot {
+        cursor: pointer;
+        width: 7.2rem;
+        height: 3.2rem;
+        background: url(../../static/image/home/lens.png) no-repeat;
+        background-size: 100% 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: white
+    }
+
+    .mainShoted {
+        background: url(../../static/image/home/lensed.png) no-repeat;
+        background-size: 100% 100%;
+    }
+
+    .wuFengShot {
+        cursor: pointer;
+        width: 7.2rem;
+        height: 3.2rem;
+        background: url(../../static/image/home/lens.png) no-repeat;
+        background-size: 100% 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: white
+    }
+
+    .wuFengShoted {
+        background: url(../../static/image/home/lensed.png) no-repeat;
+        background-size: 100% 100%;
+    }
+
+    .filmShot {
+        cursor: pointer;
+        width: 10rem;
+        height: 3.2rem;
+        background: url(../../static/image/home/lens.png) no-repeat;
+        background-size: 100% 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: white
+    }
+
+    .filmShoted {
+        background: url(../../static/image/home/lensed.png) no-repeat;
+        background-size: 100% 100%;
+    }
+
+    .huGongShot {
+        cursor: pointer;
+        width: 7.2rem;
+        height: 3.2rem;
+        background: url(../../static/image/home/lens.png) no-repeat;
+        background-size: 100% 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        color: white
+    }
+
+    .huGongShoted {
+        background: url(../../static/image/home/lensed.png) no-repeat;
+        background-size: 100% 100%;
+    }
 }
 </style>

@@ -52,9 +52,9 @@
 
 <script setup>
 import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, nextTick } from 'vue'
-// import { getRelicInfoById } from "../../api/map"
+import { addMarks } from "./draw.js";
 import bus from '../../libs/eventbus'
-const idCounter = ref(1);
+import { ElMessage } from 'element-plus';
 const layerName = ref(null)
 const remarkContents = ref(null)
 const popupIsShow = ref(false)
@@ -76,29 +76,27 @@ const cleanPopup = () => {
 }
 const confirmPopup = () => {
     if (!layerName.value) {
-        alert('请输入名称')
+        ElMessage.warning('请输入名称');
+        return; // 阻止后续执行
     } else {
-        let uniqueId = '';
-        if (popupData.type == 'point') {
-            uniqueId = `Point${idCounter.value}`;
-        } else if (popupData.type == 'polyline') {
-            uniqueId = `Line${idCounter.value}`;
-        } else {
-            uniqueId = `Area${idCounter.value}`;
-        }
-        bus.emit('add-note', {
-            id: uniqueId,
+        addMarks({
             layerName: layerName.value,
-            remarkContents: remarkContents.value,
-            wkt: popupData.wkt,
+            remarkcontents: remarkContents.value,
+            wkt: popupData.wkt.join(','),
             type: popupData.type,
             area: popupData.area,
             length: popupData.length,
-            checked: false
+            checked:false
+        }).then((res) => {
+            console.log('标注信息保存成功', res);
+            // 新增：显示保存成功提示
+            ElMessage.success('保存成功');
+            cleanPopup() // 保存成功后关闭弹窗
+        }).catch((error) => {
+            console.error('标注信息保存失败', error);
+            // 优化：失败时也显示提示
+            ElMessage.error('保存失败，请重试');
         });
-        // 4. 计数器自增（关键！确保下次ID+1，不重复）
-        idCounter.value++;
-        cleanPopup()
     }
 }
 //弹窗单元数据
@@ -140,6 +138,7 @@ onMounted(() => {
             popupData.wkt = data.coordinates
         }
     })
+
 })
 </script>
 

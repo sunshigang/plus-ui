@@ -1,25 +1,28 @@
 <template>
     <div id="leftSidebar">
         <div class="leftLine"></div>
-        <div :class="schemeReviewStyle == true ? 'schemeReviewSelected' : 'schemeReviewSelect'" @click="clickSchemeReview" v-if="schemeReviewShowHide">
+        <div :class="schemeReviewStyle == true ? 'schemeReviewSelected' : 'schemeReviewSelect'"
+            @click="clickSchemeReview" v-hasPermi="['screen:function:review']">
             <div class="schemeReviewFont">方案审查</div>
         </div>
-        <div class="leftLine1" v-if="schemeReviewShowHide"></div>
-        <div :class="planningAchievementStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'" @click="clickPlanningAchievement">
+        <div class="leftLine1" v-hasPermi="['screen:function:review']"></div>
+        <div :class="planningAchievementStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'"
+            @click="clickPlanningAchievement" v-hasPermi="['screen:function:achievement']">
             <div class="planningAchievementsFont">规划成果</div>
         </div>
-        <div class="leftLine1" v-if="vectorLayerShowHide"></div>
-        <div :class="vectorLayerStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'" @click="clickVectorLayer" v-if="vectorLayerShowHide">
+        <div class="leftLine1" v-hasPermi="['screen:function:achievement']"></div>
+        <div :class="vectorLayerStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'"
+            @click="clickVectorLayer" v-hasPermi="['screen:function:vector']">
             <div class="planningAchievementsFont">矢量图层</div>
         </div>
         <div class="lanternEar"></div>
     </div>
-    <div class="searchBox" v-if="planningAchievementStyle">
+    <div class="searchBox" v-hasPermi="['screen:function:achievement']" v-if="planningAchievementStyle">
         <input v-model="searchInput" class="search-input" placeholder="请输入搜索内容" />
         <!-- 新增：右侧搜索按钮 -->
         <div class="search-btn" @click="handleSearch">搜索</div>
     </div>
-    
+
 </template>
 
 <script setup>
@@ -29,9 +32,8 @@ import bus from '../../libs/eventbus'
 
 const { proxy } = getCurrentInstance()
 // 定义响应式数据
-const schemeReviewStyle = ref(true)
-const schemeReviewShowHide = ref(true)
-const vectorLayerShowHide = ref(true)
+const searchInput = ref('')
+const schemeReviewStyle = ref(false)
 const planningAchievementStyle = ref(false)
 const vectorLayerStyle = ref(false)
 const clickSchemeReview = () => {
@@ -53,10 +55,9 @@ const clickPlanningAchievement = () => {
     vectorLayerStyle.value = false
     // 触发事件总线，通知其他组件
     bus.emit('planning-achievement-clicked', planningAchievementStyle.value)
-    // 可扩展：调用接口获取规划成果数据，更新地图等
-    // getRelicInfoPage().then(response => {
-    //     console.log('获取规划成果数据成功', response)
-    // })
+    if (planningAchievementStyle.value == false) {
+        searchInput.value = ''
+    }
 }
 const clickVectorLayer = () => {
     // 切换矢量图层样式
@@ -65,28 +66,15 @@ const clickVectorLayer = () => {
     vectorLayerStyle.value = !vectorLayerStyle.value
     // 触发事件总线，通知其他组件
     bus.emit('vector-layer-clicked', vectorLayerStyle.value)
-    // 可扩展：调用接口获取矢量图层数据，更新地图等
-    // getRelicInfoPage().then(response => {
-    //     console.log('获取矢量图层数据成功', response)
-    // })
 }
-// 新增：搜索框输入内容（双向绑定）
-const searchInput = ref('')
 
 // 新增：搜索按钮点击事件
 const handleSearch = () => {
     console.log('搜索内容：', searchInput.value)
     bus.emit('search-relic', searchInput.value)
-    // 这里可扩展实际业务逻辑：
-    // 1. 调用接口：如 getRelicInfoPage(searchInput.value) 获取搜索结果
-    // 2. 通过 eventbus 通知地图组件更新：bus.emit('search-relic', searchInput.value)
-    // 3. 弹窗/跳转等交互...
 }
-const clickSceneRoaming = () => {
-    // 触发事件总线，通知其他组件
-    // bus.emit('scene-roaming-clicked')
-}
-onMounted(() => {})
+
+onMounted(() => { })
 </script>
 
 <style lang="scss" scoped>
@@ -100,6 +88,7 @@ onMounted(() => {})
     z-index: 2;
     display: flex;
     flex-direction: column;
+
     .leftLine {
         width: 0.1rem;
         height: 12rem;
@@ -142,6 +131,7 @@ onMounted(() => {})
         font-weight: 400;
         font-size: 2.4rem;
         cursor: pointer;
+
         .schemeReviewFont {
             width: 3.2rem;
             height: 12.3rem;
@@ -159,6 +149,7 @@ onMounted(() => {})
             letter-spacing: 0.4rem;
         }
     }
+
     .schemeReviewSelect {
         cursor: pointer;
         width: 7.3rem;
@@ -233,6 +224,7 @@ onMounted(() => {})
         font-weight: 400;
         font-size: 2.4rem;
         cursor: pointer;
+
         .planningAchievementsFont {
             width: 3.2rem;
             height: 12.3rem;
@@ -250,6 +242,7 @@ onMounted(() => {})
             letter-spacing: 0.4rem;
         }
     }
+
     .planningAchievementSelected {
         width: 7.3rem;
         height: 19rem;
@@ -263,6 +256,7 @@ onMounted(() => {})
         font-weight: 400;
         font-size: 2.4rem;
         cursor: pointer;
+
         .planningAchievementsFont {
             width: 3.2rem;
             height: 12.3rem;
@@ -297,6 +291,7 @@ onMounted(() => {})
         margin-right: auto;
     }
 }
+
 .searchBox {
     pointer-events: auto;
     position: absolute;
@@ -311,16 +306,21 @@ onMounted(() => {})
     align-items: center;
     cursor: pointer;
     z-index: 2;
+
     /* 输入框样式 */
     .search-input {
-        flex: 1; /* 占满剩余空间 */
+        flex: 1;
+        /* 占满剩余空间 */
         height: 60%;
-        margin-left: 3rem; /* 与左侧背景图间距 */
+        margin-left: 3rem;
+        /* 与左侧背景图间距 */
         padding: 0 0.5rem;
         border: none;
         outline: none;
-        background: transparent; /* 透明背景，贴合搜索框底图 */
-        color: #584424; /* 文字白色，适配背景 */
+        background: transparent;
+        /* 透明背景，贴合搜索框底图 */
+        color: #584424;
+        /* 文字白色，适配背景 */
         font-size: 1.6rem;
         font-family: 'SourceHanSansCN-Regular';
         width: 10rem;
@@ -331,7 +331,8 @@ onMounted(() => {})
     .search-btn {
         width: 6rem;
         height: 60%;
-        margin-right: 0.3rem; /* 与右侧间距 */
+        margin-right: 0.3rem;
+        /* 与右侧间距 */
         border-radius: 0.3rem;
         display: flex;
         justify-content: center;
@@ -342,11 +343,13 @@ onMounted(() => {})
         font-family: 'xianglifang';
         cursor: pointer;
         transition: all 0.3s ease;
+
         &:hover {
             color: #fff;
         }
     }
 }
+
 .sceneRoaming {
     pointer-events: auto;
     position: absolute;

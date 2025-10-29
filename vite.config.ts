@@ -27,7 +27,7 @@ export default defineConfig(({ mode, command }) => {
           target: 'https://api.openweathermap.org', // 目标接口域名
           changeOrigin: true, // 允许跨域
           rewrite: (path) => path.replace(/^\/api\/weather/, ''),
-          secure: false
+          // secure: false
         },
         [env.VITE_APP_BASE_API]: {
           target: 'http://47.96.251.128:25010',

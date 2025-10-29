@@ -215,8 +215,13 @@ const startDrawPolygon = () => {
   const handleDoubleClick = () => {
     document.getElementById('map').style.cursor = 'grab';
     // 修正坐标：只删除最后一个临时点（避免删除过多导致坐标不足3个）
-    if (polygonCoordinates.value.length > 3) {
-      polygonCoordinates.value.pop();
+    if (polygonCoordinates.value.length >= 3) {
+      const firstPoint = polygonCoordinates.value[0]; // 首坐标
+      const lastPoint = polygonCoordinates.value.at(-1); // 尾坐标
+      // 若首尾坐标不同，添加首坐标作为尾坐标（实现闭合）
+      if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
+        polygonCoordinates.value.push(firstPoint);
+      }
     }
     map.value.removeLayer(tempLine);
     polygon.enableEdit();
@@ -229,9 +234,15 @@ const startDrawPolygon = () => {
         polygonCoordinates.value.push([e.lat, e.lng]);
       });
       // 移除 Leaflet 自动添加的重复终点（避免面积计算错误）
-      if (polygonCoordinates.value.length > 0 &&
-        polygonCoordinates.value[0].toString() === polygonCoordinates.value.at(-1).toString()) {
-        polygonCoordinates.value.pop();
+      if (polygonCoordinates.value.length >= 3) {
+        const firstPoint = polygonCoordinates.value[0];
+        const lastPoint = polygonCoordinates.value.at(-1);
+        // 移除原有可能的重复尾坐标（避免多层闭合）
+        if (firstPoint[0] === lastPoint[0] && firstPoint[1] === lastPoint[1]) {
+          polygonCoordinates.value.pop();
+        }
+        // 重新添加首坐标作为尾坐标，确保闭合
+        polygonCoordinates.value.push(firstPoint);
       }
       calculatePolygonArea.value = calculateArea(polygonCoordinates.value);
       bus.emit('draw-result', {
@@ -241,7 +252,9 @@ const startDrawPolygon = () => {
         status: startDrawPolygonFunction.value
       });
     });
-
+    console.log("🚀 ~ handleDoubleClick ~ polygonCoordinates.value:", polygonCoordinates.value)
+    console.log("🚀 ~ handleDoubleClick ~ calculatePolygonArea.value.toFixed(3):", calculatePolygonArea.value.toFixed(3))
+    console.log("🚀 ~ handleDoubleClick ~ startDrawPolygonFunction.value:", startDrawPolygonFunction.value)
     // 回传最终数据
     bus.emit('draw-result', {
       type: 'polygon',
@@ -275,18 +288,25 @@ const startDrawPolygon = () => {
   // 鼠标移动更新临时线（原逻辑不变）
   const onMouseMove = evt => {
     if (latlngs.length > 0) {
-      tempLine.setLatLngs([
-        latlngs[0],
-        evt.latlng,
-        latlngs[latlngs.length - 1]
-      ]);
-      // 避免临时线重复添加（优化性能）
+      // -------------------------- 修改：临时线首尾闭合 --------------------------
+      const tempPoints = [...latlngs, [evt.latlng.lat, evt.latlng.lng]];
+      // 若临时点数量≥2，添加首点作为尾点，让临时线显示为闭合状态
+      if (tempPoints.length >= 2) {
+        tempPoints.push(tempPoints[0]);
+      }
+      tempLine.setLatLngs(tempPoints);
+      // -------------------------------------------------------------------------------
+
       if (!map.value.hasLayer(tempLine)) {
         map.value.addLayer(tempLine);
       }
-      polygon.setLatLngs([...latlngs, evt.latlng]);
-      const tempLatlngs = [...latlngs, [evt.latlng.lat, evt.latlng.lng]];
-      calculatePolygonArea.value = calculateArea(tempLatlngs);
+      // 更新多边形的临时坐标（同样确保闭合）
+      const tempPolygonPoints = [...latlngs, [evt.latlng.lat, evt.latlng.lng]];
+      if (tempPolygonPoints.length >= 2) {
+        tempPolygonPoints.push(tempPolygonPoints[0]);
+      }
+      polygon.setLatLngs(tempPolygonPoints);
+      calculatePolygonArea.value = calculateArea(tempPolygonPoints);
     }
   };
 
@@ -297,15 +317,21 @@ const startDrawPolygon = () => {
 
   // 计算面积函数（原逻辑不变，优化重复坐标判断）
   function calculateArea (latlngs) {
-    // 移除重复的终点（Leaflet 可能自动添加，导致计算错误）
+    // 复制数组，避免修改原数据
     const uniqueLatlngs = [...latlngs];
-    if (uniqueLatlngs.length > 3 &&
-      uniqueLatlngs[0].toString() === uniqueLatlngs.at(-1).toString()) {
-      uniqueLatlngs.pop();
+    // 若首尾坐标相同，移除重复的尾坐标（避免面积计算错误）
+    if (uniqueLatlngs.length >= 3) {
+      const firstPoint = uniqueLatlngs[0];
+      const lastPoint = uniqueLatlngs.at(-1);
+      if (firstPoint[0] === lastPoint[0] && firstPoint[1] === lastPoint[1]) {
+        uniqueLatlngs.pop();
+      }
     }
+    // 少于3个点，面积为0
     if (uniqueLatlngs.length < 3) {
       return 0;
     }
+    // 原有面积计算逻辑（保留不变）
     let area = 0;
     for (let i = 0; i < uniqueLatlngs.length; i++) {
       const j = (i + 1) % uniqueLatlngs.length;

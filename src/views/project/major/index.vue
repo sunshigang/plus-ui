@@ -137,7 +137,24 @@
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
         <el-table-column label="涉及风景名胜区名称" align="center" prop="scenicArea" width="150" />
         <el-table-column label="单位或个人" align="center" prop="applicantType" />
-        <el-table-column label="状态" align="center" prop="status" />
+        <el-table-column label="状态" align="center" prop="status" width="150">
+          <template #default="scope">
+            <!-- 彩色圆点：根据status动态切换背景色 -->
+            <span class="status-dot" :style="{
+              backgroundColor: getStatusColor(scope.row.status),
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              marginRight: '6px',
+              verticalAlign: 'middle' // 与文字垂直居中对齐
+            }"></span>
+            <!-- 状态文本 -->
+            <span class="status-text" :style="{ verticalAlign: 'middle' }">
+              {{ scope.row.status }}
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column label="项目类型" align="center" prop="projectType" />
         <el-table-column label="项目用途" align="center" prop="projectUsage" />
         <el-table-column label="建设单位名称" align="center" prop="constructionUnit" width="150" />
@@ -151,13 +168,7 @@
         <el-table-column label="规划依据" align="center" prop="planningBasis" width="150" />
         <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
         <el-table-column label="其他需要说明的情况" align="center" prop="otherExplanations" />
-        <el-table-column label="选址方案" align="center" prop="locationPlan">
-          <!-- <template #default="scope">
-            <ImagePreview v-if="previewListResource" :width="100" :height="100" :src="scope.row.url"
-              :preview-src-list="[scope.row.url]" />
-            <span v-text="scope.row.url" />
-          </template> -->
-        </el-table-column>
+        <el-table-column label="选址方案" align="center" prop="locationPlan" />
         <el-table-column label="专家评审意见" align="center" prop="expertOpinions" />
         <el-table-column label="会议材料" align="center" prop="meetingMaterials" />
         <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport" />
@@ -167,7 +178,7 @@
         <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
         <el-table-column label="创建时间" align="center" prop="createTime" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="230">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
           <!-- <template #default="scope">
             <el-tooltip content="信息填报" placement="top" v-if="scope.row.status === '填报中'">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
@@ -207,7 +218,13 @@
             </el-tooltip>
           </template> -->
           <template #default="scope">
-            <el-tooltip content="详情查看" placement="top">
+            <!-- 1. 动态提示的“修改”按钮：仅“填报中”“管委会驳回”显示 -->
+            <el-tooltip v-if="['填报中', '管委会驳回'].includes(scope.row.status)"
+              :content="getEditTooltipContent(scope.row.status)" placement="top">
+              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
+                v-hasPermi="['project:project:edit']"></el-button>
+            </el-tooltip>
+            <el-tooltip content="详情查看" placement="top" v-else>
               <el-button link type="primary" icon="View" @click="handleView(scope.row)"
                 v-hasPermi="['project:project:query']"></el-button>
             </el-tooltip>
@@ -382,7 +399,7 @@
               <!-- 专家评审意见专属上传组件 -->
               <el-upload ref="expertOpinionsUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'expertOpinions')"
-                :file-list="expertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="auditExpertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'expertOpinions')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'expertOpinions')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -391,7 +408,7 @@
               <!-- 专家评审意见专属文件列表 -->
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
+                <li v-for="(file, index) in auditExpertOpinionsFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -433,7 +450,7 @@
             <el-form-item label="选址方案核准申报表" prop="siteSelectionReport">
               <el-upload ref="siteSelectionReportUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'siteSelectionReport')"
-                :file-list="siteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="auditSiteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'siteSelectionReport')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'siteSelectionReport')"
                 :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -441,7 +458,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
+                <li v-for="(file, index) in auditSiteSelectionReportFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -458,7 +475,7 @@
             <el-form-item label="立项文件" prop="approvalDocuments">
               <el-upload ref="approvalDocumentsUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'approvalDocuments')"
-                :file-list="approvalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="auditApprovalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'approvalDocuments')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -466,7 +483,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
+                <li v-for="(file, index) in auditApprovalDocumentsFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -483,7 +500,7 @@
             <el-form-item label="项目用地红线图" prop="projectRedLine">
               <el-upload ref="projectRedLineUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'projectRedLine')"
-                :file-list="projectRedLineFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="auditProjectRedLineFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'projectRedLine')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'projectRedLine')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -491,7 +508,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
+                <li v-for="(file, index) in auditProjectRedLineFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -508,7 +525,7 @@
             <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
               <el-upload ref="redLineCoordinateUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'redLineCoordinate')"
-                :file-list="redLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="auditRedLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'redLineCoordinate')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'redLineCoordinate')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -516,7 +533,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in redLineCoordinateFileList" :key="file.uid"
+                <li v-for="(file, index) in auditRedLineCoordinateFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -532,16 +549,16 @@
             </el-form-item>
             <el-form-item label="项目三维模型" prop="threeDModel">
               <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
+                :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="auditThreeDModelFileList"
                 :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                :headers="headers" class="upload-file-uploader" v-if="!disabled"> <!-- 查看模式（disabled=true）隐藏上传按钮 -->
                 <el-button type="primary">选取文件</el-button>
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
+                <li v-for="(file, index) in auditThreeDModelFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -553,6 +570,10 @@
                     </el-button>
                   </div>
                 </li>
+                <!-- 空数据提示 -->
+                <li v-if="auditThreeDModelFileList.length === 0" class="el-upload-list__item">
+                  <span class="el-icon-info"> 暂无三维模型文件 </span>
+                </li>
               </transition-group>
               <el-button link type="primary" icon="Download">模型规范与模板下载</el-button>
             </el-form-item>
@@ -560,7 +581,8 @@
               <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
             </el-form-item>
             <el-form-item label="模型预览" prop="modelPreview">
-              <el-button type="primary" icon="Edit" :disabled="!form.id || isViewMode" @click="handleModelPreview">
+              <el-button type="primary" :icon="isViewMode ? 'View' : 'Edit'" :disabled="!form.id"
+                @click="handleModelPreview">
                 三维场景效果预览
               </el-button>
             </el-form-item>
@@ -888,6 +910,7 @@
 </template>
 
 <script setup name="Info" lang="ts">
+import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, getInfo, stageInfo, delInfo, addInfo, submitInfo, gwhApprove, lyjApprove } from '@/api/project/normal/index';
 import { getUserProfile } from '@/api/system/user/index';
@@ -897,6 +920,8 @@ import { InfoVO, InfoQuery, InfoForm, AuditData } from '@/api/project/normal/typ
 import { UserInfo } from '@/api/system/user/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
+import bus from '../../../libs/eventbus'
+const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
 const infoList = ref<InfoVO[]>([]);
@@ -909,8 +934,28 @@ const multiple = ref(true);
 const total = ref(0);
 const previewListResource = ref(false);
 const isViewMode = ref(false); // 新增：是否为查看模式
-
-
+// 状态颜色映射：返回对应Hex颜色值
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case '填报中':
+      return '#1890ff'; // 蓝色
+    case '管委会审批中':
+      return '#faad14'; // 橙色
+    case '管委会通过':
+    case '林业局通过':
+    case '已通过':
+      return '#62c232'; // 绿色
+    case '管委会驳回':
+    case '林业局驳回':
+      return '#ff4d4f'; // 红色
+    default:
+      return '#bfbfbf'; // 默认灰色（应对未定义状态）
+  }
+};
+// 动态获取修改按钮的提示文字
+const getEditTooltipContent = (status: string) => {
+  return status === '填报中' ? '信息填报' : '二次填报';
+};
 
 //上传文件
 // 1. 上传组件 ref（每个字段一个）
@@ -1032,9 +1077,8 @@ const canAudit = async (row: InfoForm) => {
       console.error('用户角色信息无效');
       return false;
     }
+    //系统管理员的userRole为sysadmin,建设单位的userRole为constructor,管委会审核的userRole为mca,市林业局审核的userRole为clb_audit,省林业局审核的userRole为plb_approve,超级管理员的userRole为superadmin,只有管委会审核和市林业局审核有权限审核项目，系统管理员有创建项目的权限，建设单位有修改项目的权限，省林业局审核有数据分享的权限，当 row.status === '填报中'时，建设单位进行修改，操作栏修改按钮的提示字为信息填报，当管委会驳回时，操作栏修改按钮的提示字为二次填报。当row.status === '管委会审批中'时，管委会进行审核，审核按钮提示字为管委会审核，
     const userRole = res.data.roles[0];
-    console.log('canAudit,res', userRole);
-
     // 后续权限判断逻辑
     if (userRole === 'mca' && ['待审核', '管委会已驳回'].includes(row.status)) {
       return true;
@@ -1084,90 +1128,7 @@ const handleAudit = async (row: InfoForm) => {
     modelCoordinate: projectData.modelCoordinate,
     feedback: '',
   });
-
-  // 加载项目文件列表
-  // 选址方案
-  if (projectData.locationPlan) {
-    const locationPlanOssIds = projectData.locationPlan.split(',').join(',');
-    const locationPlanRes = await listByIds(locationPlanOssIds);
-    auditLocationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-  // 专家评审意见
-  if (projectData.expertOpinions) {
-    const expertOpinionsOssIds = projectData.expertOpinions.split(',').join(',');
-    const expertOpinionsRes = await listByIds(expertOpinionsOssIds);
-    auditExpertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // 会议材料
-  if (projectData.meetingMaterials) {
-    const meetingMaterialsOssIds = projectData.meetingMaterials.split(',').join(',');
-    const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
-    auditMeetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // 选址方案核准申报表
-  if (projectData.siteSelectionReport) {
-    const siteSelectionReportOssIds = projectData.siteSelectionReport.split(',').join(',');
-    const siteSelectionReportRes = await listByIds(siteSelectionReportOssIds);
-    auditSiteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-  // 立项文件
-  if (projectData.approvalDocuments) {
-    const approvalDocumentsOssIds = projectData.approvalDocuments.split(',').join(',');
-    const approvalDocumentsRes = await listByIds(approvalDocumentsOssIds);
-    auditApprovalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-  // 项目用地红线图
-  if (projectData.projectRedLine) {
-    const projectRedLineOssIds = projectData.projectRedLine.split(',').join(',');
-    const projectRedLineRes = await listByIds(projectRedLineOssIds);
-    auditProjectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-  // 项目三维模型
-  if (projectData.threeDModel) {
-    const threeDModelOssIds = projectData.threeDModel.split(',').join(',');
-    const threeDModelRes = await listByIds(threeDModelOssIds);
-    auditThreeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  }
-
-
+  await loadAllFileLists(projectData);
   // 清空之前的审核信息
   auditForm.feedback = '';
   feedbackFileList.value = [];
@@ -1353,7 +1314,7 @@ const uploadedSuccessfully = (field: FileFieldType) => {
       approvalDocuments: { list: approvalDocumentsFileList, formKey: 'approvalDocuments' },
       projectRedLine: { list: projectRedLineFileList, formKey: 'projectRedLine' },
       redLineCoordinate: { list: redLineCoordinateFileList, formKey: 'redLineCoordinate' },
-      threeDModel: { list: threeDModelFileList, formKey: 'threeDModel' },
+      threeDModel: { list: auditThreeDModelFileList, formKey: 'threeDModel' },
       feedback: { list: feedbackFileList, formKey: 'feedback' }
     };
     const { list, formKey } = fieldMap[field];
@@ -1453,16 +1414,9 @@ const listToString = (list: any[], separator?: string) => {
   });
   return strs != '' ? strs.substring(0, strs.length - 1) : '';
 };
-const dialogClosed = ref(true);
 const dialog = reactive<DialogOption>({
   visible: false,
   title: '',
-  // 对话框完全关闭后触发的回调
-  onClose: () => {
-    dialogClosed.value = true;
-    // 对话框关闭后，再执行重置
-    reset();
-  }
 });
 
 const initFormData: InfoForm = {
@@ -1623,27 +1577,37 @@ const getList = async () => {
   total.value = res.total;
   loading.value = false;
 }
-// 模型预览按钮点击事件
+// 模型预览按钮点击事件,点击模型预览，通过bus.emit发送项目的id,项目三维模型的文件地址，三维模型的坐标。同时跳转到路由下的/screen/preview路径。 router.push('/screen/preview')。bus.emit('previewModel', {id:form.value.id, threeDModel: form.value.threeDModel, modelCoordinate: form.value.modelCoordinate});
 const handleModelPreview = () => {
   if (!form.value.id) {
     ElMessage.warning('请先保存项目信息');
     return;
   }
-  // 实际场景：打开预览页面或弹窗
-  // window.open(`/model-preview?id=${form.value.id}`, '_blank');
-  // 或调用内部预览组件：proxy?.$modal.open({ title: '三维预览', content: ModelPreview, props: { id: form.value.id } });
+  const modelFile = auditThreeDModelFileList.value.find(item => item.url);
+  if (!modelFile?.url) {
+    ElMessage.warning('请先上传项目三维模型文件');
+    return;
+  }
+  // 3. 校验3：模型坐标必须已填写
+  if (!form.value.modelCoordinate) {
+    ElMessage.warning('请先填写模型坐标');
+    return;
+  }
+  bus.emit('previewModel', {
+    id: form.value.id,
+    threeDModel: modelFile.url,
+    modelCoordinate: form.value.modelCoordinate
+  });
+  console.log('已通过Bus发送模型预览数据：', {
+    id: form.value.id,
+    threeDModel: modelFile.url,
+    modelCoordinate: form.value.modelCoordinate
+  });
+  router.push('/screen/preview');
 };
 /** 取消按钮 */
 const cancel = async () => {
-  dialogClosed.value = false;
-  // 1. 先关闭对话框，确保 DOM 开始销毁
   dialog.visible = false;
-
-  // 2. 等待 1 个微任务周期（确保对话框 DOM 已销毁），再执行重置
-  // await nextTick();
-
-  // // 3. 此时 DOM 已销毁，重置数据不会引发 DOM 操作异常
-  // reset();
 }
 
 /** 表单重置 */
@@ -1654,7 +1618,7 @@ const reset = async () => {
     infoFormRef.value.resetFields();
     await nextTick();
   }
-  // 清空8个字段的文件列表
+  // 清空主列表（原有）
   locationPlanFileList.value = [];
   expertOpinionsFileList.value = [];
   meetingMaterialsFileList.value = [];
@@ -1665,7 +1629,18 @@ const reset = async () => {
   threeDModelFileList.value = [];
   managementFeedbackFileList.value = [];
   forestryFeedbackFileList.value = [];
-}
+  // 新增：清空审核列表
+  auditLocationPlanFileList.value = [];
+  auditExpertOpinionsFileList.value = [];
+  auditMeetingMaterialsFileList.value = [];
+  auditSiteSelectionReportFileList.value = [];
+  auditApprovalDocumentsFileList.value = [];
+  auditProjectRedLineFileList.value = [];
+  auditRedLineCoordinateFileList.value = [];
+  auditThreeDModelFileList.value = []; // 关键：清空三维模型审核列表
+  feedbackFileList.value = [];
+  return Promise.resolve();
+};
 
 /** 搜索按钮操作 */
 const handleQuery = () => {
@@ -1697,72 +1672,149 @@ const handleSelectionChange = (selection: InfoVO[]) => {
 
 /** 新增按钮操作 */
 const handleAdd = async () => {
-  if (!dialogClosed.value) {
-    await new Promise(resolve => {
-      const checkClosed = setInterval(() => {
-        if (dialogClosed.value) {
-          clearInterval(checkClosed);
-          resolve(true);
-        }
-      }, 50);
-    });
-  }
   await reset();
-  dialogClosed.value = false;
-  dialog.visible = true;
   dialog.title = "添加重大项目信息";
   disabled.value = false; // 启用表单
-  isViewMode.value = false; // 非查看模式
+  isViewMode.value = false;
+  dialog.visible = true;
 }
-// 详情查看
-const handleView = async (row: InfoVO) => {
-  console.log(row)
-  // 这里可以复用修改的逻辑，但设置表单为只读
-  if (!dialogClosed.value) {
-    await new Promise(resolve => {
-      const checkClosed = setInterval(() => {
-        if (dialogClosed.value) {
-          clearInterval(checkClosed);
-          resolve(true);
-        }
-      }, 50);
-    });
-  }
-  await reset();
-  const res = await getInfo(row.id);
-  const projectData = res.data;
-  Object.assign(form.value, res.data);
-
-  // 加载所有文件列表
-  const loadFileList = async (ossIds: string, targetList: any) => {
-    if (!ossIds) return;
-    const res = await listByIds(ossIds);
-    targetList.value = res.data.map((oss: any) => ({
+const loadAllFileLists = async (projectData: InfoForm) => {
+  // ---------- 1. 选址方案 ----------
+  if (projectData.locationPlan) {
+    const locationPlanOssIds = projectData.locationPlan.split(',').join(',');
+    const locationPlanRes = await listByIds(locationPlanOssIds);
+    locationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
-  };
+  }
+  // ---------- 2. 专家评审意见（新增，原遗漏） ----------
+  if (projectData.expertOpinions) {
+    const expertOpinionsOssIds = projectData.expertOpinions.split(',').join(',');
+    const expertOpinionsRes = await listByIds(expertOpinionsOssIds);
+    expertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 3. 会议材料（新增，原遗漏） ----------
+  if (projectData.meetingMaterials) {
+    const meetingMaterialsOssIds = projectData.meetingMaterials.split(',').join(',');
+    const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
+    meetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 4. 选址方案核准申报表（新增，原遗漏） ----------
+  if (projectData.siteSelectionReport) {
+    const siteSelectionReportOssIds = projectData.siteSelectionReport.split(',').join(',');
+    const siteSelectionReportRes = await listByIds(siteSelectionReportOssIds);
+    siteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 5. 立项文件（新增，原遗漏） ----------
+  if (projectData.approvalDocuments) {
+    const approvalDocumentsOssIds = projectData.approvalDocuments.split(',').join(',');
+    const approvalDocumentsRes = await listByIds(approvalDocumentsOssIds);
+    approvalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 6. 项目用地红线图（新增，原遗漏） ----------
+  if (projectData.projectRedLine) {
+    const projectRedLineOssIds = projectData.projectRedLine.split(',').join(',');
+    const projectRedLineRes = await listByIds(projectRedLineOssIds);
+    projectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 7. 项目红线矢量数据（新增，原遗漏） ----------
+  if (projectData.redLineCoordinate) {
+    const redLineCoordinateOssIds = projectData.redLineCoordinate.split(',').join(',');
+    const redLineCoordinateRes = await listByIds(redLineCoordinateOssIds);
+    redLineCoordinateFileList.value = redLineCoordinateRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+  // ---------- 8. 项目三维模型（新增，原遗漏） ----------
+  if (projectData.threeDModel) {
+    const threeDModelOssIds = projectData.threeDModel.split(',').join(',');
+    const threeDModelRes = await listByIds(threeDModelOssIds);
+    auditThreeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+    // 同步更新表单 threeDModel 字段（确保数据一致性）
+    form.value.threeDModel = projectData.threeDModel;
+  } else {
+    // 若无模型数据，清空两个列表避免残留
+    auditThreeDModelFileList.value = [];
+    threeDModelFileList.value = [];
+    form.value.threeDModel = '';
+  }
+  // ---------- 新增：9. 管委会审批反馈文件 ----------
+  if (projectData.managementFeedbackFiles) {
+    const managementOssIds = projectData.managementFeedbackFiles.split(',').join(',');
+    const managementRes = await listByIds(managementOssIds);
+    managementFeedbackFileList.value = managementRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
 
-  // 逐个加载文件
-  await loadFileList(projectData.locationPlan || '', locationPlanFileList);
-  await loadFileList(projectData.expertOpinions || '', expertOpinionsFileList);
-  await loadFileList(projectData.meetingMaterials || '', meetingMaterialsFileList);
-  await loadFileList(projectData.siteSelectionReport || '', siteSelectionReportFileList);
-  await loadFileList(projectData.approvalDocuments || '', approvalDocumentsFileList);
-  await loadFileList(projectData.projectRedLine || '', projectRedLineFileList);
-  await loadFileList(projectData.redLineCoordinate || '', redLineCoordinateFileList);
-  await loadFileList(projectData.threeDModel || '', threeDModelFileList);
-  await loadFileList(projectData.managementFeedbackFiles || '', managementFeedbackFileList);
-  await loadFileList(projectData.forestryFeedbackFiles || '', forestryFeedbackFileList);
-  // 打开对话框
-  dialogClosed.value = false;
-  dialog.visible = true;
-  dialog.title = "查看重大项目信息";
-  // 设置表单为只读状态
-  disabled.value = true;
-  isViewMode.value = true; // 标记为查看模式
+  // ---------- 新增：10. 市林业局审核反馈文件 ----------
+  if (projectData.forestryFeedbackFiles) {
+    const forestryOssIds = projectData.forestryFeedbackFiles.split(',').join(',');
+    const forestryRes = await listByIds(forestryOssIds);
+    forestryFeedbackFileList.value = forestryRes.data.map((oss: any) => ({
+      name: oss.originalName,
+      url: oss.url,
+      ossId: oss.ossId,
+      uid: new Date().getTime() + Math.random()
+    }));
+  }
+};
+// 详情查看
+const handleView = async (row: InfoVO) => {
+  try {
+    await reset();
+    const res = await getInfo(row.id);
+    const projectData = res.data;
+    Object.assign(form.value, res.data);
+    await loadAllFileLists(projectData);
+    dialog.visible = true;
+    dialog.title = "查看重大项目信息";
+    // 设置表单为只读状态
+    disabled.value = true;
+    isViewMode.value = true; // 标记为查看模式
+  } catch (err) {
+    console.error('查看项目失败：', err);
+    proxy?.$modal.msgError('加载项目信息失败，请重试');
+  }
 };
 // 数据共享
 const handleShare = async (row: InfoVO) => {
@@ -1787,47 +1839,16 @@ const handleShare = async (row: InfoVO) => {
 };
 /** 修改按钮操作 */
 const handleUpdate = async (row?: InfoVO) => {
-  if (!dialogClosed.value) {
-    await new Promise(resolve => {
-      const checkClosed = setInterval(() => {
-        if (dialogClosed.value) {
-          clearInterval(checkClosed);
-          resolve(true);
-        }
-      }, 50);
-    });
-  }
-  await reset();
+  reset();
   const _id = row?.id || ids.value[0];
   const res = await getInfo(_id);
   const projectData = res.data;
   Object.assign(form.value, res.data);
-
-  // 加载所有文件列表
-  const loadFileList = async (ossIds: string, targetList: any) => {
-    if (!ossIds) return;
-    const res = await listByIds(ossIds);
-    targetList.value = res.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
-  };
-
-  await loadFileList(projectData.locationPlan || '', locationPlanFileList);
-  await loadFileList(projectData.expertOpinions || '', expertOpinionsFileList);
-  await loadFileList(projectData.meetingMaterials || '', meetingMaterialsFileList);
-  await loadFileList(projectData.siteSelectionReport || '', siteSelectionReportFileList);
-  await loadFileList(projectData.approvalDocuments || '', approvalDocumentsFileList);
-  await loadFileList(projectData.projectRedLine || '', projectRedLineFileList);
-  await loadFileList(projectData.redLineCoordinate || '', redLineCoordinateFileList);
-  await loadFileList(projectData.threeDModel || '', threeDModelFileList);
-  dialogClosed.value = false;
-  dialog.visible = true;
+  await loadAllFileLists(projectData);
   dialog.title = "修改重大项目信息";
   disabled.value = false; // 启用表单
-  isViewMode.value = false; // 非查看模式
+  isViewMode.value = false;
+  dialog.visible = true;
 };
 /** 重置按钮 */
 const resetForm = () => {
@@ -1929,11 +1950,14 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
       approvalDocuments: approvalDocumentsFileList,
       projectRedLine: projectRedLineFileList,
       redLineCoordinate: redLineCoordinateFileList,
-      threeDModel: threeDModelFileList
+      threeDModel: auditThreeDModelFileList
     };
     const fileList = fieldMap[field];
     const file = fileList.value[index];
-
+    if (!file.ossId) {
+      proxy?.$modal.msgError(`${fieldName}文件ID不存在，无法删除`);
+      return;
+    }
     await delOss(file.ossId);
     fileList.value.splice(index, 1);
     form.value[field] = listToString(fileList.value);
@@ -1958,10 +1982,11 @@ onMounted(async () => { // 注意添加async关键字
     // 提取部门名称（根据返回结构，userProfile.data中包含deptName）
     userDept.value = userProfile.data.user.deptName || '';
     console.log('当前用户部门：', userDept.value);
-
+    console.log("🚀 ~ queryParams.value.status:", queryParams.value.status)
     // 根据部门设置默认查询条件（例如：市林业局默认看“管委会通过”的项目）
     if (userDept.value === '建设公司') {
       queryParams.value.status = '填报中';
+
     } else if (userDept.value === '管委会') {
       queryParams.value.status = '管委会待审核';
     } else if (userDept.value === '市林业局') {
@@ -2096,5 +2121,19 @@ h3 {
       }
     }
   }
+}
+
+.status-dot {
+  // 已通过内联样式控制核心属性，此处可补充兼容性样式（可选）
+  vertical-align: middle !important;
+}
+
+.status-text {
+  vertical-align: middle !important;
+}
+
+// 操作栏按钮间距调整（可选，避免按钮过于拥挤）
+:deep(.el-table-column__content .el-button) {
+  margin: 0 4px;
 }
 </style>

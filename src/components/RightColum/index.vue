@@ -1,5 +1,5 @@
 <template>
-    <div class="rightSidebar" v-show="layerManagementShowHide">
+    <div class="rightSidebar" v-show="layerManagementShowHide" v-hasPermi="['screen:function:review']">
         <div class="layerTitle">
             <span class="layerTitleFont">图层管理</span>
         </div>
@@ -107,6 +107,46 @@
             </div>
             <div class="layerContentA">
                 <div class="layerContentTitle">
+                    <div class="layerContentLabel">分级保护规划</div>
+                    <el-checkbox v-model="isAllCheckedI" class="scroll-custom-checkbox"
+                        @change="handleAllCheckI"></el-checkbox>
+                    <div :class="layerContentStyleI == true ? 'layerContentShow' : 'layerContentHide'"
+                        @click="clickLayerContentI"></div>
+                </div>
+                <transition name="fade">
+                    <div v-if="layerContentStyleI" class="contentBodyA">
+                        <div class="scrollContentA">
+                            <div class="scrollDetailA" v-for="item in checkItemsI" :key="item.id">
+                                <div class="scrollDetailFontA">{{ item.name }}</div>
+                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
+                                    @change="handleCheckChangeI(item)" />
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+            <div class="layerContentA">
+                <div class="layerContentTitle">
+                    <div class="layerContentLabel">景区范围</div>
+                    <el-checkbox v-model="isAllCheckedK" class="scroll-custom-checkbox"
+                        @change="handleAllCheckK"></el-checkbox>
+                    <div :class="layerContentStyleK == true ? 'layerContentShow' : 'layerContentHide'"
+                        @click="clickLayerContentK"></div>
+                </div>
+                <transition name="fade">
+                    <div v-if="layerContentStyleK" class="contentBodyA">
+                        <div class="scrollContentA">
+                            <div class="scrollDetailA" v-for="item in checkItemsK" :key="item.id">
+                                <div class="scrollDetailFontA">{{ item.name }}</div>
+                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
+                                    @change="handleCheckChangeK(item)" />
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+            <div class="layerContentA">
+                <div class="layerContentTitle">
                     <div class="layerContentLabel">土地利用现状</div>
                     <el-checkbox v-model="isAllCheckedF" class="scroll-custom-checkbox"
                         @change="handleAllCheckF"></el-checkbox>
@@ -167,26 +207,6 @@
             </div>
             <div class="layerContentA">
                 <div class="layerContentTitle">
-                    <div class="layerContentLabel">分级保护规划</div>
-                    <el-checkbox v-model="isAllCheckedI" class="scroll-custom-checkbox"
-                        @change="handleAllCheckI"></el-checkbox>
-                    <div :class="layerContentStyleI == true ? 'layerContentShow' : 'layerContentHide'"
-                        @click="clickLayerContentI"></div>
-                </div>
-                <transition name="fade">
-                    <div v-if="layerContentStyleI" class="contentBodyA">
-                        <div class="scrollContentA">
-                            <div class="scrollDetailA" v-for="item in checkItemsI" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.name }}</div>
-                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
-                                    @change="handleCheckChangeI(item)" />
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </div>
-            <div class="layerContentA">
-                <div class="layerContentTitle">
                     <div class="layerContentLabel">土地利用规划</div>
                     <el-checkbox v-model="isAllCheckedJ" class="scroll-custom-checkbox"
                         @change="handleAllCheckJ"></el-checkbox>
@@ -205,26 +225,7 @@
                     </div>
                 </transition>
             </div>
-            <div class="layerContentA">
-                <div class="layerContentTitle">
-                    <div class="layerContentLabel">景区范围</div>
-                    <el-checkbox v-model="isAllCheckedK" class="scroll-custom-checkbox"
-                        @change="handleAllCheckK"></el-checkbox>
-                    <div :class="layerContentStyleK == true ? 'layerContentShow' : 'layerContentHide'"
-                        @click="clickLayerContentK"></div>
-                </div>
-                <transition name="fade">
-                    <div v-if="layerContentStyleK" class="contentBodyA">
-                        <div class="scrollContentA">
-                            <div class="scrollDetailA" v-for="item in checkItemsK" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.name }}</div>
-                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
-                                    @change="handleCheckChangeK(item)" />
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </div>
+
             <div class="layerContentA">
                 <div class="layerContentTitle">
                     <div class="layerContentLabel">备注信息</div>
@@ -247,7 +248,7 @@
             </div>
         </div>
     </div>
-    <div class="functionPanel" v-show="functionPanelShowHide">
+    <div class="functionPanel" v-show="functionPanelShowHide" v-hasPermi="['screen:function:review']">
         <!-- 箭头部分：根据当前选中的按钮动态调整位置（若多个选中，默认优先显示最后一个选中的） -->
         <div class="arrow" :style="arrowStyle"></div>
 
@@ -272,7 +273,7 @@
             <!-- 移除原有的固定实心圆圈，改为与按钮状态联动 -->
         </div>
     </div>
-    <div class="drawFunctionBody" v-if="drawFunctionShowHide">
+    <div class="drawFunctionBody" v-if="drawFunctionShowHide" v-hasPermi="['screen:function:vector']">
         <div :class="drawPointBodyStyle == true ? 'drawPointBodySelected' : 'drawPointBodySelect'"
             @click="clickDrawPoint">
             <div class="drawPointImg"></div>
@@ -294,7 +295,7 @@
 <script setup>
 import { toRefs, reactive, ref, onMounted, computed, watch } from 'vue'
 import bus from '../../libs/eventbus'
-// import { getSurveyPoints, getSurveyLines, getSurveyPolygons } from "../../api/map"
+import { getMarkList } from "./remark.js";
 const isAllCheckedA = ref(false);
 const isAllCheckedB = ref(false);
 const isAllCheckedC = ref(false);
@@ -395,10 +396,6 @@ const checkItemsB = ref([
     { id: 2, name: '胡公文化景源', checked: false },
     { id: 3, name: '书院文化景源', checked: false },
     { id: 4, name: '抗战历史文化景源', checked: false },
-    // { id: 5, name: '岩洞寺庙文化集中地', checked: false },
-    // { id: 6, name: '胡公文化集中地', checked: false },
-    // { id: 7, name: '书院文化集中地', checked: false },
-    // { id: 8, name: '抗战历史文化集中地', checked: false },
 ])
 const checkItemsC = ref([
     { id: 1, name: '对外交通', checked: false },
@@ -409,7 +406,7 @@ const checkItemsD = ref([
     { id: 2, name: '二级车行道', checked: false },
     { id: 3, name: '一级游步道', checked: false },
     { id: 4, name: '二级游步道', checked: false },
-    { id: 5, name: '古道', checked: false },
+    { id: 5, name: '客运索道', checked: false },
 ])
 const checkItemsE = ref([{ id: 1, name: '主要景观游赏线', checked: false },])
 const checkItemsF = ref([
@@ -426,14 +423,12 @@ const checkItemsF = ref([
 ])
 const checkItemsG = ref([
     { id: 1, name: '景群', checked: false },
-    { id: 2, name: '景区分化', checked: false },
+    { id: 2, name: '景区分区', checked: false },
 ])
 const checkItemsH = ref([
-    { id: 1, name: '五指九泄景区', checked: false },
-    { id: 2, name: '太平湖景区', checked: false },
+    { id: 1, name: '灵岩山湖景区', checked: false },
+    { id: 2, name: '方山山林景区', checked: false },
     { id: 3, name: '方岩丹霞景区', checked: false },
-    { id: 4, name: '方山山林景区', checked: false },
-    { id: 5, name: '灵岩山湖景区', checked: false },
 ])
 const checkItemsI = ref([
     { id: 1, name: '一级保护区', checked: false },
@@ -453,8 +448,8 @@ const checkItemsJ = ref([
     { id: 10, name: '生态保护红线', checked: false },
 ])
 const checkItemsK = ref([
-    { id: 1, name: '方岩风景区总体规划范围', checked: false },
-    { id: 2, name: '方岩风景区划范围_16版', checked: false },
+    { id: 1, name: '方岩风景名胜区范围_16版', checked: false },
+    { id: 2, name: '方岩风景名胜区总体规划范围', checked: false },
     { id: 3, name: '在编方岩风景名胜区范围', checked: false },
 ])
 const checkItemsRemark = ref([
@@ -473,10 +468,10 @@ const allCheckItems = ref([
     checkItemsH,
     checkItemsI,
     checkItemsJ,
-    checkItemsK
+    checkItemsK,
 ])
-const layerManagementShowHide = ref(true)
-const functionPanelShowHide = ref(true)
+const layerManagementShowHide = ref(false)
+const functionPanelShowHide = ref(false)
 const layerContentStyleA = ref(true)
 const layerContentStyleB = ref(false)
 const layerContentStyleC = ref(false)
@@ -536,7 +531,6 @@ const handleCheckChangeB = item => {
 const handleCheckChangeC = item => {
     // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
-    // bus.emit('attractionTypeMessage', item)
 }
 const handleCheckChangeD = item => {
     // 处理复选框状态变化
@@ -811,11 +805,12 @@ onMounted(() => {
             functionPanelShowHide.value = false
         }
     })
-    bus.on('add-note', data => {
-        console.log("🚀 ~ data:", data)
-        checkItemsRemark.value.push(data)
-        console.log("🚀 ~ checkItemsRemark.value:", checkItemsRemark.value)
-    })
+
+    getMarkList().then((res) => {
+        checkItemsRemark.value = res.rows
+    }).catch((error) => {
+        console.error('获取标注信息失败', error);
+    });
 })
 </script>
 
@@ -1119,8 +1114,8 @@ onMounted(() => {
     position: absolute;
     width: 7.1rem;
     height: 29.5rem;
-    top: 65.28%;
-    right: 6.25%;
+    top: 62.28%;
+    right: 5.25%;
     z-index: 2;
     // background-color: red;
     display: flex;

@@ -1,5 +1,6 @@
 <!doctype html>
 <html>
+
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -7,6 +8,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <link rel="icon" href="/favicon.ico" />
     <title>规划管理应用系统</title>
+    <script inline>
+      /** 大屏按照16:9设计[1920:1080]
+      默认大屏状态下： 1rem = 10px【注意开发设置】
+     */
+      const screenRatioByDesign = 16 / 9
+      let docEle = document.documentElement
+      function setHtmlFontSize () {
+        var screenRatio = docEle.clientWidth / docEle.clientHeight;
+        var fontSize = (
+          screenRatio > screenRatioByDesign ?
+            (screenRatioByDesign / screenRatio) : 1
+        ) * docEle.clientWidth / 192;
+        docEle.style.fontSize = fontSize.toFixed(3) + "px";
+        const style = getComputedStyle(docEle)
+      }
+      setHtmlFontSize()
+      window.addEventListener('resize', setHtmlFontSize)
+    </script>
     <!--[if lt IE 11
       ]><script>
         window.location.href = '/html/ie.html';
@@ -211,4 +230,5 @@
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
+
 </html>
