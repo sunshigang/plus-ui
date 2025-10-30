@@ -163,7 +163,6 @@
         <el-table-column label="经办人联系方式" align="center" prop="contactPhone" />
         <el-table-column label="保护等级" align="center" prop="protectionLevel" />
         <el-table-column label="拟选位置" align="center" prop="projectPurpose" width="150" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="100" />
         <el-table-column label="建设项目总投资（万元）" align="center" prop="projectInvestment" />
         <el-table-column label="规划依据" align="center" prop="planningBasis" width="150" />
         <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
@@ -177,7 +176,7 @@
         <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
         <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
         <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
-        <el-table-column label="创建时间" align="center" prop="createTime" />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="97" />
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
           <template #default="scope">
             <!-- 1. 动态提示的“修改”按钮：仅“填报中”“管委会驳回”显示 -->
@@ -194,7 +193,7 @@
               <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
                 v-hasPermi="['project:project:gwhApprove']"></el-button>
             </el-tooltip>
-            <el-tooltip content="管委会审核1" placement="top" v-if="scope.row.status === '管委会审批中'">
+            <el-tooltip content="管委会审核" placement="top" v-if="scope.row.status === '管委会审批中'">
               <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
                 v-hasPermi="['project:project:gwhApprove']"></el-button>
             </el-tooltip>
@@ -1084,43 +1083,63 @@ const canAudit = async (row: InfoForm) => {
 
 // 修改审核相关方法，区分一次审批和二次审批
 const handleAudit = async (row: InfoForm) => {
+  if (!row.id || (typeof row.id !== 'string' && typeof row.id !== 'number')) {
+    proxy?.$modal.msgError('项目ID无效，无法进行审核操作');
+    return;
+  }
   auditDialog.projectId = row.id;
   auditForm.projectId = row.id;
+  try {
+    // 获取项目详情
+    const res = await getInfo(row.id);
+    let projectData = res.data;
+    console.log('getInfo 接口完整返回（projectId=' + row.id + '）：', res);
+    if (Array.isArray(projectData)) {
+      console.warn('接口返回数组（预期单条），已自动取第一条数据', projectData);
+      projectData = projectData.length > 0 ? projectData[0] : null;
+    }
+    // 若处理后仍无数据，提示并终止
+    if (!projectData) {
+      proxy?.$modal.msgError('未查询到项目详情，请刷新后重试');
+      return;
+    }
+    form.value.status = projectData.status;
+    // 填充项目基本信息
+    Object.assign(auditForm, {
+      projectName: projectData.projectName,
+      projectCode: projectData.projectCode,
+      administrativeRegion: projectData.administrativeRegion,
+      scenicArea: projectData.scenicArea,
+      applicantType: projectData.applicantType, // 已匹配补充的属性
+      constructionUnit: projectData.constructionUnit,
+      organizationCode: projectData.organizationCode, // 已匹配补充的属性
+      contactPerson: projectData.contactPerson, // 已匹配补充的属性
+      contactPhone: projectData.contactPhone, // 已匹配补充的属性
+      protectionLevel: projectData.protectionLevel,
+      status: projectData.status, // 已匹配补充的属性
+      projectType: projectData.projectType, // 已匹配补充的属性
+      projectUsage: projectData.projectUsage,
+      projectPurpose: projectData.projectPurpose,
+      projectInvestment: projectData.projectInvestment,
+      planningBasis: projectData.planningBasis, // 已匹配补充的属性
+      constructionContent: projectData.constructionContent, // 已匹配补充的属性
+      otherExplanations: projectData.otherExplanations, // 已匹配补充的属性
+      modelCoordinate: projectData.modelCoordinate,
+      feedback: '',
+    });
+    await loadAllFileLists(projectData);
+    // 清空之前的审核信息
+    auditForm.feedback = '';
+    feedbackFileList.value = [];
 
-  // 获取项目详情
-  const res = await getInfo(row.id);
-  const projectData = res.data;
-  form.value.status = projectData.status;
-  // 填充项目基本信息
-  Object.assign(auditForm, {
-    projectName: projectData.projectName,
-    projectCode: projectData.projectCode,
-    administrativeRegion: projectData.administrativeRegion,
-    scenicArea: projectData.scenicArea,
-    applicantType: projectData.applicantType, // 已匹配补充的属性
-    constructionUnit: projectData.constructionUnit,
-    organizationCode: projectData.organizationCode, // 已匹配补充的属性
-    contactPerson: projectData.contactPerson, // 已匹配补充的属性
-    contactPhone: projectData.contactPhone, // 已匹配补充的属性
-    protectionLevel: projectData.protectionLevel,
-    status: projectData.status, // 已匹配补充的属性
-    projectType: projectData.projectType, // 已匹配补充的属性
-    projectUsage: projectData.projectUsage,
-    projectPurpose: projectData.projectPurpose,
-    projectInvestment: projectData.projectInvestment,
-    planningBasis: projectData.planningBasis, // 已匹配补充的属性
-    constructionContent: projectData.constructionContent, // 已匹配补充的属性
-    otherExplanations: projectData.otherExplanations, // 已匹配补充的属性
-    modelCoordinate: projectData.modelCoordinate,
-    feedback: '',
-  });
-  await loadAllFileLists(projectData);
-  // 清空之前的审核信息
-  auditForm.feedback = '';
-  feedbackFileList.value = [];
-
-  // 显示审核对话框
-  auditDialog.visible = true;
+    // 显示审核对话框
+    auditDialog.visible = true;
+  } catch (err) {
+    // 5. 捕获所有异常并提示
+    const errorMsg = (err as Error).message || '审核弹窗加载失败';
+    proxy?.$modal.msgError(`获取项目信息异常：${errorMsg}`);
+    console.error('handleAudit 方法报错：', err); // 打印日志给后端排查
+  }
 };
 
 // 处理审核通过
@@ -1582,7 +1601,8 @@ const handleModelPreview = () => {
   bus.emit('previewModel', {
     id: form.value.id,
     threeDModel: modelFile.url,
-    modelCoordinate: form.value.modelCoordinate
+    modelCoordinate: form.value.modelCoordinate,
+    type: '重大项目'
   });
   console.log('已通过Bus发送模型预览数据：', {
     id: form.value.id,
@@ -1665,25 +1685,31 @@ const handleAdd = async () => {
   dialog.visible = true;
 }
 const loadAllFileLists = async (projectData: InfoForm) => {
+  form.value.managementFeedback = projectData.managementFeedback || '';
   // ---------- 新增：加载管委会审批反馈文件（关键修复） ----------
   if (projectData.managementFeedbackFiles) {
-    const managementOssIds = projectData.managementFeedbackFiles.split(',').join(',');
-    const managementRes = await listByIds(managementOssIds);
-    managementFeedbackFileList.value = managementRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
+    const managementOssIds = projectData.managementFeedbackFiles.split(',').filter(id => id.trim()); // 过滤空ID
+    if (managementOssIds.length > 0) {
+      try {
+        const managementRes = await listByIds(managementOssIds.join(','));
+        managementFeedbackFileList.value = managementRes.data.map((oss: any) => ({
+          name: oss.originalName,
+          url: oss.url,
+          ossId: oss.ossId,
+          uid: new Date().getTime() + Math.random()
+        }));
+      } catch (err) {
+        console.error('加载管委会反馈文件失败：', err);
+        managementFeedbackFileList.value = []; // 失败时清空列表
+      }
+    } else {
+      managementFeedbackFileList.value = [];
+    }
   } else {
-    // 若无反馈文件，清空列表避免残留
+    // 无反馈文件时，强制清空列表，避免残留旧数据
     managementFeedbackFileList.value = [];
   }
 
-  // ---------- 新增：同步管委会审批反馈文本（确保文本显示） ----------
-  if (projectData.managementFeedback) {
-    form.value.managementFeedback = projectData.managementFeedback;
-  }
   // ---------- 1. 选址方案 ----------
   if (projectData.locationPlan) {
     const locationPlanOssIds = projectData.locationPlan.split(',').join(',');
@@ -1838,8 +1864,8 @@ const handleUpdate = async (row?: InfoVO) => {
   const res = await getInfo(_id);
   const projectData = res.data;
   // 关键验证：打印查看后端是否返回驳回信息（调试用）
-  console.log('管委会反馈文本：', projectData.managementFeedback);
-  console.log('管委会反馈文件ID：', projectData.managementFeedbackFiles);
+  console.log('建设单位二次填报 - 管委会反馈文本：', projectData.managementFeedback);
+  console.log('建设单位二次填报 - 管委会反馈文件ID：', projectData.managementFeedbackFiles);
   Object.assign(form.value, res.data);
   await loadAllFileLists(projectData);
   dialog.title = "修改重大项目信息";

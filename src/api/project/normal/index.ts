@@ -34,7 +34,7 @@ export const getInfo = (id: string | number): AxiosPromise<InfoVO> => {
 export const addInfo = (data: InfoForm) => {
   return request({
     url: '/project/',
-    method: 'put',
+    method: 'post',
     data: data
   });
 };

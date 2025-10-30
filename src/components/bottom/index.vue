@@ -47,9 +47,10 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, computed } from 'vue'
 import bus from '../../libs/eventbus'
+const route = useRoute()
 const timeIsShow = ref(false)
 const years = ref([2023, 2024, 2025]) // 年份数组
 const currentYear = ref(2025) // 默认选中 2023
@@ -100,6 +101,10 @@ const clickRightArrow = () => {
     moveSlider(1)
 }
 onMounted(() => {
+    console.log('当前路由路径：', route.path)
+    // bus.on('previewModel', data => {
+    //     console.log("🚀 ~ clickBack ~ data:", data)
+    // })
     bus.on('function-panel-clicked', index => {
         console.log('🚀 ~ index:', index)
         if (index.index === 0) {
@@ -132,7 +137,14 @@ watch(currentYear, newYear => {
     bus.emit('time-change', newYear)
 })
 const clickBack = () => {
-    router.push('/')
+
+    if (route.path == '/screen/screen') {
+        router.push('/')
+    } else {
+        router.push('/project/major')
+
+    }
+
 }
 </script>
 
