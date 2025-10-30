@@ -254,38 +254,41 @@
 
         <!-- 文字区域：点击切换自身选中状态 -->
         <div class="text-container">
-            <div class="text-item" @click="selectItem(0)" :class="{ active: isSelected[0] }">
+            <div class="text-item" @click="selectItem(0)" :class="{ active: isSelected[0] }"
+                v-hasPermi="['screen:function:redline']">
                 红线叠加对比
             </div>
-            <div class="text-item" @click="selectItem(1)" :class="{ active: isSelected[1] }">
+            <div class="text-item" @click="selectItem(1)" :class="{ active: isSelected[1] }"
+                v-hasPermi="['screen:function:splitscreen']">
                 分屏比对
             </div>
-            <div class="text-item" @click="selectItem(2)" :class="{ active: isSelected[2] }">
+            <div class="text-item" @click="selectItem(2)" :class="{ active: isSelected[2] }"
+                v-hasPermi="['screen:function:analysis']">
                 时空分析
             </div>
         </div>
 
         <!-- 圆圈区域：根据按钮选中状态动态切换实心/空心（与文字按钮对应） -->
         <div class="circle-container">
-            <div class="circle" :class="{ solid: isSelected[0] }"></div> <!-- 对应“红线叠加对比” -->
-            <div class="circle" :class="{ solid: isSelected[1] }"></div> <!-- 对应“分屏比对” -->
-            <div class="circle" :class="{ solid: isSelected[2] }"></div> <!-- 对应“时空分析” -->
+            <div class="circle" :class="{ solid: isSelected[0] }" v-hasPermi="['screen:function:redline']"></div> <!-- 对应“红线叠加对比” -->
+            <div class="circle" :class="{ solid: isSelected[1] }" v-hasPermi="['screen:function:splitscreen']"></div> <!-- 对应“分屏比对” -->
+            <div class="circle" :class="{ solid: isSelected[2] }" v-hasPermi="['screen:function:analysis']"></div> <!-- 对应“时空分析” -->
             <!-- 移除原有的固定实心圆圈，改为与按钮状态联动 -->
         </div>
     </div>
     <div class="drawFunctionBody" v-if="drawFunctionShowHide" v-hasPermi="['screen:function:vector']">
         <div :class="drawPointBodyStyle == true ? 'drawPointBodySelected' : 'drawPointBodySelect'"
-            @click="clickDrawPoint">
+            @click="clickDrawPoint" v-hasPermi="['screen:function:point']">
             <div class="drawPointImg"></div>
             <div class="drawPointFont">点</div>
         </div>
         <div :class="drawPloylineBodyStyle == true ? 'drawPloylineBodySelected' : 'drawPloylineBodySelect'"
-            @click="clickDrawPloyline">
+            @click="clickDrawPloyline" v-hasPermi="['screen:function:polyline']">
             <div class="drawPolylineImg"></div>
             <div class="drawPolylineFont">线</div>
         </div>
         <div :class="drawPloygonBodyStyle == true ? 'drawPloygonBodySelected' : 'drawPloygonBodySelect'"
-            @click="clickDrawPloygon">
+            @click="clickDrawPloygon" v-hasPermi="['screen:function:polygon']">
             <div class="drawPloygonImg"></div>
             <div class="drawPloygonFont">面</div>
         </div>
@@ -646,8 +649,13 @@ const selectItem = (index) => {
     isSelected.value[index] = !isSelected.value[index]
     // 关键联动：仅当点击“红线叠加对比”（索引0）时，同步图层状态
     if (index === 0) {
+        layerManagementShowHide.value = true
         // 按钮选中 → 图层全选；按钮未选中 → 图层取消全选
         setAllLayersChecked(isSelected.value[index]);
+    } else if (index === 1) {
+        layerManagementShowHide.value = false
+    } else {
+        layerManagementShowHide.value = true
     }
     // 通知其他组件：传递“按钮索引”和“当前选中状态”（便于后续业务逻辑扩展）
     bus.emit('function-panel-clicked', { index, isSelected: isSelected.value[index] })

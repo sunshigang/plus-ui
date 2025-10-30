@@ -1,124 +1,126 @@
 <template>
-    <div class="mapImg">
-        <div class="beforeConstruction"></div>
-        <!-- 保持 left 绑定逻辑不变 -->
-        <!-- <div class="drag" :style="{ left: dragPosition + '%' }"></div>
-        <div class="dragIcon" @mousedown="startDrag" :style="{ left: dragPosition + '%' }"></div> -->
-        <div class="AfterConstruction"></div>
-    </div>
+    <div v-if="draggingStyle" class="beforeConstruction"></div>
+    <div v-if="draggingStyle" class="drag" :style="{ left: dragPosition + '%' }"></div>
+    <div v-if="draggingStyle" class="dragIcon" @mousedown="startDrag" :style="{ left: dragPosition + '%' }"></div>
+    <div v-if="draggingStyle" class="AfterConstruction"></div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+import bus from '../../libs/eventbus';
 
-const dragPosition = ref(50)
-const isDragging = ref(false)
+const dragPosition = ref(50); // 拖动图标当前的left百分比（10%-90%）
+const isDragging = ref(false);
+const draggingStyle = ref(false);
 
-// 开始拖动：新增记录初始位置，避免拖动起点偏移
-const startDrag = e => {
-    isDragging.value = true
-    e.preventDefault()
-    // 可选：记录拖动开始时的鼠标X坐标与当前dragPosition的偏差（优化精准度）
-    window.dragStartX = e.clientX
-    window.dragStartPercent = dragPosition.value
-}
+// 开始拖动：记录初始位置
+const startDrag = (e) => {
+    e.preventDefault();
+    isDragging.value = true;
+    window.dragStartX = e.clientX;
+    window.dragStartPercent = dragPosition.value;
+};
 
-// 处理拖动：优化坐标计算，避免百分比精度丢失
-const handleMouseMove = e => {
-    if (!isDragging.value) return
+// 处理拖动：实时更新位置（不发送数据，避免频繁触发）
+const handleMouseMove = (e) => {
+    if (!isDragging.value) return;
 
-    const screenWidth = window.innerWidth
-    // 方案1：直接计算鼠标占比（基础版）
-    let percentage = (e.clientX / screenWidth) * 100
+    const screenWidth = window.innerWidth;
+    const offsetX = e.clientX - window.dragStartX;
+    const offsetPercent = (offsetX / screenWidth) * 100;
+    let percentage = window.dragStartPercent + offsetPercent;
 
-    // 方案2（可选优化）：基于初始位置计算偏移，减少抖动
-    // const offsetX = e.clientX - window.dragStartX
-    // const offsetPercent = (offsetX / screenWidth) * 100
-    // let percentage = window.dragStartPercent + offsetPercent
+    // 边界限制 + 保留1位小数
+    percentage = Math.max(10, Math.min(90, Math.round(percentage * 10) / 10));
+    dragPosition.value = percentage;
+};
 
-    // 边界限制 + 保留1位小数（避免频繁更新导致的性能损耗）
-    percentage = Math.max(10, Math.min(90, Math.round(percentage * 10) / 10))
-    dragPosition.value = percentage
-}
-
+// 结束拖动：计算最终比例并通过bus发送
 const handleMouseUp = () => {
-    isDragging.value = true
-    // 清除临时变量
-    delete window.dragStartX
-    delete window.dragStartPercent
-}
+    if (isDragging.value) {
+        // 核心：计算拖动图标最终位置占屏幕的比例（已是百分比，直接转小数）
+        const dragIconScreenRatio = dragPosition.value / 100;
+        // 通过bus发送比例，命名建议带标识，避免与其他事件冲突
+        bus.emit('dragIcon:screenRatio', dragIconScreenRatio);
+        console.log('拖动结束，图标屏幕比例：', dragIconScreenRatio); // 调试用
 
-// 监听事件：确保事件绑定/解绑完整
+        // 重置拖动状态
+        isDragging.value = false;
+        delete window.dragStartX;
+        delete window.dragStartPercent;
+    }
+};
+
+// 监听事件与清理
 onMounted(() => {
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    // 补充监听mouseleave（防止鼠标移出窗口后仍处于拖动状态）
-    window.addEventListener('mouseleave', handleMouseUp)
-})
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseleave', handleMouseUp);
+
+    bus.on('function-panel-clicked', (data) => {
+        draggingStyle.value = data.index === 1 && data.isSelected;
+    });
+});
 
 onUnmounted(() => {
-    window.removeEventListener('mousemove', handleMouseMove)
-    window.removeEventListener('mouseup', handleMouseUp)
-    window.removeEventListener('mouseleave', handleMouseUp)
-})
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+    window.removeEventListener('mouseleave', handleMouseUp);
+    bus.off('function-panel-clicked');
+});
 </script>
 
 <style lang="scss" scoped>
-.mapImg {
+/* 样式保持不变 */
+.beforeConstruction {
     pointer-events: auto;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background: url(../../static/image/map/map.png) no-repeat;
+    width: 37.5rem;
+    height: 5.9rem;
+    z-index: 2;
+    background-size: 100% 100%;
+    top: 20%;
+    transform: translateX(-50%);
+    background: url(../../static/image/map/beforeConstruction.png) no-repeat;
+    left: 25%;
+}
+
+.AfterConstruction {
+    pointer-events: auto;
+    position: absolute;
+    width: 37.5rem;
+    height: 5.9rem;
+    z-index: 2;
+    background-size: 100% 100%;
+    top: 20%;
+    transform: translateX(-50%);
+    background: url(../../static/image/map/AfterConstruction.png) no-repeat;
+    left: 75%;
+}
+
+.drag {
+    pointer-events: auto;
+    position: absolute;
+    width: 0.2rem;
+    height: 90%;
+    background: #ffffff;
+    top: 0%;
+}
+
+.dragIcon {
+    pointer-events: auto;
+    position: absolute;
+    width: 3.8rem;
+    height: 3.8rem;
+    background: url(../../static/image/map/drag-icon.png) no-repeat;
     background-size: cover;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: ew-resize;
+    z-index: 3;
 
-    .beforeConstruction,
-    .AfterConstruction {
-        pointer-events: auto;
-        position: absolute;
-        width: 37.5rem;
-        height: 5.9rem;
-        z-index: 2;
-        background-size: 100% 100%;
-        top: 20%;
-        transform: translateX(-50%);
-    }
-    .beforeConstruction {
-        background: url(../../static/image/map/beforeConstruction.png) no-repeat;
-        left: 25%;
-    }
-    .AfterConstruction {
-        background: url(../../static/image/map/AfterConstruction.png) no-repeat;
-        left: 75%;
-    }
-
-    .drag {
-        pointer-events: auto;
-        position: absolute;
-        width: 0.2rem;
-        height: 90%;
-        background: #ffffff;
-        top: 0%;
-        /* 关键：移除 transition 过渡，消除滞后 */
-        /* transition: left 0.1s ease; */
-    }
-
-    .dragIcon {
-        pointer-events: auto;
-        position: absolute;
-        width: 3.8rem;
-        height: 3.8rem;
-        background: url(../../static/image/map/drag-icon.png) no-repeat;
-        background-size: cover;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        cursor: ew-resize;
-        z-index: 3;
-        /* 可选：添加鼠标按下时的视觉反馈 */
-        &:active {
-            transform: translate(-50%, -50%) scale(1.05);
-        }
+    &:active {
+        transform: translate(-50%, -50%) scale(1.05);
     }
 }
 </style>

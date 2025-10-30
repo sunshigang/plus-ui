@@ -1,7 +1,8 @@
 <template>
     <div id="home">
         <iframe v-if="mapSwitch" id="iframe" ref="iframeRef" frameborder="0" :src="iframeUrl"
-            style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"></iframe>
+            style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"
+            @error="handleIframeError"></iframe>
         <LeafletMap v-else></LeafletMap>
         <my-mask>
             <template v-slot:main>
@@ -10,6 +11,7 @@
                 <right-colum></right-colum>
                 <NotesPopup />
                 <bottom />
+                <mapTitle  />
             </template>
         </my-mask>
     </div>
@@ -25,10 +27,12 @@ import RightColum from '@/components/RightColum'
 import NotesPopup from '@/components/NotesPopup'
 import bottom from '@/components/bottom'
 import LeafletMap from '@/components/LeafletMap'
+import mapTitle from '@/components/mapTitle'
 const iframeUrl = "http://127.0.0.1:46150/";
 const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
+const splitScreen = ref(false);
 const cultureTypeMap = {
     1: "Culture_YDSM",
     2: "Culture_HG",
@@ -45,22 +49,43 @@ const attractionTypeMap = {
     7: "Scene_XZC",
     8: "Parking"
 };
+const msgQueue = ref([]);
 // iframe加载完成后标记状态
 const handleIframeLoad = () => {
     isIframeLoaded.value = true;
     console.log('iframe加载完成，可发送消息');
+    // 发送队列中残留的消息
+    while (msgQueue.value.length > 0) {
+        const queuedData = msgQueue.value.shift();
+        iframeRef.value.contentWindow.postMessage(JSON.stringify(queuedData), "*");
+    }
 };
 /* 三维协议消息发送 */
 const sendMsgUE = (data) => {
+    if (!mapSwitch.value) {
+        console.warn('iframe 已隐藏，消息加入队列', data);
+        msgQueue.value.push(data); // 加入队列
+        return;
+    }
+    if (!iframeRef.value) {
+        console.warn('iframe 已隐藏，无法发送消息', data);
+        msgQueue.value.push(data); // 加入队列
+        return;
+    }
     if (!iframeRef.value) {
         console.warn('iframe尚未加载或已被移除，无法发送消息', data);
         return;
     }
     if (!isIframeLoaded.value) {
         console.warn('iframe内容未加载完成，延迟发送消息', data);
+        msgQueue.value.push(data); // 加入队列
         // 延迟100ms重试（可根据实际调整）
-        setTimeout(() => sendMsgUE(data), 100);
+        // setTimeout(() => sendMsgUE(data), 100);
         return;
+    }
+    while (msgQueue.value.length > 0) {
+        const queuedData = msgQueue.value.shift();
+        iframeRef.value.contentWindow.postMessage(JSON.stringify(queuedData), "*");
     }
     try {
         iframeRef.value.contentWindow.postMessage(JSON.stringify(data), "*");
@@ -68,37 +93,52 @@ const sendMsgUE = (data) => {
         console.error('发送iframe消息失败（可能是跨域问题）', error, data);
     }
 };
+const handleIframeError = () => {
+    console.error('iframe 加载失败，检查 URL 或服务是否正常');
+    // 可选：自动切换到 LeafletMap
+    mapSwitch.value = false;
+};
 /**
  * 接送其他页面发送UE消息
  */
 //备注信息弹窗
 function transformWKT (wktStr) {
-    const arr = wktStr.split(',');
-    const resultArr = [];
+    // 1. 清理 WKT 字符串（处理空格、多余逗号，避免格式干扰）
+    const cleanStr = wktStr.replace(/\s+/g, ',').replace(/,,+/g, ',').trim();
+    const coordArr = cleanStr.split(',');
+    const result = [];
 
-    // 判断数组长度是否为偶数且至少有两个元素
-    if (arr.length === 2) {
-        // 只有一组经纬度，直接加0
-        resultArr.push(`${arr[0]},${arr[1]},0`);
+    // 2. 校验坐标数组长度（至少2个元素，且为偶数，确保格式合法）
+    if (coordArr.length < 2 || coordArr.length % 2 !== 0) {
+        console.warn('WKT 格式错误，坐标数量需为偶数且至少2个', wktStr);
+        return result;
+    }
+
+    // 3. 区分处理：2个元素是点，≥4个元素是线/面
+    if (coordArr.length === 2) {
+        // 点类型：直接拼接 ",0"（原始格式已为“经度,纬度”）
+        const pointCoord = `${coordArr[0]},${coordArr[1]},0`;
+        result.push(pointCoord);
     } else {
-        // 多组经纬度，按之前逻辑处理
-        for (let i = 0; i < arr.length; i += 2) {
-            const lat = arr[i];
-            const lon = arr[i + 1];
-            resultArr.push(`${lon},${lat},0`);
+        // 线/面类型：循环交换“纬度,经度”为“经度,纬度”，再拼接 ",0"
+        for (let i = 0; i < coordArr.length; i += 2) {
+            if (i + 1 >= coordArr.length) break; // 避免数组越界
+            const lat = coordArr[i];     // 原始第1项：纬度
+            const lng = coordArr[i + 1]; // 原始第2项：经度
+            const lineAreaCoord = `${lng},${lat},0`;
+            result.push(lineAreaCoord);
         }
     }
 
-    return resultArr;
+    return result;
 }
 let dataWkt = []
 bus.on('remarkMessage', data => {
+    console.log("🚀 ~ data.wkt:", data.wkt)
     dataWkt = transformWKT(data.wkt);
+    console.log("🚀 ~ data.dataWkt:", dataWkt)
     if (data.type == 'point') {
         if (data.checked) {
-            console.log("🚀 ~ data.wkt:", data.wkt)
-            console.log("🚀 ~ data.layerName:", data.id)
-            console.log("🚀 ~ data.layerName:", data.layerName)
             sendMsgUE({
                 "Command": "CreateVectorLayer_Point",
                 "Args": {
@@ -282,6 +322,7 @@ const handleSearchRelic = (data) => {
 };
 const handleFunctionPanel = (data) => {
     if (data.index === 0) {
+        splitScreen.value = false
         if (data.isSelected) {
             sendMsgUE({
                 "Command": "ShowPOIWithType",
@@ -300,6 +341,7 @@ const handleFunctionPanel = (data) => {
             });
         }
     } else if (data.index === 1) {
+        splitScreen.value = true
         if (data.isSelected) {
             sendMsgUE({
                 "Command": "SwitchSplitScreenState",
@@ -307,6 +349,15 @@ const handleFunctionPanel = (data) => {
                     "State": true
                 }
             });
+            bus.on('dragIcon:screenRatio', data => {
+                console.log("🚀 ~ handleFunctionPanel ~ data:", data)
+                sendMsgUE({
+                    "Command": "SwitchSplitScreenRatio",
+                    "Args": {
+                        "Ratio": data
+                    }
+                });
+            })
         } else {
             sendMsgUE({
                 "Command": "SwitchSplitScreenState",
@@ -316,6 +367,7 @@ const handleFunctionPanel = (data) => {
             });
         }
     } else if (data.index === 2) {
+        splitScreen.value = false
         if (data.isSelected) {
             bus.on('time-change', year => {
                 sendMsgUE({

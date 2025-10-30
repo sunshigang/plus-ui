@@ -350,16 +350,4 @@ onMounted(() => { })
     }
 }
 
-.sceneRoaming {
-    pointer-events: auto;
-    position: absolute;
-    width: 8.6rem;
-    height: 8.7rem;
-    top: 85.28%;
-    left: 6.25%;
-    background: url(../../static/image/left/sceneRoaming.png) no-repeat;
-    background-size: cover;
-    z-index: 2;
-    cursor: pointer;
-}
 </style>

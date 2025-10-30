@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <div class="top">
-            <div class="titleName">方岩风景名胜区三维场景大屏</div>
+            <div class="titleName">数字方岩三维可视化平台</div>
         </div>
         <div class="bottom"></div>
         <div class="left"></div>
