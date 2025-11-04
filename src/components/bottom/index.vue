@@ -52,6 +52,7 @@ import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, computed }
 import bus from '../../libs/eventbus'
 const route = useRoute()
 const timeIsShow = ref(false)
+const projectType = ref(''); // 初始为空
 const years = ref([2023, 2024, 2025]) // 年份数组
 const currentYear = ref(2025) // 默认选中 2023
 const router = useRouter()
@@ -101,10 +102,9 @@ const clickRightArrow = () => {
     moveSlider(1)
 }
 onMounted(() => {
-    console.log('当前路由路径：', route.path)
-    // bus.on('previewModel', data => {
-    //     console.log("🚀 ~ clickBack ~ data:", data)
-    // })
+    bus.on('previewModel', data => {
+        projectType.value = data.type;
+    });
     bus.on('function-panel-clicked', index => {
         console.log('🚀 ~ index:', index)
         if (index.index === 0) {
@@ -137,15 +137,20 @@ watch(currentYear, newYear => {
     bus.emit('time-change', newYear)
 })
 const clickBack = () => {
-
     if (route.path == '/screen/screen') {
-        router.push('/')
+        router.push('/');
     } else {
-        router.push('/project/major')
-
+        // 新增：根据存储的项目类型跳转对应页面
+        if (projectType.value === '重大项目') {
+            router.push('/project/major');
+        } else if (projectType.value === '一般项目') {
+            router.push('/project/normal');
+        } else {
+            // 默认跳转（防止无类型时异常）
+            router.push('/project/major');
+        }
     }
-
-}
+};
 </script>
 
 <style lang="scss" scoped>

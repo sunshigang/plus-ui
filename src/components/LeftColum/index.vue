@@ -1,21 +1,23 @@
 <template>
     <div id="leftSidebar">
-        <div class="leftLine"></div>
+        <div class="leftLine" v-hasPermi="['screen:function:review']"></div>
         <div :class="schemeReviewStyle == true ? 'schemeReviewSelected' : 'schemeReviewSelect'"
             @click="clickSchemeReview" v-hasPermi="['screen:function:review']">
             <div class="schemeReviewFont">方案审查</div>
         </div>
-        <div class="leftLine1" v-hasPermi="['screen:function:review']"></div>
+        <div class="leftLine1" v-hasPermi="['screen:function:achievement']"></div>
         <div :class="planningAchievementStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'"
             @click="clickPlanningAchievement" v-hasPermi="['screen:function:achievement']">
             <div class="planningAchievementsFont">规划成果</div>
         </div>
-        <div class="leftLine1" v-hasPermi="['screen:function:achievement']"></div>
+        <div class="leftLine1" v-hasPermi="['screen:function:vector']"></div>
         <div :class="vectorLayerStyle == true ? 'planningAchievementSelected' : 'planningAchievementSelect'"
             @click="clickVectorLayer" v-hasPermi="['screen:function:vector']">
             <div class="planningAchievementsFont">矢量图层</div>
         </div>
-        <div class="lanternEar"></div>
+        <div class="lanternEar"  v-hasPermi="['screen:function:vector']"></div>
+        <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
+            v-hasPermi="['screen:function:roam']"></div>
     </div>
     <div class="searchBox" v-hasPermi="['screen:function:achievement']" v-if="planningAchievementStyle">
         <input v-model="searchInput" class="search-input" placeholder="请输入搜索内容" />
@@ -29,7 +31,7 @@
 import { reactive, toRefs, onMounted, getCurrentInstance, ref, computed } from 'vue'
 import bus from '../../libs/eventbus'
 // import { getRelicInfoById, getRelicInfoPage } from "../../api/map"
-
+const sceneRoamingShow = ref(true)
 const { proxy } = getCurrentInstance()
 // 定义响应式数据
 const searchInput = ref('')
@@ -43,10 +45,7 @@ const clickSchemeReview = () => {
     vectorLayerStyle.value = false
     // 触发事件总线，通知其他组件
     bus.emit('scheme-review-clicked', schemeReviewStyle.value)
-    // 可扩展：调用接口获取方案数据，更新地图等
-    // getRelicInfoPage().then(response => {
-    //     console.log('获取方案数据成功', response)
-    // })
+    sceneRoamingShow.value =true
 }
 const clickPlanningAchievement = () => {
     // 切换规划成果样式
@@ -66,15 +65,23 @@ const clickVectorLayer = () => {
     vectorLayerStyle.value = !vectorLayerStyle.value
     // 触发事件总线，通知其他组件
     bus.emit('vector-layer-clicked', vectorLayerStyle.value)
+    sceneRoamingShow.value = !vectorLayerStyle.value
 }
-
+const sceneRoamingStart = ref(false)
+const clickSceneRoaming = () => {
+    // 触发事件总线，通知其他组件
+    sceneRoamingStart.value = !sceneRoamingStart.value
+    bus.emit('scene-roaming-clicked', sceneRoamingStart.value)
+}
 // 新增：搜索按钮点击事件
 const handleSearch = () => {
     console.log('搜索内容：', searchInput.value)
     bus.emit('search-relic', searchInput.value)
 }
 
-onMounted(() => { })
+onMounted(() => {
+
+})
 </script>
 
 <style lang="scss" scoped>
@@ -82,16 +89,17 @@ onMounted(() => { })
     pointer-events: auto;
     position: absolute;
     width: 7.3rem;
-    height: 86.5vh;
+    height: 89.5vh;
     top: 6.5%;
     left: 6.875%;
     z-index: 2;
     display: flex;
     flex-direction: column;
+    // background-color: red;
 
     .leftLine {
         width: 0.1rem;
-        height: 12rem;
+        height: 7rem;
         background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.4rem, #fad126 0.4rem, #fad126 0.5rem);
         margin: 0 auto;
         /* 相对定位，给伪元素做参考 */
@@ -103,7 +111,7 @@ onMounted(() => { })
         content: '';
         position: absolute;
         /* 四分之三高度 = 8.5rem * 0.75 = 6.375rem（根据实际高度调整） */
-        top: calc(12rem * 0.75);
+        top: calc(7rem * 0.5);
         left: 50%;
         transform: translateX(-50%);
         width: 0.6rem;
@@ -184,7 +192,7 @@ onMounted(() => { })
 
     .leftLine1 {
         width: 0.1rem;
-        height: 9rem;
+        height: 6rem;
         background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.4rem, #fad126 0.4rem, #fad126 0.5rem);
         margin: 0 auto;
         /* 相对定位，给伪元素做参考 */
@@ -196,7 +204,7 @@ onMounted(() => { })
         content: '';
         position: absolute;
         /* 四分之三高度 = 8.5rem * 0.75 = 6.375rem（根据实际高度调整） */
-        top: calc(9rem * 0.5);
+        top: calc(6rem * 0.5);
         left: 50%;
         transform: translateX(-50%);
         width: 0.6rem;
@@ -290,6 +298,14 @@ onMounted(() => { })
         margin-left: auto;
         margin-right: auto;
     }
+
+    .sceneRoaming {
+        pointer-events: auto;
+        width: 8.6rem;
+        height: 8.7rem;
+        background: url(../../static/image/left/sceneRoaming.png) no-repeat;
+        cursor: pointer;
+    }
 }
 
 .searchBox {
@@ -349,5 +365,4 @@ onMounted(() => { })
         }
     }
 }
-
 </style>

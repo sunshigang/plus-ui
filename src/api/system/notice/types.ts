@@ -6,6 +6,7 @@ export interface NoticeVO extends BaseEntity {
   status: string;
   remark: string;
   createByName: string;
+  read: boolean;
 }
 
 export interface NoticeQuery extends PageQuery {
@@ -13,6 +14,7 @@ export interface NoticeQuery extends PageQuery {
   createByName: string;
   status: string;
   noticeType: string;
+  read: boolean;
 }
 
 export interface NoticeForm {
@@ -23,4 +25,5 @@ export interface NoticeForm {
   status: string;
   remark: string;
   createByName: string;
+  read: boolean;
 }

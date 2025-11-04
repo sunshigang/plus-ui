@@ -33,39 +33,7 @@ const isIframeLoaded = ref(false);
 const handleIframeLoad = () => {
     isIframeLoaded.value = true;
     console.log('iframe加载完成，可发送消息');
-    bus.on('previewModel', data => {
-        const coords = data.modelCoordinate.split(',');
-        const x = parseFloat(coords[0]).toFixed(5); // 保留5位小数，和原始数据一致
-        const y = parseFloat(coords[1]).toFixed(6); // 保留6位小数，和原始数据一致
-        const z = parseFloat(coords[2]).toFixed(3); // 保留3位小数，示例中Z=0.000
-        const z1 = (1000).toFixed(3);
-        const url = data.threeDModel;
-        const path = url.replace(/^https?:\/\/[^\/]+\//, ''); // 去掉协议和域名，保留 fangyan/2025/10/27/...
-        // 再把第一个斜杠去掉，变成 fangyan2025/10/27/...
-        const result = path.replace('fangyan/', 'fangyan');
-        console.log("🚀 ~ result:", result)
-        sendMsgUE({
-            "Command": "LoadAssets",
-            "Args": {
-                "ID": data.id,
-                "Name": result,
-                "State": 0,
-                "Angle": 0,
-                "CoordType": 0,
-                "Location": data.modelCoordinate,
-                "Scale": "1,1,1"
-            }
-        });
-        sendMsgUE({
-            "Command": "SetCameraMove_Geo",
-            "Args": {
-                "CoordType": 0,
-                "TargetLocation": `X=${x} Y=${y} Z=${z}`,
-                "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
-                "Duration": 1.0
-            }
-        });
-    });
+
 };
 /* 三维协议消息发送 */
 const sendMsgUE = (data) => {
@@ -93,12 +61,56 @@ const sendMsgUE = (data) => {
 // 3. 简化attractionTypeMessage事件
 
 onMounted(() => {
-    // 2. 仅在onMounted中绑定事件
-    // 初始化发送主镜头指令
-    // sendMsgUE({
-    //     "Command": "SwitchCamera",
-    //     "Args": { "ID": "Main", "Duration": 1.0 }
-    // });
+    bus.on('attraction-body-clicked', data => {
+        sendMsgUE({
+            "Command": "SwitchCamera",
+            "Args": {
+                "ID": data,
+                "Duration": 1.0
+            }
+        });
+    });
+    bus.on('previewModel', data => {
+        const coords = data.modelCoordinate.split(',');
+        const x = parseFloat(coords[0]).toFixed(5); // 保留5位小数，和原始数据一致
+        const y = parseFloat(coords[1]).toFixed(6); // 保留6位小数，和原始数据一致
+        const z = parseFloat(coords[2]).toFixed(3); // 保留3位小数，示例中Z=0.000
+        const z1 = (500).toFixed(3);
+        const url = data.threeDModel;
+        const path = url.replace(/^https?:\/\/[^\/]+\//, ''); // 去掉协议和域名，保留 fangyan/2025/10/27/...
+        // 再把fangyan/去掉，变成 2025/10/27/...
+        const result = path.replace(/^fangyan\//, '');
+        console.log("🚀 ~ result:", result)
+        const sendMsg = () => {
+            if (isIframeLoaded.value) {
+                sendMsgUE({
+                    "Command": "LoadAssets",
+                    "Args": {
+                        "ID": data.id,
+                        "Name": result,
+                        "State": 0,
+                        "Angle": 0,
+                        "CoordType": 0,
+                        "Location": data.modelCoordinate,
+                        "Scale": "2,2,2"
+                    }
+                });
+                sendMsgUE({
+                    "Command": "SetCameraMove_Geo",
+                    "Args": {
+                        "CoordType": 0,
+                        "TargetLocation": `X=${x} Y=${y} Z=${z}`,
+                        "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
+                        "Duration": 1.0
+                    }
+                });
+            } else {
+                setTimeout(sendMsg, 100); // 未加载完成则延迟重试
+            }
+        }
+        sendMsg();
+
+    });
 
 
 
@@ -107,6 +119,7 @@ onMounted(() => {
 // 3. 单独定义onUnmounted，统一解绑所有事件（符合Vue规范）
 onUnmounted(() => {
     bus.off('previewModel');
+    bus.off('attraction-body-clicked');
 });
 
 </script>

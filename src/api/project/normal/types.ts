@@ -1,13 +1,15 @@
 export interface InfoVO {
   projectUsage?: string; //项目类型
-  forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
-  managementFeedbackFiles?: string;   // 管委会审批反馈文件
-  managementApprovalTime?: string; // 新增：管理审批时间
-  managementFeedback?: string; // 新增：管理审批反馈
-  forestryApprovalStatus?: string; // 新增：林业审批状态
-  forestryApprovalTime?: string; // 新增：林业审批时间
-  forestryFeedback?: string; // 新增：林业审批反馈
-  managementApprovalStatus?: string; // 新增该属性
+    approveRecord: {
+    gwhApprovalAttachment?: string, // 管委会审批反馈文件
+    gwhApprovalReason?: string,// 管委会审批反馈
+    gwhApproveResult?: string,// 管委会审批状态
+    gwhApproveTime?: string,// 管委会审批时间
+    lyjApprovalAttachment?: string,// 市林业局审核反馈文件
+    lyjApprovalReason?: string,// 市林业局审核反馈
+    lyjApproveResult?: string,// 市林业局审核状态
+    lyjApproveTime?: string,// 市林业局审核时间
+  },
   /**
    *
    */
@@ -151,14 +153,24 @@ export interface InfoVO {
 
 export interface InfoForm extends BaseEntity {
   projectUsage?: string;//项目用途
-  forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
-  managementFeedbackFiles?: string;   // 管委会审批反馈文件
-  managementApprovalTime?: string; // 新增：管理审批时间
-  managementFeedback?: string; // 新增：管理审批反馈
-  forestryApprovalStatus?: string; // 新增：林业审批状态
-  forestryApprovalTime?: string; // 新增：林业审批时间
-  forestryFeedback?: string; // 新增：林业审批反馈
-  managementApprovalStatus?: string; // 新增该属性
+  approveRecord: {
+    gwhApprovalAttachment?: string, // 管委会审批反馈文件
+    gwhApprovalReason?: string,// 管委会审批反馈
+    gwhApproveResult?: string,// 管委会审批状态
+    gwhApproveTime?: string,// 管委会审批时间
+    lyjApprovalAttachment?: string,// 市林业局审核反馈文件
+    lyjApprovalReason?: string,// 市林业局审核反馈
+    lyjApproveResult?: string,// 市林业局审核状态
+    lyjApproveTime?: string,// 市林业局审核时间
+  },
+  // forestryFeedbackFiles?: string;     // 市林业局审核反馈文件
+  // managementFeedbackFiles?: string;   // 管委会审批反馈文件
+  // managementApprovalTime?: string; // 新增：管理审批时间
+  // managementFeedback?: string; // 新增：管理审批反馈
+  // forestryApprovalStatus?: string; // 新增：林业审批状态
+  // forestryApprovalTime?: string; // 新增：林业审批时间
+  // forestryFeedback?: string; // 新增：林业审批反馈
+  // managementApprovalStatus?: string; // 新增该属性
   status?: string;
   majorFlag?: boolean;
   /**

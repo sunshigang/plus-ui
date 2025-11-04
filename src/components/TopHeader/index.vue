@@ -10,8 +10,7 @@
             <div class="todayWeatherTemp">{{ weather.temp }}°C</div>
         </div>
     </div>
-    <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
-        v-hasPermi="['screen:function:roam']"></div>
+    
     <div v-show="sceneRoamingShow" class="attractionBody">
         <div class="mainShot" @click="handleShotClick('mainShot', 'Main')"
             :class="{ mainShoted: activeShotId === 'mainShot' }">主镜头
@@ -55,13 +54,8 @@ const { currentTime } = toRefs(data);
 const { weather } = toRefs(weatherData)
 const showLogout = ref(false);
 let timer = null; // 存储定时器ID，用于清除
-const sceneRoamingStart = ref(false)
-const clickSceneRoaming = () => {
-    // 触发事件总线，通知其他组件
-    sceneRoamingStart.value = !sceneRoamingStart.value
-    console.log("🚀 ~ clickSceneRoaming ~ sceneRoamingStart.value:", sceneRoamingStart.value)
-    bus.emit('scene-roaming-clicked', sceneRoamingStart.value)
-}
+
+
 const handleShotClick = (shotId, shotName) => {
     activeShotId.value = shotId; // 更新当前选中的按钮ID（控制样式）
     bus.emit('attraction-body-clicked', shotName); // 发送总线事件，传入镜头名称
@@ -233,18 +227,7 @@ const loginOut = () => {
     outline: 0px !important;
 }
 
-.sceneRoaming {
-    pointer-events: auto;
-    position: absolute;
-    width: 8.6rem;
-    height: 8.7rem;
-    left: 11%;
-    top: 7%;
-    background: url(../../static/image/left/sceneRoaming.png) no-repeat;
-    background-size: cover;
-    z-index: 2;
-    cursor: pointer;
-}
+
 
 .attractionBody {
     pointer-events: auto;

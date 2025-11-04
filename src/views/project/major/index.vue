@@ -44,59 +44,16 @@
               <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="拟选位置" prop="projectPurpose">
-              <el-input v-model="queryParams.projectPurpose" placeholder="请输入拟选位置" clearable
-                @keyup.enter="handleQuery" />
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="queryParams.status" placeholder="请选择状态" clearable @keyup.enter="handleQuery">
+                <el-option label="填报中" value="填报中"></el-option>
+                <el-option label="管委会审批中" value="管委会审批中"></el-option>
+                <el-option label="管委会通过" value="管委会通过"></el-option>
+                <el-option label="管委会驳回" value="管委会驳回"></el-option>
+                <el-option label="林业局通过" value="林业局通过"></el-option>
+                <el-option label="林业局驳回" value="林业局驳回"></el-option>
+              </el-select>
             </el-form-item>
-
-            <!-- <el-form-item label="建设项目总投资（万元）" prop="projectInvestment">
-              <el-input v-model="queryParams.projectInvestment" placeholder="请输入建设项目总投资" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="规划依据" prop="planningBasis">
-              <el-input v-model="queryParams.planningBasis" placeholder="请输入规划依据" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-              <el-input v-model="queryParams.otherExplanations" placeholder="请输入其他需要说明的情况" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="选址方案" prop="locationPlan">
-              <el-input v-model="queryParams.locationPlan" placeholder="请输入选址方案" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="专家评审意见" prop="expertOpinions">
-              <el-input v-model="queryParams.expertOpinions" placeholder="请输入专家评审意见" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="会议材料" prop="meetingMaterials">
-              <el-input v-model="queryParams.meetingMaterials" placeholder="请输入会议材料" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="选址方案核准申报表" prop="siteSelectionReport">
-              <el-input v-model="queryParams.siteSelectionReport" placeholder="请输入选址方案核准申报表" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="立项文件" prop="approvalDocuments">
-              <el-input v-model="queryParams.approvalDocuments" placeholder="请输入立项文件" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="项目用地红线图" prop="projectRedLine">
-              <el-input v-model="queryParams.projectRedLine" placeholder="请输入项目用地红线图" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
-              <el-input v-model="queryParams.redLineCoordinate" placeholder="请输入项目红线矢量数据" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="项目三维模型" prop="threeDModel">
-              <el-input v-model="queryParams.threeDModel" placeholder="请输入项目三维模型" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item>
-            <el-form-item label="模型坐标" prop="modelCoordinate">
-              <el-input v-model="queryParams.modelCoordinate" placeholder="请输入模型坐标" clearable
-                @keyup.enter="handleQuery" />
-            </el-form-item> -->
             <el-form-item>
               <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
               <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -180,7 +137,7 @@
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
           <template #default="scope">
             <!-- 1. 动态提示的“修改”按钮：仅“填报中”“管委会驳回”显示 -->
-            <el-tooltip v-if="['填报中', '管委会驳回'].includes(scope.row.status)"
+            <el-tooltip v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) && canEdit()"
               :content="getEditTooltipContent(scope.row.status)" placement="top">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                 v-hasPermi="['project:project:edit']"></el-button>
@@ -205,7 +162,7 @@
               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
                 v-hasPermi="['project:project:remove']"></el-button>
             </el-tooltip>
-            <el-tooltip content="数据共享" placement="top" v-if="scope.row.status === '市林业局已通过'">
+            <el-tooltip content="数据共享" placement="top" v-if="['已通过', '林业局通过'].includes(scope.row.status)">
               <el-button link type="primary" icon="Share" @click="handleShare(scope.row)"
                 v-hasPermi="['project:project:share']"></el-button>
             </el-tooltip>
@@ -546,35 +503,35 @@
           </el-form>
         </div>
         <!-- 修改审批信息部分 - 不仅在查看模式且在二次填报修改也可查看审批信息 -->
-        <div v-if="isViewMode || form.status === '管委会驳回'" class="section approval-info">
-          <h3 class="section-title"> {{ form.status === '管委会驳回' ? '管委会驳回意见（二次填报参考）' : '审批信息' }}</h3>
+        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))"
+          class="section approval-info">
+          <h3 class="section-title"> 审批信息</h3>
           <el-form label-width="178px" disabled>
             <!-- 1. 管委会审批信息：状态为“管委会审批中”或“管委会通过”时显示 -->
-            <template v-if="form.managementApprovalStatus || form.status === '管委会驳回'">
+            <template v-if="['管委会通过', '管委会驳回', '林业局通过', '林业局驳回', '已通过'].includes(form.status)">
               <el-form-item label="管委会审批状态">
                 <div class="approval-item">
                   <span :class="['status-icon',
-                    form.managementApprovalStatus === '通过' ? 'success' :
-                      form.managementApprovalStatus === '驳回' ? 'error' : 'pending'
+                    form.approveRecord.gwhApproveResult === '通过' ? 'success' :
+                      form.approveRecord.gwhApproveResult === '驳回' ? 'error' : 'pending'
                   ]">
                     {{
-                      form.managementApprovalStatus === '通过' ? '✓' :
-                        form.managementApprovalStatus === '驳回' ? '✗' : '-'
+                      form.approveRecord.gwhApproveResult === '通过' ? '✓' :
+                        form.approveRecord.gwhApproveResult === '驳回' ? '✗' : '-'
                     }}
                   </span>
                   <span class="status-text">
-                    {{ form.managementApprovalStatus || (form.status === '管委会驳回' ? '驳回' : '待审批') }}
+                    {{ form.approveRecord.gwhApproveResult || '待审批' }}
                   </span>
                 </div>
               </el-form-item>
 
               <el-form-item label="审批时间">
-                <span>{{ form.managementApprovalTime || '暂无时间' }}</span>
+                <span>{{ form.approveRecord.gwhApproveTime || '暂无时间' }}</span>
               </el-form-item>
 
               <el-form-item label="审批反馈">
-                <el-input type="textarea"
-                  :value="form.managementFeedback || (form.status === '管委会驳回' ? '暂无驳回意见' : '暂无反馈')" :rows="3"
+                <el-input type="textarea" :value="form.approveRecord.gwhApprovalReason || '暂无反馈'" :rows="2"
                   style="background: #fff;" />
               </el-form-item>
 
@@ -595,33 +552,31 @@
             </template>
 
             <!-- 2. 市林业局审批信息：不仅查看模式且管委会已通过时显示，另外在林业局通过和林业局驳回也显示审批信息 -->
-            <template v-if="['管委会通过', '林业局通过', '林业局驳回'].includes(form.status)">
+            <template v-if="['林业局通过', '林业局驳回', '已通过'].includes(form.status)">
+              <el-divider content="市林业局审核信息" />
               <el-form-item label="市林业局审核状态">
                 <div class="approval-item">
                   <span :class="['status-icon',
-                    form.forestryApprovalStatus === '通过' ? 'success' :
-                      form.forestryApprovalStatus === '驳回' ? 'error' : 'pending'
+                    form.approveRecord.lyjApproveResult === '通过' ? 'success' :
+                      form.approveRecord.lyjApproveResult === '驳回' ? 'error' : 'pending'
                   ]">
                     {{
-                      form.forestryApprovalStatus === '通过' ? '✓' :
-                        form.forestryApprovalStatus === '驳回' ? '✗' : '-'
+                      form.approveRecord.lyjApproveResult === '通过' ? '✓' :
+                        form.approveRecord.lyjApproveResult === '驳回' ? '✗' : '-'
                     }}
                   </span>
                   <span class="status-text">
-                    {{
-                      form.forestryApprovalStatus ||
-                      (form.status === '管委会通过' ? '未审核' : '待确认')
-                    }}
+                    {{ form.approveRecord.lyjApproveResult || '待审核' }}
                   </span>
                 </div>
               </el-form-item>
 
               <el-form-item label="审核时间">
-                <span>{{ form.forestryApprovalTime || '暂无时间' }}</span>
+                <span>{{ form.approveRecord.lyjApproveTime || '暂无时间' }}</span>
               </el-form-item>
 
               <el-form-item label="审核反馈">
-                <el-input type="textarea" :value="form.forestryFeedback || '暂无反馈意见'" :rows="3"
+                <el-input type="textarea" :value="form.approveRecord.lyjApprovalReason || '暂无反馈意见'" :rows="2"
                   style="background: #fff;" />
               </el-form-item>
 
@@ -642,7 +597,7 @@
             </template>
 
             <!-- 3. 状态为“填报中”时：显示提示文本（可选，增强用户体验） -->
-            <template v-if="isViewMode && !form.managementApprovalStatus && form.status !== '管委会驳回'">
+            <template v-if="isViewMode && !form.approveRecord.gwhApproveResult && form.status !== '管委会驳回'">
               <el-form-item>
                 <span class="text-gray-500">当前项目暂无审批记录</span>
               </el-form-item>
@@ -660,16 +615,25 @@
         </div>
         <div class="dialog-footer" v-if="isViewMode">
           <el-button @click="cancel">取消</el-button>
-          <el-button v-if="form.id && canAudit(form)" type="primary" @click="handleAudit(form)"
-            v-hasPermi="getAuditPermi(form)">
-            {{ form.managementApprovalStatus === '通过' ? '二次审批' : '审批' }}
-          </el-button>
+          <template v-if="form.id && canAudit(form) && !['已通过'].includes(form.status)">
+            <!-- 场景1：管委会审批权限（包括林业局驳回、管委会驳回、未审批） -->
+            <el-button
+              v-if="!form.approveRecord.gwhApproveResult || form.approveRecord.gwhApproveResult === '驳回' || form.approveRecord.lyjApproveResult === '驳回'"
+              type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:gwhApprove']">
+              审批
+            </el-button>
+            <!-- 场景2：林业局审批权限（管委会通过、林业局未审批） -->
+            <el-button v-else-if="form.approveRecord.gwhApproveResult === '通过' && !form.approveRecord.lyjApproveResult"
+              type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:lyjApprove']">
+              二次审批
+            </el-button>
+          </template>
         </div>
       </template>
     </el-dialog>
     <!-- 审批对话框 -->
     <el-dialog
-      :title="`${['管委会通过'].includes(form.status || auditForm.status) ? '二次审批' : '项目审批'} - ${auditForm.projectName || ''}`"
+      :title="`${['管委会通过'].includes(form.status || auditForm.status) ? '林业局审批' : '项目审批'} - ${auditForm.projectName || ''}`"
       v-model="auditDialog.visible" width="1000px" append-to-body>
       <div class="audit-content">
         <!-- 第一部分：项目信息展示 -->
@@ -849,7 +813,7 @@
 
         <!-- 第二部分：审核操作区 -->
         <div class="audit-operation-area">
-          <h3 class="mb-4">{{ form.managementApprovalStatus === '通过' ? '市林业局审核信息' : '审核信息' }}</h3>
+          <h3 class="mb-4">{{ form.approveRecord.gwhApproveResult === '通过' ? '市林业局审核信息' : '审核信息' }}</h3>
           <el-form ref="auditFormRef" :model="auditForm" label-width="120px">
             <el-form-item label="反馈意见" prop="feedback"
               :rules="[{ required: auditForm.auditResult === '驳回', message: '驳回必须填写反馈意见', trigger: 'blur' }]">
@@ -898,6 +862,7 @@
 import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, getInfo, stageInfo, delInfo, addInfo, submitInfo, gwhApprove, lyjApprove } from '@/api/project/normal/index';
+import { useMajorProjectStore } from '@/store/modules/majorProject';
 import { getUserProfile } from '@/api/system/user/index';
 import { getInfo as getUserInfo } from '@/api/login';
 import { delOss, listByIds } from '@/api/system/oss';
@@ -937,11 +902,12 @@ const getStatusColor = (status: string) => {
       return '#bfbfbf'; // 默认灰色（应对未定义状态）
   }
 };
+
 // 动态获取修改按钮的提示文字
 const getEditTooltipContent = (status: string) => {
   return status === '填报中' ? '信息填报' : '二次填报';
 };
-
+const majorProjectStore = useMajorProjectStore();
 //上传文件
 // 1. 上传组件 ref（每个字段一个）
 const locationPlanUploadRef = ref<ElUploadInstance>(); // 选址方案
@@ -1050,7 +1016,17 @@ const auditForm = reactive({
   feedback: '', // 审核反馈意见
   auditResult: '', // 审核结果：通过/驳回
   modelCoordinate: '',
-  createTime: ''
+  createTime: '',
+  approveRecord: {
+    gwhApprovalAttachment: '', // 管委会审批反馈文件
+    gwhApprovalReason: '',// 管委会审批反馈
+    gwhApproveResult: '',// 管委会审批状态
+    gwhApproveTime: '',// 管委会审批时间
+    lyjApprovalAttachment: '',// 市林业局审核反馈文件
+    lyjApprovalReason: '',// 市林业局审核反馈
+    lyjApproveResult: '',// 市林业局审核状态
+    lyjApproveTime: '',// 市林业局审核时间
+  },
 });
 const auditFormRef = ref<ElFormInstance>();
 
@@ -1062,14 +1038,20 @@ const canAudit = async (row: InfoForm) => {
       console.error('用户角色信息无效');
       return false;
     }
-    //系统管理员的userRole为sysadmin,建设单位的userRole为constructor,管委会审核的userRole为mca,市林业局审核的userRole为clb_audit,省林业局审核的userRole为plb_approve,超级管理员的userRole为superadmin,只有管委会审核和市林业局审核有权限审核项目，系统管理员有创建项目的权限，建设单位有修改项目的权限，省林业局审核有数据分享的权限，当 row.status === '填报中'时，建设单位进行修改，操作栏修改按钮的提示字为信息填报，当管委会驳回时，操作栏修改按钮的提示字为二次填报。当row.status === '管委会审批中'时，管委会进行审核，审核按钮提示字为管委会审核，
     const userRole = res.data.roles[0];
+    if (userRole === 'mca' && (
+      !row.approveRecord.gwhApproveResult ||
+      row.approveRecord.gwhApproveResult === '驳回' ||
+      row.approveRecord.lyjApproveResult === '驳回'
+    )) {
+      return true;
+    }
     // 后续权限判断逻辑
     if (userRole === 'mca' && ['待审核', '管委会已驳回'].includes(row.status)) {
       return true;
     } else if (userRole === 'constructor' && row.status === '填报中') {
       return true;
-    } else if (userRole === 'clb_audit' && row.managementApprovalStatus === '通过' && !row.forestryApprovalStatus) {
+    } else if (userRole === 'clb_audit' && row.approveRecord.gwhApproveResult === '通过' && !row.approveRecord.lyjApproveResult) {
       return true;
     } else if (userRole === 'plb_approve' && row.status === '省林业局待审核') {
       return true;
@@ -1158,6 +1140,7 @@ const handleReject = async () => {
 
 // 修改提交审核结果方法（按 form.status 选择接口）
 const submitAuditResult = async (result: '通过' | '驳回') => {
+
   try {
     buttonLoading.value = true;
 
@@ -1168,7 +1151,7 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
       approvalReason: auditForm.feedback,
       approvalAttachment: listToString(feedbackFileList.value)
     };
-
+    // form.value.managementApprovalTime = auditForm.feedback;
     // 👇 核心修改：增加对 status 为 undefined/空值的兜底处理
     const currentStatus = form.value.status || auditForm.status; // 优先用 form.status，次之用 auditForm.status
     if (!currentStatus) {
@@ -1200,14 +1183,22 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
 };
 // 动态获取审批所需权限
 const getAuditPermi = (row: InfoForm) => {
-  if (!row.managementApprovalStatus || row.managementApprovalStatus === '驳回') {
-    return ['project:project:gwhApprove']; // 管委会审批权限（需与后端权限表一致）
+  if (row.approveRecord.lyjApproveResult === '驳回') {
+    return ['project:project:gwhApprove'];
   }
-  // 2. 市林业局审批（二次审批）需要的权限：示例权限标识可根据实际业务调整
-  if (row.managementApprovalStatus === '通过' && !row.forestryApprovalStatus) {
-    return ['project:project:lyjApprove']; // 市林业局审批权限（需与后端权限表一致）
+  // 场景1：未审批/管委会驳回 → 管委会审批权限
+  if (!row.approveRecord.gwhApproveResult || row.approveRecord.gwhApproveResult === '驳回') {
+    return ['project:project:gwhApprove'];
   }
-  // 3. 无匹配审批场景时，返回空数组（避免指令报错）
+  // 场景2：管委会通过、林业局未审批 → 林业局审批权限
+  if (row.approveRecord.gwhApproveResult === '通过' && !row.approveRecord.lyjApproveResult) {
+    return ['project:project:lyjApprove'];
+  }
+  // 场景3：已通过（最终状态）→ 无审批权限，返回空数组（但通过模板层控制不渲染按钮）
+  if (row.status === '已通过') {
+    return [];
+  }
+  // 其他场景兜底
   return [];
 };
 const disabled = ref(false);
@@ -1441,6 +1432,7 @@ const initFormData: InfoForm = {
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
+  updateTime: undefined,
   projectInvestment: undefined,
   planningBasis: undefined,
   constructionContent: undefined,
@@ -1456,14 +1448,16 @@ const initFormData: InfoForm = {
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  managementApprovalStatus: undefined, // 管委会审批状态
-  managementApprovalTime: undefined,   // 管委会审批时间
-  managementFeedback: undefined,       // 管委会审批反馈
-  managementFeedbackFiles: undefined,  // 管委会审批反馈文件
-  forestryApprovalStatus: undefined,   // 市林业局审核状态
-  forestryApprovalTime: undefined,     // 市林业局审核时间
-  forestryFeedback: undefined,         // 市林业局审核反馈
-  forestryFeedbackFiles: undefined,    // 市林业局审核反馈文件
+  approveRecord: {
+    gwhApprovalAttachment: undefined, // 管委会审批反馈文件
+    gwhApprovalReason: undefined,// 管委会审批反馈
+    gwhApproveResult: undefined,// 管委会审批状态
+    gwhApproveTime: undefined,// 管委会审批时间
+    lyjApprovalAttachment: undefined,// 市林业局审核反馈文件
+    lyjApprovalReason: undefined,// 市林业局审核反馈
+    lyjApproveResult: undefined,// 市林业局审核状态
+    lyjApproveTime: undefined,// 市林业局审核时间
+  },
 }
 const data = reactive<PageData<InfoForm, InfoQuery>>({
   form: { ...initFormData },
@@ -1514,60 +1508,6 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     scenicArea: [
       { required: true, message: "涉及风景名胜区名称不能为空", trigger: "blur" }
     ],
-    // organizationCode: [
-    //   { required: true, message: "组织机构代码不能为空", trigger: "blur" }
-    // ],
-    // contactPerson: [
-    //   { required: true, message: "经办人不能为空", trigger: "blur" }
-    // ],
-    // protectionLevel: [
-    //   { required: true, message: "保护等级不能为空", trigger: "blur" }
-    // ],
-    // projectType: [
-    //   { required: true, message: "项目类型不能为空", trigger: "change" }
-    // ],
-    // projectPurpose: [
-    //   { required: true, message: "拟选位置不能为空", trigger: "blur" }
-    // ],
-    // projectInvestment: [
-    //   { required: true, message: "建设项目总投资不能为空", trigger: "blur" }
-    // ],
-    // planningBasis: [
-    //   { required: true, message: "规划依据不能为空", trigger: "blur" }
-    // ],
-    // constructionContent: [
-    //   { required: true, message: "建设内容涉及规模不能为空", trigger: "blur" }
-    // ],
-    // otherExplanations: [
-    //   { required: true, message: "其他需要说明的情况不能为空", trigger: "blur" }
-    // ],
-    // locationPlan: [
-    //   { required: true, message: "选址方案不能为空", trigger: "blur" }
-    // ],
-    // expertOpinions: [
-    //   { required: true, message: "专家评审意见不能为空", trigger: "blur" }
-    // ],
-    // meetingMaterials: [
-    //   { required: true, message: "会议材料不能为空", trigger: "blur" }
-    // ],
-    // siteSelectionReport: [
-    //   { required: true, message: "选址方案核准申报表不能为空", trigger: "blur" }
-    // ],
-    // approvalDocuments: [
-    //   { required: true, message: "立项文件不能为空", trigger: "blur" }
-    // ],
-    // projectRedLine: [
-    //   { required: true, message: "项目用地红线图不能为空", trigger: "blur" }
-    // ],
-    // redLineCoordinate: [
-    //   { required: true, message: "项目红线矢量数据不能为空", trigger: "blur" }
-    // ],
-    // threeDModel: [
-    //   { required: true, message: "项目三维模型不能为空", trigger: "blur" }
-    // ],
-    // modelCoordinate: [
-    //   { required: true, message: "模型坐标不能为空", trigger: "blur" }
-    // ]
   }
 });
 
@@ -1577,13 +1517,12 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await listInfo(queryParams.value);
-  console.log("🚀 ~ getList ~ res:", res)
   infoList.value = res.rows;
   total.value = res.total;
   loading.value = false;
 }
-// 模型预览按钮点击事件,点击模型预览，通过bus.emit发送项目的id,项目三维模型的文件地址，三维模型的坐标。同时跳转到路由下的/screen/preview路径。 router.push('/screen/preview')。bus.emit('previewModel', {id:form.value.id, threeDModel: form.value.threeDModel, modelCoordinate: form.value.modelCoordinate});
-const handleModelPreview = () => {
+// 模型预览按钮点击事件
+const handleModelPreview = async () => {
   if (!form.value.id) {
     ElMessage.warning('请先保存项目信息');
     return;
@@ -1598,6 +1537,13 @@ const handleModelPreview = () => {
     ElMessage.warning('请先填写模型坐标');
     return;
   }
+  majorProjectStore.saveDialogData({
+    formData: form.value, // 所有表单字段
+    threeDModelFileList: auditThreeDModelFileList.value, // 模型文件列表
+    disabled: disabled.value, // 禁用状态
+    isViewMode: isViewMode.value
+  });
+  await router.push('/screen/preview');
   bus.emit('previewModel', {
     id: form.value.id,
     threeDModel: modelFile.url,
@@ -1609,7 +1555,6 @@ const handleModelPreview = () => {
     threeDModel: modelFile.url,
     modelCoordinate: form.value.modelCoordinate
   });
-  router.push('/screen/preview');
 };
 /** 取消按钮 */
 const cancel = async () => {
@@ -1685,10 +1630,10 @@ const handleAdd = async () => {
   dialog.visible = true;
 }
 const loadAllFileLists = async (projectData: InfoForm) => {
-  form.value.managementFeedback = projectData.managementFeedback || '';
+  form.value.approveRecord.gwhApprovalReason = projectData.approveRecord.gwhApprovalReason || '';
   // ---------- 新增：加载管委会审批反馈文件（关键修复） ----------
-  if (projectData.managementFeedbackFiles) {
-    const managementOssIds = projectData.managementFeedbackFiles.split(',').filter(id => id.trim()); // 过滤空ID
+  if (projectData.approveRecord?.gwhApprovalAttachment) {
+    const managementOssIds = projectData.approveRecord.gwhApprovalAttachment.split(',').filter(id => id.trim()); // 过滤空ID
     if (managementOssIds.length > 0) {
       try {
         const managementRes = await listByIds(managementOssIds.join(','));
@@ -1807,15 +1752,26 @@ const loadAllFileLists = async (projectData: InfoForm) => {
   }
 
   // ---------- 新增：10. 市林业局审核反馈文件 ----------
-  if (projectData.forestryFeedbackFiles) {
-    const forestryOssIds = projectData.forestryFeedbackFiles.split(',').join(',');
-    const forestryRes = await listByIds(forestryOssIds);
-    forestryFeedbackFileList.value = forestryRes.data.map((oss: any) => ({
-      name: oss.originalName,
-      url: oss.url,
-      ossId: oss.ossId,
-      uid: new Date().getTime() + Math.random()
-    }));
+  if (projectData.approveRecord?.lyjApprovalAttachment) {
+    const forestryOssIds = projectData.approveRecord.lyjApprovalAttachment.split(',').filter(id => id.trim());
+    if (forestryOssIds.length > 0) {
+      try {
+        const forestryRes = await listByIds(forestryOssIds.join(','));
+        forestryFeedbackFileList.value = forestryRes.data.map((oss: any) => ({
+          name: oss.originalName,
+          url: oss.url,
+          ossId: oss.ossId,
+          uid: new Date().getTime() + Math.random()
+        }));
+      } catch (err) {
+        console.error('加载市林业局反馈文件失败：', err);
+        forestryFeedbackFileList.value = [];
+      }
+    } else {
+      forestryFeedbackFileList.value = [];
+    }
+  } else {
+    forestryFeedbackFileList.value = [];
   }
 };
 // 详情查看
@@ -1824,10 +1780,12 @@ const handleView = async (row: InfoVO) => {
     await reset();
     const res = await getInfo(row.id);
     const projectData = res.data;
+    console.log("🚀 ~ handleView ~ projectData:", projectData)
     Object.assign(form.value, res.data);
     await loadAllFileLists(projectData);
     dialog.visible = true;
     dialog.title = "查看重大项目信息";
+    // console.log('form', form.value)
     // 设置表单为只读状态
     disabled.value = true;
     isViewMode.value = true; // 标记为查看模式
@@ -1857,15 +1815,29 @@ const handleShare = async (row: InfoVO) => {
     }
   }
 };
+// 校验当前用户是否有修改权限
+const canEdit = async () => {
+  try {
+    const res = await getUserInfo();
+    const userRoles = res.data?.roles || [];
+    // 根据角色判断是否有修改权限（示例：管理员、建设单位有修改权限）
+    return userRoles.some(role => ['superadmin', 'sysadmin', 'constructor', 'mca', 'clb_audit', 'plb_approve'].includes(role));
+  } catch (err) {
+    console.error('校验修改权限失败：', err);
+    return false;
+  }
+};
 /** 修改按钮操作 */
 const handleUpdate = async (row?: InfoVO) => {
+  const hasEditPermi = await canEdit();
+  if (!hasEditPermi) {
+    proxy?.$modal.msgError('当前操作没有权限');
+    return;
+  }
   reset();
   const _id = row?.id || ids.value[0];
   const res = await getInfo(_id);
   const projectData = res.data;
-  // 关键验证：打印查看后端是否返回驳回信息（调试用）
-  console.log('建设单位二次填报 - 管委会反馈文本：', projectData.managementFeedback);
-  console.log('建设单位二次填报 - 管委会反馈文件ID：', projectData.managementFeedbackFiles);
   Object.assign(form.value, res.data);
   await loadAllFileLists(projectData);
   dialog.title = "修改重大项目信息";
@@ -1997,29 +1969,19 @@ const handleExport = () => {
     ...queryParams.value
   }, `info_${new Date().getTime()}.xlsx`)
 }
-const userDept = ref('');
 onMounted(async () => { // 注意添加async关键字
   try {
-    // 等待用户信息返回（处理异步）
-    const userProfile = await getUserProfile();
-    // 提取部门名称（根据返回结构，userProfile.data中包含deptName）
-    userDept.value = userProfile.data.user.deptName || '';
-    console.log('当前用户部门：', userDept.value);
-    console.log("🚀 ~ queryParams.value.status:", queryParams.value.status)
-    // 根据部门设置默认查询条件（例如：市林业局默认看“管委会通过”的项目）
-    if (userDept.value === '建设公司') {
-      queryParams.value.status = '填报中';
-
-    } else if (userDept.value === '管委会') {
-      queryParams.value.status = '管委会待审核';
-    } else if (userDept.value === '市林业局') {
-      queryParams.value.status = '管委会通过';
-    } else if (userDept.value === '省林业局') {
-      queryParams.value.status = '林业局通过';
-    }
-
     // 加载项目列表
     getList();
+    const { isEditDialogVisible, formData, threeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
+    // 若需要显示弹窗，恢复所有数据
+    if (isEditDialogVisible) {
+      form.value = { ...form.value, ...formData }; // 恢复表单字段
+      auditThreeDModelFileList.value = [...threeDModelFileList]; // 恢复模型文件列表
+      disabled.value = storeDisabled; // 恢复禁用状态
+      isViewMode.value = storeIsViewMode; // 恢复查看模式状态
+      dialog.visible = true; // 自动弹出弹窗
+    }
   } catch (err) {
     console.error('获取用户信息失败：', err);
     // 即使获取失败，仍尝试加载列表（可选）

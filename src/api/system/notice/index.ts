@@ -43,3 +43,18 @@ export function delNotice(noticeId: string | number | Array<string | number>) {
     method: 'delete'
   });
 }
+// 已读公告通知
+export function readNotice(noticeIds: string | number | Array<string | number>) {
+  return request({
+    url: '/system/notice/read/' + noticeIds,
+    method: 'post',
+    data: noticeIds
+  });
+}
+//
+export function unreadCount(){
+  return request({
+    url: '/system/notice/unreadCount',
+    method: 'get',
+  });
+}

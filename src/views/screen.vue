@@ -11,7 +11,7 @@
                 <right-colum></right-colum>
                 <NotesPopup />
                 <bottom />
-                <mapTitle  />
+                <mapTitle />
             </template>
         </my-mask>
     </div>
@@ -62,35 +62,33 @@ const handleIframeLoad = () => {
 };
 /* 三维协议消息发送 */
 const sendMsgUE = (data) => {
+    // 关键修复：iframe隐藏时加入队列（原代码漏了这步）
     if (!mapSwitch.value) {
         console.warn('iframe 已隐藏，消息加入队列', data);
-        msgQueue.value.push(data); // 加入队列
+        msgQueue.value.push(data);
         return;
     }
     if (!iframeRef.value) {
-        console.warn('iframe 已隐藏，无法发送消息', data);
-        msgQueue.value.push(data); // 加入队列
-        return;
-    }
-    if (!iframeRef.value) {
-        console.warn('iframe尚未加载或已被移除，无法发送消息', data);
+        console.warn('iframe 未挂载，消息加入队列', data);
+        msgQueue.value.push(data);
         return;
     }
     if (!isIframeLoaded.value) {
-        console.warn('iframe内容未加载完成，延迟发送消息', data);
-        msgQueue.value.push(data); // 加入队列
-        // 延迟100ms重试（可根据实际调整）
-        // setTimeout(() => sendMsgUE(data), 100);
+        console.warn('iframe未加载完成，消息加入队列', data);
+        msgQueue.value.push(data);
         return;
     }
+    // 发送队列中残留的消息
     while (msgQueue.value.length > 0) {
         const queuedData = msgQueue.value.shift();
         iframeRef.value.contentWindow.postMessage(JSON.stringify(queuedData), "*");
     }
+    // 发送当前消息
     try {
         iframeRef.value.contentWindow.postMessage(JSON.stringify(data), "*");
     } catch (error) {
-        console.error('发送iframe消息失败（可能是跨域问题）', error, data);
+        console.error('发送iframe消息失败', error, data);
+        msgQueue.value.push(data); // 失败时重新入队
     }
 };
 const handleIframeError = () => {
@@ -258,16 +256,9 @@ bus.on('scene-roaming-clicked', data => {
                 "State": "Start"
             }
         });
-        sendMsgUE({
-            "Command": "OnStartRoaming",
-            "Args": {
-                "ID": "场景漫游",
-                "State": "Start"
-            }
-        });
     } else {
         sendMsgUE({
-            "Command": "OnStartRoaming",
+            "Command": "StartRoaming",
             "Args": {
                 "ID": "场景漫游",
                 "State": "Stop"
@@ -407,7 +398,7 @@ onUnmounted(() => {
     bus.off('search-relic', handleSearchRelic);
     bus.off('cultureTypeMessage'); // 简化事件无需命名函数，直接off
     bus.off('attractionTypeMessage');
-    // bus.off('scene-roaming-clicked');
+    bus.off('scene-roaming-clicked');
     bus.off('function-panel-clicked', handleFunctionPanel);
 });
 
@@ -415,7 +406,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 #home {
     width: 100%;
-    height: 100vh;
+    height: 99.8vh;
     background: url(../../../static/image/map/map.png) no-repeat;
     background-size: 100% 100%;
 }

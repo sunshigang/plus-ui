@@ -1,6 +1,7 @@
 <template>
   <div class="p-2">
-    <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
@@ -28,15 +29,16 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:notice:add']" type="primary" plain icon="Plus" @click="handleAdd">新增</el-button>
+            <el-button v-hasPermi="['system:notice:add']" type="primary" plain icon="Plus"
+              @click="handleAdd">新增</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:notice:edit']" type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()"
-              >修改</el-button
-            >
+            <el-button v-hasPermi="['system:notice:edit']" type="success" plain icon="Edit" :disabled="single"
+              @click="handleUpdate()">修改</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:notice:remove']" type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()">
+            <el-button v-hasPermi="['system:notice:remove']" type="danger" plain icon="Delete" :disabled="multiple"
+              @click="handleDelete()">
               删除
             </el-button>
           </el-col>
@@ -66,17 +68,30 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
+            <el-tooltip content="详情查看" placement="top">
+              <el-button v-hasPermi="['system:notice:view']" link type="primary" icon="View"
+                @click="handleUpdate(scope.row)"></el-button>
+            </el-tooltip>
             <el-tooltip content="修改" placement="top">
-              <el-button v-hasPermi="['system:notice:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:notice:edit']" link type="primary" icon="Edit"
+                @click="handleUpdate(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:notice:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+              <el-button v-hasPermi="['system:notice:remove']" link type="primary" icon="Delete"
+                @click="handleDelete(scope.row)"></el-button>
             </el-tooltip>
+            <el-button v-hasPermi="['system:notice:read']" link :style="{
+              color: scope.row.read ? '#999999' : '#409eff',
+              cursor: scope.row.read ? 'default' : 'pointer'
+            }" :disabled="scope.row.read" @click="handleRead(scope.row)">
+              标为已读
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" :total="total" @pagination="getList" />
+      <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
+        :total="total" @pagination="getList" />
     </el-card>
     <!-- 添加或修改公告对话框 -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="780px" append-to-body>
@@ -90,14 +105,16 @@
           <el-col :span="12">
             <el-form-item label="公告类型" prop="noticeType">
               <el-select v-model="form.noticeType" placeholder="请选择">
-                <el-option v-for="dict in sys_notice_type" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+                <el-option v-for="dict in sys_notice_type" :key="dict.value" :label="dict.label"
+                  :value="dict.value"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="状态">
               <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in sys_notice_status" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
+                <el-radio v-for="dict in sys_notice_status" :key="dict.value"
+                  :value="dict.value">{{ dict.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>
@@ -119,7 +136,7 @@
 </template>
 
 <script setup name="Notice" lang="ts">
-import { listNotice, getNotice, delNotice, addNotice, updateNotice } from '@/api/system/notice';
+import { listNotice, getNotice, delNotice, readNotice, addNotice, updateNotice,unreadCount } from '@/api/system/notice';
 import { NoticeForm, NoticeQuery, NoticeVO } from '@/api/system/notice/types';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -148,7 +165,8 @@ const initFormData: NoticeForm = {
   noticeContent: '',
   status: '0',
   remark: '',
-  createByName: ''
+  createByName: '',
+  read: false
 };
 const data = reactive<PageData<NoticeForm, NoticeQuery>>({
   form: { ...initFormData },
@@ -158,7 +176,8 @@ const data = reactive<PageData<NoticeForm, NoticeQuery>>({
     noticeTitle: '',
     createByName: '',
     status: '',
-    noticeType: ''
+    noticeType: '',
+    read: false
   },
   rules: {
     noticeTitle: [{ required: true, message: '公告标题不能为空', trigger: 'blur' }],
@@ -176,6 +195,8 @@ const getList = async () => {
   noticeList.value = res.rows;
   total.value = res.total;
   loading.value = false;
+  const number = await unreadCount()
+  console.log("🚀 ~ getList ~ number:", number)
 };
 /** 取消按钮 */
 const cancel = () => {
@@ -236,6 +257,30 @@ const handleDelete = async (row?: NoticeVO) => {
   await delNotice(noticeIds);
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
+};
+/** 已读按钮操作 */
+const handleRead = async (row?: NoticeVO) => {
+  if (!row) {
+    proxy?.$modal.msgError('请选择有效公告');
+    return;
+  }
+  // 2. 已读状态直接返回，避免重复操作
+  if (row.read) {
+    proxy?.$modal.msgWarning('该公告已标记为已读');
+    return;
+  }
+  const noticeIds = row.noticeId;
+  const noticeTitle = row.noticeTitle || '当前公告'; // 兜底文案，避免空值
+  try {
+    // 3. 捕获弹窗取消的 Promise 异常
+    await proxy?.$modal.confirm(`是否将"${noticeTitle}"标记为已读？`);
+    await readNotice(noticeIds);
+    await getList();
+    proxy?.$modal.msgSuccess('标记成功');
+  } catch (error) {
+    // 捕获取消操作的异常，不抛出错误
+    console.log('用户取消标记已读操作', error);
+  }
 };
 
 onMounted(() => {

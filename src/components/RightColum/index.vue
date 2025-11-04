@@ -226,7 +226,7 @@
                 </transition>
             </div>
 
-            <div class="layerContentA">
+            <div class="layerContentA" >
                 <div class="layerContentTitle">
                     <div class="layerContentLabel">备注信息</div>
                     <el-checkbox v-model="isAllCheckedRemark" class="scroll-custom-checkbox"
