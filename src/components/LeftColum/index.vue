@@ -15,7 +15,7 @@
             @click="clickVectorLayer" v-hasPermi="['screen:function:vector']">
             <div class="planningAchievementsFont">矢量图层</div>
         </div>
-        <div class="lanternEar"  v-hasPermi="['screen:function:vector']"></div>
+        <div class="lanternEar"></div>
         <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
             v-hasPermi="['screen:function:roam']"></div>
     </div>
@@ -45,7 +45,7 @@ const clickSchemeReview = () => {
     vectorLayerStyle.value = false
     // 触发事件总线，通知其他组件
     bus.emit('scheme-review-clicked', schemeReviewStyle.value)
-    sceneRoamingShow.value =true
+    sceneRoamingShow.value = true
 }
 const clickPlanningAchievement = () => {
     // 切换规划成果样式
@@ -300,10 +300,13 @@ onMounted(() => {
     }
 
     .sceneRoaming {
+        position: absolute;
         pointer-events: auto;
         width: 8.6rem;
         height: 8.7rem;
+        top: 89rem;
         background: url(../../static/image/left/sceneRoaming.png) no-repeat;
+        background-size: cover;
         cursor: pointer;
     }
 }

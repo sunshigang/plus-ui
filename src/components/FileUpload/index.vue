@@ -55,11 +55,11 @@ const props = defineProps({
     default: () => []
   },
   // 数量限制
-  limit: propTypes.number.def(5),
+  limit: propTypes.number.def(15),
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型, 例如['png', 'jpg', 'jpeg']
-  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf']),
+  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'DWG','dxf', 'jpg', 'jpeg', 'png', 'cpg','CPG', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml','xml', 'shx', 'FBX', 'obj']),
   // 是否显示提示
   isShowTip: propTypes.bool.def(true),
   // 禁用组件（仅查看文件）
@@ -86,6 +86,7 @@ const fileAccept = computed(() => props.fileType.map((type) => `.${type}`).join(
 watch(
   () => props.modelValue,
   async (val) => {
+    
     if (val) {
       let temp = 1;
       // 首先将值转为数组
@@ -120,9 +121,14 @@ watch(
 const handleBeforeUpload = (file: any) => {
   // 校检文件类型
   if (props.fileType.length) {
-    const fileName = file.name.split('.');
-    const fileExt = fileName[fileName.length - 1];
-    const isTypeOk = props.fileType.indexOf(fileExt) >= 0;
+    let isTypeOk = false;
+    // 遍历允许的文件类型，判断文件名是否以允许的类型结尾
+    for (const type of props.fileType) {
+      if (file.name.endsWith(`.${type}`)) {
+        isTypeOk = true;
+        break;
+      }
+    }
     if (!isTypeOk) {
       proxy?.$modal.msgError(`文件格式不正确, 请上传${props.fileType.join('/')}格式文件!`);
       return false;
@@ -148,7 +154,7 @@ const handleBeforeUpload = (file: any) => {
 
 // 文件个数超出
 const handleExceed = () => {
-  proxy?.$modal.msgError(`上传文件数量不能超过 ${props.limit} 个!`);
+  proxy?.$modal.msgError(`不能超过 ${props.limit} 个!`);
 };
 
 // 上传失败

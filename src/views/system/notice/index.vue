@@ -50,36 +50,34 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column v-if="false" label="序号" align="center" prop="noticeId" width="100" />
         <el-table-column label="公告标题" align="center" prop="noticeTitle" :show-overflow-tooltip="true" />
-        <el-table-column label="公告类型" align="center" prop="noticeType" width="100">
+        <el-table-column label="公告类型" align="center" prop="noticeType" width="150">
           <template #default="scope">
             <dict-tag :options="sys_notice_type" :value="scope.row.noticeType" />
           </template>
         </el-table-column>
-        <el-table-column label="状态" align="center" prop="status" width="100">
+        <el-table-column label="状态" align="center" prop="status" width="150">
           <template #default="scope">
             <dict-tag :options="sys_notice_status" :value="scope.row.status" />
           </template>
         </el-table-column>
-        <el-table-column label="创建者" align="center" prop="createByName" width="100" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="100">
+        <el-table-column label="创建者" align="center" prop="createByName" width="150" />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="150">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
-            <el-tooltip content="详情查看" placement="top">
-              <el-button v-hasPermi="['system:notice:view']" link type="primary" icon="View"
-                @click="handleUpdate(scope.row)"></el-button>
-            </el-tooltip>
-            <el-tooltip content="修改" placement="top">
+            <el-button v-hasPermi="['system:notice:view']" link type="primary"
+              @click="handleView(scope.row)">详情查看</el-button>
+            <!-- <el-tooltip content="修改" placement="top">
               <el-button v-hasPermi="['system:notice:edit']" link type="primary" icon="Edit"
                 @click="handleUpdate(scope.row)"></el-button>
             </el-tooltip>
             <el-tooltip content="删除" placement="top">
               <el-button v-hasPermi="['system:notice:remove']" link type="primary" icon="Delete"
                 @click="handleDelete(scope.row)"></el-button>
-            </el-tooltip>
+            </el-tooltip> -->
             <el-button v-hasPermi="['system:notice:read']" link :style="{
               color: scope.row.read ? '#999999' : '#409eff',
               cursor: scope.row.read ? 'default' : 'pointer'
@@ -99,12 +97,12 @@
         <el-row>
           <el-col :span="12">
             <el-form-item label="公告标题" prop="noticeTitle">
-              <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" />
+              <el-input v-model="form.noticeTitle" placeholder="请输入公告标题" :disabled="isViewMode" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="公告类型" prop="noticeType">
-              <el-select v-model="form.noticeType" placeholder="请选择">
+              <el-select v-model="form.noticeType" placeholder="请选择" :disabled="isViewMode">
                 <el-option v-for="dict in sys_notice_type" :key="dict.value" :label="dict.label"
                   :value="dict.value"></el-option>
               </el-select>
@@ -112,7 +110,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
+              <el-radio-group v-model="form.status" :disabled="isViewMode">
                 <el-radio v-for="dict in sys_notice_status" :key="dict.value"
                   :value="dict.value">{{ dict.label }}</el-radio>
               </el-radio-group>
@@ -120,14 +118,14 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="内容">
-              <editor v-model="form.noticeContent" :min-height="192" />
+              <editor v-model="form.noticeContent" :min-height="192"  />
             </el-form-item>
           </el-col>
         </el-row>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button type="primary" @click="submitForm" v-if="!isViewMode">确 定</el-button>
           <el-button @click="cancel">取 消</el-button>
         </div>
       </template>
@@ -136,7 +134,7 @@
 </template>
 
 <script setup name="Notice" lang="ts">
-import { listNotice, getNotice, delNotice, readNotice, addNotice, updateNotice,unreadCount } from '@/api/system/notice';
+import { listNotice, getNotice, delNotice, readNotice, addNotice, updateNotice } from '@/api/system/notice';
 import { NoticeForm, NoticeQuery, NoticeVO } from '@/api/system/notice/types';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -184,23 +182,21 @@ const data = reactive<PageData<NoticeForm, NoticeQuery>>({
     noticeType: [{ required: true, message: '公告类型不能为空', trigger: 'change' }]
   }
 });
-
+const isViewMode = ref(false);
 const { queryParams, form, rules } = toRefs(data);
 
 /** 查询公告列表 */
 const getList = async () => {
   loading.value = true;
   const res = await listNotice(queryParams.value);
-  console.log("🚀 ~ getList ~ res:", res)
   noticeList.value = res.rows;
   total.value = res.total;
   loading.value = false;
-  const number = await unreadCount()
-  console.log("🚀 ~ getList ~ number:", number)
 };
 /** 取消按钮 */
 const cancel = () => {
   reset();
+  isViewMode.value = false;
   dialog.visible = false;
 };
 /** 表单重置 */
@@ -238,7 +234,20 @@ const handleUpdate = async (row?: NoticeVO) => {
   Object.assign(form.value, data);
   dialog.visible = true;
   dialog.title = '修改公告';
+  isViewMode.value = false; // 重置为修改模式
 };
+/**查看按钮操作 */
+const handleView = async (row?: NoticeVO) => {
+  if (!row) return; // 确保有选中行
+  reset();
+  const noticeId = row.noticeId;
+  const { data } = await getNotice(noticeId);
+  Object.assign(form.value, data); // 加载数据
+  isViewMode.value = true; // 标记为查看模式
+  dialog.visible = true;
+  dialog.title = '查看公告';
+};
+
 /** 提交按钮 */
 const submitForm = () => {
   noticeFormRef.value?.validate(async (valid: boolean) => {

@@ -108,10 +108,13 @@ onMounted(() => {
     bus.on('function-panel-clicked', index => {
         console.log('🚀 ~ index:', index)
         if (index.index === 0) {
+            legendShowHide.value = true
         } else if (index.index === 1) {
             // legendShowHide.value = !legendShowHide.value
             timeIsShow.value = false
+            legendShowHide.value = false
         } else if (index.index === 2) {
+            legendShowHide.value = false
             timeIsShow.value = index.isSelected // 切换时间轴显示状态
             if (!index.isSelected) {
                 // 如果时间轴被隐藏，重置为默认年份

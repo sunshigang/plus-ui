@@ -10,7 +10,7 @@
             <div class="todayWeatherTemp">{{ weather.temp }}°C</div>
         </div>
     </div>
-    
+
     <div v-show="sceneRoamingShow" class="attractionBody">
         <div class="mainShot" @click="handleShotClick('mainShot', 'Main')"
             :class="{ mainShoted: activeShotId === 'mainShot' }">主镜头
@@ -61,6 +61,18 @@ const handleShotClick = (shotId, shotName) => {
     bus.emit('attraction-body-clicked', shotName); // 发送总线事件，传入镜头名称
 };
 onMounted(() => {
+    bus.on('function-panel-clicked', index => {
+        console.log("🚀 ~ index:", index)
+        if (index.index === 1) {
+            if (index.isSelected) {
+                sceneRoamingShow.value = false
+            } else {
+                sceneRoamingShow.value = true
+            }
+        } else {
+            sceneRoamingShow.value = true
+        }
+    })
     bus.on('scheme-review-clicked', data => {
         if (data) {
             sceneRoamingShow.value = true

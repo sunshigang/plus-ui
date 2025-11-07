@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import { useMajorProjectStore } from '@/store/modules/majorProject';
 import { toRefs, reactive, ref, onMounted, computed, onUnmounted } from 'vue'
 import bus from '@/libs/eventbus'
 import TopHeader from '@/components/TopHeader'
@@ -33,6 +34,7 @@ const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
 const splitScreen = ref(false);
+const majorProjectStore = useMajorProjectStore();
 const cultureTypeMap = {
     1: "Culture_YDSM",
     2: "Culture_HG",
@@ -236,7 +238,20 @@ bus.on('cultureTypeMessage', data => {
         "Args": { "Show": data.checked, "Type": [poiType] }
     });
 });
+bus.on('layerCheckMessage', data => {
+    // 映射图层类型：line → Line，area → Area（匹配 UE 命令要求的 Type）
+    const ueLayerType = data.layerType === 'Line' ? 'Line' : 'Area';
 
+    // 发送与点数据格式对齐的 UE 命令
+    sendMsgUE({
+        "Command": "ShowVectorLayerWithType",
+        "Args": {
+            "Show": data.checked,    // 显示/隐藏状态（与点数据一致）
+            "Type": ueLayerType,     // 线/面类型（正确映射）
+            "Tag": data.name         // 图层名称（与点数据的 Type 逻辑一致）
+        }
+    });
+});
 // 3. 简化attractionTypeMessage事件
 bus.on('attractionTypeMessage', data => {
     const poiType = attractionTypeMap[data.id];
@@ -311,49 +326,123 @@ const handleSearchRelic = (data) => {
         });
     }
 };
+//功能
 const handleFunctionPanel = (data) => {
     if (data.index === 0) {
         splitScreen.value = false
+        const isShow = data.isSelected;
         if (data.isSelected) {
             sendMsgUE({
                 "Command": "ShowPOIWithType",
                 "Args": {
-                    "Show": true,
+                    "Show": isShow,
                     "Type": ["All"]
                 }
+            });
+            sendMsgUE({
+                "Command": "ShowVectorLayerWithType",
+                "Args": { "Show": isShow, "Type": "Line", "Tag": "All" }
+            });
+            sendMsgUE({
+                "Command": "ShowVectorLayerWithType",
+                "Args": { "Show": isShow, "Type": "Area", "Tag": "All" }
             });
         } else {
             sendMsgUE({
                 "Command": "ShowPOIWithType",
                 "Args": {
-                    "Show": false,
+                    "Show": isShow,
                     "Type": ["All"]
                 }
+            });
+            sendMsgUE({
+                "Command": "ShowVectorLayerWithType",
+                "Args": { "Show": isShow, "Type": "Line", "Tag": "All" }
+            });
+            sendMsgUE({
+                "Command": "ShowVectorLayerWithType",
+                "Args": { "Show": isShow, "Type": "Area", "Tag": "All" }
             });
         }
     } else if (data.index === 1) {
-        splitScreen.value = true
+        // 从状态管理中获取保存的项目信息
+        const projectInfo = majorProjectStore.previewProjectInfo;
+        console.log("🚀 ~ handleFunctionPanel ~ projectInfo:", projectInfo)
+        // 分屏比对逻辑（核心修改：读取项目预览信息）
+        splitScreen.value = true;
         if (data.isSelected) {
-            sendMsgUE({
-                "Command": "SwitchSplitScreenState",
-                "Args": {
-                    "State": true
-                }
-            });
-            bus.on('dragIcon:screenRatio', data => {
-                console.log("🚀 ~ handleFunctionPanel ~ data:", data)
+            if (projectInfo) {
+                console.log('分屏比对使用的项目信息：', projectInfo);
+                // 1. 原有分屏基础命令（保留）
+                // sendMsgUE({ "Command": "PingPongMsg", "Args": { "Type": "Ping" } });
+                // 2. 新增：使用项目信息发送命令（示例：加载该项目模型，可根据实际需求调整）
+                const coords = projectInfo.modelCoordinate.split(',');
+                const x = coords[0] || '120.187601';
+                const y = coords[1] || '28.923468';
+                const z = coords[2] || '0';
+
+                // 加载当前项目的三维模型（替换原有固定ID和Name）
+                // sendMsgUE({
+                //     "Command": "LoadAssets",
+                //     "Args": {
+                //         "ID": projectInfo.id.toString(), // 使用项目ID
+                //         "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''), // 提取模型路径
+                //         "State": 0,
+                //         "Angle": 0,
+                //         "CoordType": 0,
+                //         "Location": `${x},${y},${z}`, // 使用项目坐标
+                //         "Scale": "1,1,1"
+                //     }
+                // });
+                sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
                 sendMsgUE({
-                    "Command": "SwitchSplitScreenRatio",
+                    "Command": "SwitchAssetsState",
                     "Args": {
-                        "Ratio": data
+                        "IDs": [projectInfo.id.toString()], // 关联项目ID
+                        "State": 1
                     }
                 });
-            })
+                sendMsgUE({
+                    "Command": "GetAllAssets",
+                });
+                // 3. 原有分屏比例监听（保留）
+                bus.on('dragIcon:screenRatio', (ratio) => {
+                    sendMsgUE({ "Command": "SwitchSplitScreenRatio", "Args": { "Ratio": ratio } });
+                });
+            } else {
+                console.warn('未获取到项目预览信息，分屏比对使用默认配置');
+                // 无项目信息时使用原有默认逻辑
+                // sendMsgUE({ "Command": "PingPongMsg", "Args": { "Type": "Ping" } });
+                // setTimeout(() => {
+                //     sendMsgUE({
+                //         "Command": "LoadAssets",
+                //         "Args": {
+                //             "ID": "1985667666857914369",
+                //             "Name": "2025/11/04/8c0f78c2424844b2b5fa48af9ed892d7.pak",
+                //             "State": 0,
+                //             "Angle": 0,
+                //             "CoordType": 0,
+                //             "Location": "120.187601,28.923468,0",
+                //             "Scale": "1,1,1"
+                //         }
+                //     });
+                //     sendMsgUE({
+                //         "Command": "SwitchAssetsState",
+                //         "Args": {
+                //             "IDs": ["1985667666857914369"],
+                //             "State": 0
+                //         }
+                //     });
+                // }, 1000);
+                // sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
+            }
         } else {
+            // 关闭分屏（不变）
+            sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
             sendMsgUE({
-                "Command": "SwitchSplitScreenState",
+                "Command": "DeleteAssets",
                 "Args": {
-                    "State": false
+                    "ID": projectInfo.id.toString()
                 }
             });
         }
@@ -393,6 +482,7 @@ onMounted(() => {
 
 // 3. 单独定义onUnmounted，统一解绑所有事件（符合Vue规范）
 onUnmounted(() => {
+    majorProjectStore.clearPreviewProjectInfo(); // 清空项目预览信息
     bus.off('vector-layer-clicked', handleVectorLayer);
     bus.off('scheme-review-clicked', handleSchemeReview);
     bus.off('search-relic', handleSearchRelic);

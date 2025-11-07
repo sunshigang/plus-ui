@@ -1537,6 +1537,14 @@ const handleModelPreview = async () => {
     ElMessage.warning('请先填写模型坐标');
     return;
   }
+  // 核心新增：保存项目预览信息到状态管理
+  const projectPreviewInfo = {
+    id: form.value.id,
+    threeDModel: modelFile.url,
+    modelCoordinate: form.value.modelCoordinate,
+    type: '重大项目'
+  };
+  majorProjectStore.savePreviewProjectInfo(projectPreviewInfo); // 保存到store
   majorProjectStore.saveDialogData({
     formData: form.value, // 所有表单字段
     threeDModelFileList: auditThreeDModelFileList.value, // 模型文件列表
@@ -1544,17 +1552,8 @@ const handleModelPreview = async () => {
     isViewMode: isViewMode.value
   });
   await router.push('/screen/preview');
-  bus.emit('previewModel', {
-    id: form.value.id,
-    threeDModel: modelFile.url,
-    modelCoordinate: form.value.modelCoordinate,
-    type: '重大项目'
-  });
-  console.log('已通过Bus发送模型预览数据：', {
-    id: form.value.id,
-    threeDModel: modelFile.url,
-    modelCoordinate: form.value.modelCoordinate
-  });
+  bus.emit('previewModel', projectPreviewInfo);
+  console.log('已保存项目预览信息到状态管理：', projectPreviewInfo);
 };
 /** 取消按钮 */
 const cancel = async () => {

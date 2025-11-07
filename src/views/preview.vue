@@ -44,7 +44,7 @@ const sendMsgUE = (data) => {
     if (!isIframeLoaded.value) {
         console.warn('iframe内容未加载完成，延迟发送消息', data);
         // 延迟100ms重试（可根据实际调整）
-        setTimeout(() => sendMsgUE(data), 100);
+        setTimeout(() => sendMsgUE(data), 3000);
         return;
     }
     try {
@@ -72,17 +72,25 @@ onMounted(() => {
     });
     bus.on('previewModel', data => {
         const coords = data.modelCoordinate.split(',');
-        const x = parseFloat(coords[0]).toFixed(5); // 保留5位小数，和原始数据一致
+        const x = parseFloat(coords[0]).toFixed(6); // 保留5位小数，和原始数据一致
         const y = parseFloat(coords[1]).toFixed(6); // 保留6位小数，和原始数据一致
-        const z = parseFloat(coords[2]).toFixed(3); // 保留3位小数，示例中Z=0.000
-        const z1 = (500).toFixed(3);
+        const z = '0.000'; // 保留3位小数，示例中Z=0.000
+        const z1 = (20000).toFixed(3);
         const url = data.threeDModel;
         const path = url.replace(/^https?:\/\/[^\/]+\//, ''); // 去掉协议和域名，保留 fangyan/2025/10/27/...
         // 再把fangyan/去掉，变成 2025/10/27/...
         const result = path.replace(/^fangyan\//, '');
         console.log("🚀 ~ result:", result)
-        const sendMsg = () => {
-            if (isIframeLoaded.value) {
+        const loadModelWithDelay = () => {
+            // 确保iframe已加载完成，否则继续等待
+            if (!isIframeLoaded.value) {
+                console.log('iframe未加载完成，等待后重试...');
+                setTimeout(loadModelWithDelay, 500); // 每500ms检查一次
+                return;
+            }
+            // 3秒后发送加载模型的消息
+            setTimeout(() => {
+                // 加载模型
                 sendMsgUE({
                     "Command": "LoadAssets",
                     "Args": {
@@ -92,9 +100,31 @@ onMounted(() => {
                         "Angle": 0,
                         "CoordType": 0,
                         "Location": data.modelCoordinate,
-                        "Scale": "2,2,2"
+                        "Scale": "1,1,1"
                     }
                 });
+                sendMsgUE({
+                    "Command": "GetAllAssets",
+                });
+                // sendMsgUE({
+                //     "Command": "DeleteAssets",
+                //     "Args": {
+                //         "ID": data.id
+                //     }
+                // });
+                // sendMsgUE({
+                //     "Command": "DeleteAssets",
+                //     "Args": {
+                //         "ID": "Assets1"
+                //     }
+                // });
+                // sendMsgUE({
+                //     "Command": "DeleteAssets",
+                //     "Args": {
+                //         "ID": "1985667666857914369"
+                //     }
+                // });
+                // 调整相机位置
                 sendMsgUE({
                     "Command": "SetCameraMove_Geo",
                     "Args": {
@@ -104,12 +134,9 @@ onMounted(() => {
                         "Duration": 1.0
                     }
                 });
-            } else {
-                setTimeout(sendMsg, 100); // 未加载完成则延迟重试
-            }
-        }
-        sendMsg();
-
+            }, 1000); // 延迟3秒执行
+        };
+        loadModelWithDelay();
     });
 
 
@@ -126,7 +153,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 #home {
     width: 100%;
-    height: 100vh;
+    height: 99.8vh;
     background: url(../../../static/image/map/map.png) no-repeat;
     background-size: 100% 100%;
 }

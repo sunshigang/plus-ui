@@ -157,7 +157,7 @@
                     <div v-if="layerContentStyleF" class="contentBodyA">
                         <div class="scrollContentA">
                             <div class="scrollDetailA" v-for="item in checkItemsF" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.name }}</div>
+                                <div class="scrollDetailFontA">{{ item.label }}</div>
                                 <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
                                     @change="handleCheckChangeF(item)" />
                             </div>
@@ -207,7 +207,7 @@
             </div>
             <div class="layerContentA">
                 <div class="layerContentTitle">
-                    <div class="layerContentLabel">土地利用规划</div>
+                    <div class="layerContentLabel">生态保护红线</div>
                     <el-checkbox v-model="isAllCheckedJ" class="scroll-custom-checkbox"
                         @change="handleAllCheckJ"></el-checkbox>
                     <div :class="layerContentStyleJ == true ? 'layerContentShow' : 'layerContentHide'"
@@ -226,7 +226,7 @@
                 </transition>
             </div>
 
-            <div class="layerContentA" >
+            <div class="layerContentA">
                 <div class="layerContentTitle">
                     <div class="layerContentLabel">备注信息</div>
                     <el-checkbox v-model="isAllCheckedRemark" class="scroll-custom-checkbox"
@@ -270,9 +270,12 @@
 
         <!-- 圆圈区域：根据按钮选中状态动态切换实心/空心（与文字按钮对应） -->
         <div class="circle-container">
-            <div class="circle" :class="{ solid: isSelected[0] }" v-hasPermi="['screen:function:redline']"></div> <!-- 对应“红线叠加对比” -->
-            <div class="circle" :class="{ solid: isSelected[1] }" v-hasPermi="['screen:function:splitscreen']"></div> <!-- 对应“分屏比对” -->
-            <div class="circle" :class="{ solid: isSelected[2] }" v-hasPermi="['screen:function:analysis']"></div> <!-- 对应“时空分析” -->
+            <div class="circle" :class="{ solid: isSelected[0] }" v-hasPermi="['screen:function:redline']"></div>
+            <!-- 对应“红线叠加对比” -->
+            <div class="circle" :class="{ solid: isSelected[1] }" v-hasPermi="['screen:function:splitscreen']"></div>
+            <!-- 对应“分屏比对” -->
+            <div class="circle" :class="{ solid: isSelected[2] }" v-hasPermi="['screen:function:analysis']"></div>
+            <!-- 对应“时空分析” -->
             <!-- 移除原有的固定实心圆圈，改为与按钮状态联动 -->
         </div>
     </div>
@@ -406,23 +409,21 @@ const checkItemsC = ref([
 ])
 const checkItemsD = ref([
     { id: 1, name: '一级车行道', checked: false },
-    { id: 2, name: '二级车行道', checked: false },
-    { id: 3, name: '一级游步道', checked: false },
-    { id: 4, name: '二级游步道', checked: false },
-    { id: 5, name: '客运索道', checked: false },
+    { id: 2, name: '一级游步道', checked: false },
+    { id: 3, name: '二级游步道', checked: false },
+    { id: 4, name: '客运索道', checked: false },
 ])
 const checkItemsE = ref([{ id: 1, name: '主要景观游赏线', checked: false },])
 const checkItemsF = ref([
-    { id: 1, name: '风景游赏用地', checked: false },
-    { id: 2, name: '旅游服务设施用地', checked: false },
-    { id: 3, name: '居民社会用地', checked: false },
-    { id: 4, name: '交通与功能用地', checked: false },
-    { id: 5, name: '林地', checked: false },
-    { id: 6, name: '园地', checked: false },
-    { id: 7, name: '耕地', checked: false },
-    { id: 8, name: '草地', checked: false },
-    { id: 9, name: '水域', checked: false },
-    { id: 10, name: '滞留地', checked: false },
+    { id: 1, label: '风景游赏用地', name: '土地利用现状-甲类', checked: false },
+    { id: 2, label: '旅游服务设施用地', name: '土地利用现状-乙类', checked: false },
+    { id: 3, label: '居民社会用地', name: '土地利用现状-丙类', checked: false },
+    { id: 4, label: '交通与功能用地', name: '土地利用现状-丁类', checked: false },
+    { id: 5, label: '林地', name: '土地利用现状-戊类', checked: false },
+    { id: 6, label: '园地', name: '土地利用现状-己类', checked: false },
+    { id: 7, label: '耕地', name: '土地利用现状-庚类', checked: false },
+    { id: 8, label: '草地', name: '土地利用现状-辛类', checked: false },
+    { id: 9, label: '水域', name: '土地利用现状-壬类', checked: false },
 ])
 const checkItemsG = ref([
     { id: 1, name: '景群', checked: false },
@@ -439,21 +440,11 @@ const checkItemsI = ref([
     { id: 3, name: '三级保护区', checked: false },
 ])
 const checkItemsJ = ref([
-    { id: 1, name: '风景游赏用地', checked: false },
-    { id: 2, name: '旅游服务设施用地', checked: false },
-    { id: 3, name: '居民社会用地', checked: false },
-    { id: 4, name: '交通与功能用地', checked: false },
-    { id: 5, name: '林地', checked: false },
-    { id: 6, name: '园地', checked: false },
-    { id: 7, name: '耕地', checked: false },
-    { id: 8, name: '草地', checked: false },
-    { id: 9, name: '水域', checked: false },
-    { id: 10, name: '生态保护红线', checked: false },
+    { id: 1, name: '生态保护红线', checked: false },
 ])
 const checkItemsK = ref([
     { id: 1, name: '方岩风景名胜区范围_16版', checked: false },
     { id: 2, name: '方岩风景名胜区总体规划范围', checked: false },
-    { id: 3, name: '在编方岩风景名胜区范围', checked: false },
 ])
 const checkItemsRemark = ref([
     // { id: 1, name: '方岩风景区总体规划范围', checked: false },
@@ -519,7 +510,15 @@ const clickDrawPoint = () => {
     }
     bus.emit('draw-point-clicked', drawPointBodyStyle.value)
 }
-
+const handleCheckChangeCommon = (item, layerType) => {
+    console.log(`Item ${item.id} (${layerType}) checked: ${item.checked}`);
+    bus.emit('layerCheckMessage', {
+        id: item.id,
+        name: item.name,        // 对应 UE 命令的 Tag
+        checked: item.checked,  // 显示/隐藏状态
+        layerType: layerType    // 图层类型：line/area
+    });
+};
 
 const handleCheckChangeA = item => {
     // 处理复选框状态变化
@@ -531,45 +530,15 @@ const handleCheckChangeB = item => {
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('cultureTypeMessage', item)
 }
-const handleCheckChangeC = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
-const handleCheckChangeD = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-
-}
-const handleCheckChangeE = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-
-}
-const handleCheckChangeF = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-
-}
-const handleCheckChangeG = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
-const handleCheckChangeH = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
-const handleCheckChangeI = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
-const handleCheckChangeJ = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
-const handleCheckChangeK = item => {
-    // 处理复选框状态变化
-    console.log(`Item ${item.id} checked: ${item.checked}`)
-}
+const handleCheckChangeC = (item) => handleCheckChangeCommon(item, 'Line');
+const handleCheckChangeD = (item) => handleCheckChangeCommon(item, 'Line');
+const handleCheckChangeE = (item) => handleCheckChangeCommon(item, 'Line');
+const handleCheckChangeF = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeG = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeH = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeI = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeJ = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeK = (item) => handleCheckChangeCommon(item, 'Area');
 const handleCheckChangeRemark = item => {
     // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
@@ -619,8 +588,6 @@ const setAllLayersChecked = (isChecked) => {
         checkItems.value.forEach((item) => {
             // 修改checked状态（触发视图更新）
             item.checked = isChecked;
-            // 可选：若需要触发原有handleCheckChange逻辑（如日志打印、后端同步），可手动调用对应方法
-            // 注意：需根据item所属分类匹配对应方法，此处以A为例，其他分类需补充
             if (checkItems === checkItemsA) handleCheckChangeA(item);
             if (checkItems === checkItemsB) handleCheckChangeB(item);
             if (checkItems === checkItemsC) handleCheckChangeC(item);
@@ -632,9 +599,13 @@ const setAllLayersChecked = (isChecked) => {
             if (checkItems === checkItemsI) handleCheckChangeI(item);
             if (checkItems === checkItemsJ) handleCheckChangeJ(item);
             if (checkItems === checkItemsK) handleCheckChangeK(item);
-            // ... 依次补充D~K的handleCheckChange调用（根据实际业务需求决定是否需要）
         });
     });
+    checkItemsRemark.value.forEach((item) => {
+        item.checked = isChecked;
+        handleCheckChangeRemark(item); // 触发备注信息的选中事件，同步到UE
+    });
+    isAllCheckedRemark.value = isChecked;
 }
 // 1. 修复：用对象存储每个按钮的独立选中状态（默认全未选中）
 const isSelected = ref({
@@ -782,11 +753,19 @@ watch(
     },
     { deep: true }
 );
-
+watch(
+    () => checkItemsRemark.value.map(item => item.checked),
+    (checkedList) => {
+        // 所有备注子项都选中时，全选框勾选；否则取消
+        isAllCheckedRemark.value = checkedList.every(checked => checked);
+    },
+    { deep: true } // 深度监听数组内元素变化
+);
 
 onMounted(() => {
     if (!isSelected.value[0]) {
         setAllLayersChecked(false);
+        isAllCheckedRemark.value = false;
     }
     bus.on('scheme-review-clicked', data => {
         console.log('方案审查可见性:', data)
@@ -798,6 +777,15 @@ onMounted(() => {
         } else {
             drawFunctionShowHide.value = false
         }
+        getMarkList().then((res) => {
+            checkItemsRemark.value = res.rows
+            if (isSelected.value[0]) {
+                checkItemsRemark.value.forEach(item => item.checked = true);
+                isAllCheckedRemark.value = true;
+            }
+        }).catch((error) => {
+            console.error('获取标注信息失败', error);
+        });
     })
     bus.on('planning-achievement-clicked', data => {
         layerManagementShowHide.value = data
@@ -814,11 +802,7 @@ onMounted(() => {
         }
     })
 
-    getMarkList().then((res) => {
-        checkItemsRemark.value = res.rows
-    }).catch((error) => {
-        console.error('获取标注信息失败', error);
-    });
+
 })
 </script>
 

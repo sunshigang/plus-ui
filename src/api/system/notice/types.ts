@@ -7,6 +7,8 @@ export interface NoticeVO extends BaseEntity {
   remark: string;
   createByName: string;
   read: boolean;
+  id: string;
+  message: string;
 }
 
 export interface NoticeQuery extends PageQuery {

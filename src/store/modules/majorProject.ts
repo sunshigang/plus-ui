@@ -3,6 +3,12 @@ import { defineStore } from 'pinia';
 
 export const useMajorProjectStore = defineStore('majorProject', {
   state: () => ({
+    previewProjectInfo: null as {
+      id: string | number;
+      threeDModel: string;
+      modelCoordinate: string;
+      type: string;
+    } | null,
     // 弹窗显示状态（控制返回后是否自动弹出）
     isEditDialogVisible: false,
     // 表单所有字段（与弹窗form结构完全一致）
@@ -45,6 +51,14 @@ export const useMajorProjectStore = defineStore('majorProject', {
     isViewMode: false
   }),
   actions: {
+    // 新增：保存项目预览信息
+    savePreviewProjectInfo(info: any) {
+      this.previewProjectInfo = info;
+    },
+    // 新增：清空项目预览信息（可选，避免残留）
+    clearPreviewProjectInfo() {
+      this.previewProjectInfo = null;
+    },
     // 保存弹窗数据（跳转预览前调用）
     saveDialogData(data) {
       this.formData = { ...this.formData, ...data.formData };

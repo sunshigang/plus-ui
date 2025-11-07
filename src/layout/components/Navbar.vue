@@ -1,23 +1,17 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="appStore.sidebar.opened" class="hamburger-container" @toggle-click="toggleSideBar" />
+    <hamburger id="hamburger-container" :is-active="appStore.sidebar.opened" class="hamburger-container"
+      @toggle-click="toggleSideBar" />
     <breadcrumb v-if="!settingsStore.topNav" id="breadcrumb-container" class="breadcrumb-container" />
     <top-nav v-if="settingsStore.topNav" id="topmenu-container" class="topmenu-container" />
 
     <div class="right-menu flex align-center">
       <template v-if="appStore.device !== 'mobile'">
-        <el-select
-          v-if="userId === 1 && tenantEnabled"
-          v-model="companyName"
-          class="min-w-244px"
-          clearable
-          filterable
-          reserve-keyword
-          :placeholder="proxy.$t('navbar.selectTenant')"
-          @change="dynamicTenantEvent"
-          @clear="dynamicClearEvent"
-        >
-          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId"> </el-option>
+        <el-select v-if="userId === 1 && tenantEnabled" v-model="companyName" class="min-w-244px" clearable filterable
+          reserve-keyword :placeholder="proxy.$t('navbar.selectTenant')" @change="dynamicTenantEvent"
+          @clear="dynamicClearEvent">
+          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId">
+          </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
         </el-select>
 
@@ -32,8 +26,9 @@
           <div>
             <el-popover placement="bottom" trigger="click" transition="el-zoom-in-top" :width="300" :persistent="false">
               <template #reference>
-                <el-badge :value="newNotice > 0 ? newNotice : ''" :max="99">
-                  <div class="right-menu-item hover-effect" style="display: block"><svg-icon icon-class="message" /></div>
+                <el-badge :value="noticeStore.state.unreadNum > 0 ? noticeStore.state.unreadNum : ''" :max="99">
+                  <div class="right-menu-item hover-effect" style="display: block"><svg-icon icon-class="message" />
+                  </div>
                 </el-badge>
               </template>
               <template #default>
@@ -42,14 +37,6 @@
             </el-popover>
           </div>
         </el-tooltip>
-        <!-- <el-tooltip content="Github" effect="dark" placement="bottom">
-          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
-        </el-tooltip>
-
-        <el-tooltip :content="proxy.$t('navbar.document')" effect="dark" placement="bottom">
-          <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
-        </el-tooltip> -->
-
         <el-tooltip :content="proxy.$t('navbar.full')" effect="dark" placement="bottom">
           <screenfull id="screenfull" class="right-menu-item hover-effect" />
         </el-tooltip>
@@ -88,6 +75,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
+import { Router } from 'vue-router';
+import { ComponentInternalInstance, getCurrentInstance } from 'vue';
+import { unreadCount } from '@/api/system/notice';
 import SearchMenu from './TopBar/search.vue';
 import { useAppStore } from '@/store/modules/app';
 import { useUserStore } from '@/store/modules/user';
@@ -98,15 +89,31 @@ import { dynamicClear, dynamicTenant } from '@/api/system/tenant';
 import { TenantVO } from '@/api/types';
 import notice from './notice/index.vue';
 import router from '@/router';
-import { ElMessageBoxOptions } from 'element-plus/es/components/message-box/src/message-box.type';
-
+import { ElMessageBox, ElMessageBoxOptions } from 'element-plus';
+// 声明自定义 proxy 类型
+interface CustomProxy {
+  $router: {
+    push: (path: string | { path: string; query?: Record<string, any> }) => Promise<void>;
+  };
+  $tab: {
+    closeAllPage: () => Promise<void>;
+    refreshPage: () => Promise<void>;
+  };
+  $modal: {
+    msgError: (content: string) => void;
+    msgSuccess: (content: string) => void;
+    msgInfo: (content: string) => void;
+    confirm: (message: string, title: string, options: any) => Promise<void>;
+  };
+  $t: (key: string) => string; // 国际化方法
+}
+const noticeStore = useNoticeStore();
 const appStore = useAppStore();
 const userStore = useUserStore();
 const settingsStore = useSettingsStore();
-const noticeStore = storeToRefs(useNoticeStore());
-const newNotice = ref(<number>0);
-
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// 替换原有的 proxy 获取方式
+const instance = getCurrentInstance();
+const proxy = (instance?.proxy as unknown) as CustomProxy;
 
 const userId = ref(userStore.userId);
 const companyName = ref(undefined);
@@ -192,12 +199,17 @@ const handleCommand = (command: string) => {
 };
 //用深度监听 消息
 watch(
-  () => noticeStore.state.value.notices,
-  (newVal) => {
-    newNotice.value = newVal.filter((item: any) => !item.read).length;
+  () => noticeStore.state.notices,
+  async (newVal) => {
+    // 原有逻辑保留，新增接口获取最新未读数
+    await noticeStore.fetchUnreadCount();
   },
   { deep: true }
 );
+onMounted(() => {
+  noticeStore.fetchUnreadCount();
+  // 原有 initTenantList 等逻辑保留
+});
 </script>
 
 <style lang="scss" scoped>

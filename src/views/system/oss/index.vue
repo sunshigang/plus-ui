@@ -306,6 +306,7 @@ const submitForm = () => {
 };
 /** 下载按钮操作 */
 const handleDownload = (row: OssVO) => {
+  console.log("🚀 ~ handleDownload ~ row:", row)
   proxy?.$download.oss(row.ossId);
 };
 /** 预览开关按钮  */
