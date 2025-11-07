@@ -53,7 +53,7 @@ import bus from '../../libs/eventbus'
 const route = useRoute()
 const timeIsShow = ref(false)
 const projectType = ref(''); // 初始为空
-const years = ref([2023, 2024, 2025]) // 年份数组
+const years = ref([2022,2023, 2024, 2025]) // 年份数组
 const currentYear = ref(2025) // 默认选中 2023
 const router = useRouter()
 const legendShowHide = ref(false) // 图例显示隐藏状态

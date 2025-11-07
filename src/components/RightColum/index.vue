@@ -107,6 +107,26 @@
             </div>
             <div class="layerContentA">
                 <div class="layerContentTitle">
+                    <div class="layerContentLabel">生态保护红线</div>
+                    <el-checkbox v-model="isAllCheckedJ" class="scroll-custom-checkbox"
+                        @change="handleAllCheckJ"></el-checkbox>
+                    <div :class="layerContentStyleJ == true ? 'layerContentShow' : 'layerContentHide'"
+                        @click="clickLayerContentJ"></div>
+                </div>
+                <transition name="fade">
+                    <div v-if="layerContentStyleJ" class="contentBodyA">
+                        <div class="scrollContentA">
+                            <div class="scrollDetailA" v-for="item in checkItemsJ" :key="item.id">
+                                <div class="scrollDetailFontA">{{ item.name }}</div>
+                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
+                                    @change="handleCheckChangeJ(item)" />
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+            <div class="layerContentA">
+                <div class="layerContentTitle">
                     <div class="layerContentLabel">分级保护规划</div>
                     <el-checkbox v-model="isAllCheckedI" class="scroll-custom-checkbox"
                         @change="handleAllCheckI"></el-checkbox>
@@ -205,27 +225,6 @@
                     </div>
                 </transition>
             </div>
-            <div class="layerContentA">
-                <div class="layerContentTitle">
-                    <div class="layerContentLabel">生态保护红线</div>
-                    <el-checkbox v-model="isAllCheckedJ" class="scroll-custom-checkbox"
-                        @change="handleAllCheckJ"></el-checkbox>
-                    <div :class="layerContentStyleJ == true ? 'layerContentShow' : 'layerContentHide'"
-                        @click="clickLayerContentJ"></div>
-                </div>
-                <transition name="fade">
-                    <div v-if="layerContentStyleJ" class="contentBodyA">
-                        <div class="scrollContentA">
-                            <div class="scrollDetailA" v-for="item in checkItemsJ" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.name }}</div>
-                                <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
-                                    @change="handleCheckChangeJ(item)" />
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-            </div>
-
             <div class="layerContentA">
                 <div class="layerContentTitle">
                     <div class="layerContentLabel">备注信息</div>
@@ -580,33 +579,30 @@ const clickLayerContentK = () => {
 const clickLayerContentRemark = () => {
     layerContentStyleRemark.value = !layerContentStyleRemark.value
 }
-// 2. 通用方法：设置所有图层的checked状态
-const setAllLayersChecked = (isChecked) => {
-    // 遍历所有分类（A~K）
-    allCheckItems.value.forEach((checkItems) => {
-        // 遍历当前分类下的每个图层项
-        checkItems.value.forEach((item) => {
-            // 修改checked状态（触发视图更新）
-            item.checked = isChecked;
-            if (checkItems === checkItemsA) handleCheckChangeA(item);
-            if (checkItems === checkItemsB) handleCheckChangeB(item);
-            if (checkItems === checkItemsC) handleCheckChangeC(item);
-            if (checkItems === checkItemsD) handleCheckChangeD(item);
-            if (checkItems === checkItemsE) handleCheckChangeE(item);
-            if (checkItems === checkItemsF) handleCheckChangeF(item);
-            if (checkItems === checkItemsG) handleCheckChangeG(item);
-            if (checkItems === checkItemsH) handleCheckChangeH(item);
-            if (checkItems === checkItemsI) handleCheckChangeI(item);
-            if (checkItems === checkItemsJ) handleCheckChangeJ(item);
-            if (checkItems === checkItemsK) handleCheckChangeK(item);
-        });
-    });
-    checkItemsRemark.value.forEach((item) => {
+const setOnlyEcoRedlineChecked = (isChecked) => {
+    checkItemsJ.value.forEach((item) => {
         item.checked = isChecked;
-        handleCheckChangeRemark(item); // 触发备注信息的选中事件，同步到UE
+        handleCheckChangeJ(item);
     });
-    isAllCheckedRemark.value = isChecked;
-}
+    // 核心同步：生态保护红线的全选框、子项、数据框状态完全一致
+    isAllCheckedJ.value = isChecked; // 全选框勾选/取消
+    layerContentStyleJ.value = isChecked; // 数据框展开/折叠（true=展开，false=折叠）
+
+    // 其他分类状态重置
+    [isAllCheckedA, isAllCheckedB, isAllCheckedC, isAllCheckedD, isAllCheckedE,
+        isAllCheckedF, isAllCheckedG, isAllCheckedH, isAllCheckedI, isAllCheckedK].forEach(checkedRef => {
+            checkedRef.value = false;
+        });
+    [layerContentStyleA, layerContentStyleB, layerContentStyleC, layerContentStyleD, layerContentStyleE,
+        layerContentStyleF, layerContentStyleG, layerContentStyleH, layerContentStyleI, layerContentStyleK].forEach(styleRef => {
+            styleRef.value = false;
+        });
+
+    // 备注信息图层隐藏
+    checkItemsRemark.value.forEach(item => item.checked = false);
+    isAllCheckedRemark.value = false;
+    layerContentStyleRemark.value = false;
+};
 // 1. 修复：用对象存储每个按钮的独立选中状态（默认全未选中）
 const isSelected = ref({
     0: false, // 0: 红线叠加对比
@@ -622,7 +618,7 @@ const selectItem = (index) => {
     if (index === 0) {
         layerManagementShowHide.value = true
         // 按钮选中 → 图层全选；按钮未选中 → 图层取消全选
-        setAllLayersChecked(isSelected.value[index]);
+        setOnlyEcoRedlineChecked(isSelected.value[index]);
     } else if (index === 1) {
         layerManagementShowHide.value = false
     } else {
@@ -737,10 +733,19 @@ watch(
 );
 
 // 监听 J 分类子项变化
+// watch(
+//     () => checkItemsJ.value.map(item => item.checked),
+//     (checkedList) => {
+//         isAllCheckedJ.value = checkedList.every(checked => checked);
+//     },
+//     { deep: true }
+// );
 watch(
-    () => checkItemsJ.value.map(item => item.checked),
-    (checkedList) => {
-        isAllCheckedJ.value = checkedList.every(checked => checked);
+    () => checkItemsJ.value[0]?.checked, // 监听唯一子项的checked状态
+    (isChecked) => {
+        if (isChecked !== undefined) {
+            isSelected.value[0] = isChecked; // 子项勾选 → 按钮激活；子项取消 → 按钮取消
+        }
     },
     { deep: true }
 );
@@ -763,10 +768,8 @@ watch(
 );
 
 onMounted(() => {
-    if (!isSelected.value[0]) {
-        setAllLayersChecked(false);
-        isAllCheckedRemark.value = false;
-    }
+    setOnlyEcoRedlineChecked(isSelected.value[0]);
+    isAllCheckedRemark.value = false;
     bus.on('scheme-review-clicked', data => {
         console.log('方案审查可见性:', data)
         layerManagementShowHide.value = data

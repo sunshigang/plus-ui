@@ -326,74 +326,82 @@ const handleSearchRelic = (data) => {
         });
     }
 };
+const handleAuditPreviewModel = (projectInfo) => {
+    console.log('收到审批场景项目信息：', projectInfo);
+    // 后续可执行场景加载逻辑（如分屏比对、模型渲染等）
+    // 示例：加载该项目模型（可根据实际需求调整命令）
+    if (projectInfo) {
+        const coords = projectInfo.modelCoordinate.split(',');
+        const x = coords[0] || '120.187601';
+        const y = coords[1] || '28.923468';
+        const z = coords[2] || '0';
+
+        // 加载项目模型（与原有分屏逻辑一致）
+        sendMsgUE({
+            "Command": "LoadAssets",
+            "Args": {
+                "ID": projectInfo.id,
+                "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''),
+                "State": 0,
+                "Angle": 0,
+                "CoordType": 0,
+                "Location": `${x},${y},${z}`,
+                "Scale": "1,1,1"
+            }
+        });
+    }
+};
 //功能
 const handleFunctionPanel = (data) => {
+    const projectInfo = majorProjectStore.previewProjectInfo;
+    console.log("🚀 ~ handleFunctionPanel ~ projectInfo:", projectInfo)
+    // 解析坐标（默认值兜底，避免报错）
+    const coords = projectInfo?.modelCoordinate ? projectInfo.modelCoordinate.split(',') : [];
+    const x = coords[0] || '120.187601';
+    const y = coords[1] || '28.923468';
+    const z = coords[2] || '0';
+    const z1 = '15500'; // 镜头高度（可根据需求调整）
+
     if (data.index === 0) {
+        sendMsgUE({
+            "Command": "SetCameraMove_Geo",
+            "Args": {
+                "CoordType": 0,
+                "TargetLocation": `X=${x} Y=${y} Z=${z}`,
+                "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
+                "Duration": 1.0
+            }
+        });
         splitScreen.value = false
         const isShow = data.isSelected;
         if (data.isSelected) {
             sendMsgUE({
-                "Command": "ShowPOIWithType",
-                "Args": {
-                    "Show": isShow,
-                    "Type": ["All"]
-                }
-            });
-            sendMsgUE({
                 "Command": "ShowVectorLayerWithType",
-                "Args": { "Show": isShow, "Type": "Line", "Tag": "All" }
-            });
-            sendMsgUE({
-                "Command": "ShowVectorLayerWithType",
-                "Args": { "Show": isShow, "Type": "Area", "Tag": "All" }
+                "Args": { "Show": isShow, "Type": "Area", "Tag": "生态保护红线" }
             });
         } else {
             sendMsgUE({
-                "Command": "ShowPOIWithType",
-                "Args": {
-                    "Show": isShow,
-                    "Type": ["All"]
-                }
-            });
-            sendMsgUE({
                 "Command": "ShowVectorLayerWithType",
-                "Args": { "Show": isShow, "Type": "Line", "Tag": "All" }
-            });
-            sendMsgUE({
-                "Command": "ShowVectorLayerWithType",
-                "Args": { "Show": isShow, "Type": "Area", "Tag": "All" }
+                "Args": { "Show": isShow, "Type": "Area", "Tag": "生态保护红线" }
             });
         }
     } else if (data.index === 1) {
-        // 从状态管理中获取保存的项目信息
-        const projectInfo = majorProjectStore.previewProjectInfo;
-        console.log("🚀 ~ handleFunctionPanel ~ projectInfo:", projectInfo)
         // 分屏比对逻辑（核心修改：读取项目预览信息）
         splitScreen.value = true;
         if (data.isSelected) {
             if (projectInfo) {
-                console.log('分屏比对使用的项目信息：', projectInfo);
-                // 1. 原有分屏基础命令（保留）
-                // sendMsgUE({ "Command": "PingPongMsg", "Args": { "Type": "Ping" } });
-                // 2. 新增：使用项目信息发送命令（示例：加载该项目模型，可根据实际需求调整）
-                const coords = projectInfo.modelCoordinate.split(',');
-                const x = coords[0] || '120.187601';
-                const y = coords[1] || '28.923468';
-                const z = coords[2] || '0';
-
-                // 加载当前项目的三维模型（替换原有固定ID和Name）
-                // sendMsgUE({
-                //     "Command": "LoadAssets",
-                //     "Args": {
-                //         "ID": projectInfo.id.toString(), // 使用项目ID
-                //         "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''), // 提取模型路径
-                //         "State": 0,
-                //         "Angle": 0,
-                //         "CoordType": 0,
-                //         "Location": `${x},${y},${z}`, // 使用项目坐标
-                //         "Scale": "1,1,1"
-                //     }
-                // });
+                sendMsgUE({
+                    "Command": "LoadAssets",
+                    "Args": {
+                        "ID": projectInfo.id.toString(), // 使用项目ID
+                        "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''), // 提取模型路径
+                        "State": 0,
+                        "Angle": 0,
+                        "CoordType": 0,
+                        "Location": `${x},${y},${z}`, // 使用项目坐标
+                        "Scale": "1,1,1"
+                    }
+                });
                 sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
                 sendMsgUE({
                     "Command": "SwitchAssetsState",
@@ -411,45 +419,34 @@ const handleFunctionPanel = (data) => {
                 });
             } else {
                 console.warn('未获取到项目预览信息，分屏比对使用默认配置');
-                // 无项目信息时使用原有默认逻辑
-                // sendMsgUE({ "Command": "PingPongMsg", "Args": { "Type": "Ping" } });
-                // setTimeout(() => {
-                //     sendMsgUE({
-                //         "Command": "LoadAssets",
-                //         "Args": {
-                //             "ID": "1985667666857914369",
-                //             "Name": "2025/11/04/8c0f78c2424844b2b5fa48af9ed892d7.pak",
-                //             "State": 0,
-                //             "Angle": 0,
-                //             "CoordType": 0,
-                //             "Location": "120.187601,28.923468,0",
-                //             "Scale": "1,1,1"
-                //         }
-                //     });
-                //     sendMsgUE({
-                //         "Command": "SwitchAssetsState",
-                //         "Args": {
-                //             "IDs": ["1985667666857914369"],
-                //             "State": 0
-                //         }
-                //     });
-                // }, 1000);
-                // sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
+                sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
+                bus.on('dragIcon:screenRatio', (ratio) => {
+                    sendMsgUE({ "Command": "SwitchSplitScreenRatio", "Args": { "Ratio": ratio } });
+                });
             }
         } else {
             // 关闭分屏（不变）
             sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
-            sendMsgUE({
-                "Command": "DeleteAssets",
-                "Args": {
-                    "ID": projectInfo.id.toString()
-                }
-            });
+            // sendMsgUE({
+            //     "Command": "DeleteAssets",
+            //     "Args": {
+            //         "ID": projectInfo.id.toString()
+            //     }
+            // });
         }
     } else if (data.index === 2) {
         splitScreen.value = false
         if (data.isSelected) {
             bus.on('time-change', year => {
+                sendMsgUE({
+                    "Command": "SetCameraMove_Geo",
+                    "Args": {
+                        "CoordType": 0,
+                        "TargetLocation": `X=${x} Y=${y} Z=${z}`,
+                        "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
+                        "Duration": 1.0
+                    }
+                });
                 sendMsgUE({
                     "Command": "SwitchSpaceTime",
                     "Args": {
@@ -474,8 +471,11 @@ onMounted(() => {
     bus.on('scheme-review-clicked', handleSchemeReview);
     bus.on('search-relic', handleSearchRelic);
     bus.on('function-panel-clicked', handleFunctionPanel);
-
-
+    bus.on('auditPreviewModel', handleAuditPreviewModel);
+    const projectInfo = majorProjectStore.previewProjectInfo;
+    if (projectInfo && projectInfo.type === '重大项目') {
+        bus.emit('scheme-review-clicked', true); // 激活方案审查
+    }
 
 
 });
@@ -490,6 +490,7 @@ onUnmounted(() => {
     bus.off('attractionTypeMessage');
     bus.off('scene-roaming-clicked');
     bus.off('function-panel-clicked', handleFunctionPanel);
+    bus.off('auditPreviewModel', handleAuditPreviewModel);
 });
 
 </script>
