@@ -143,13 +143,10 @@ const handleLogin = () => {
         localStorage.removeItem('password');
         localStorage.removeItem('rememberMe');
       }
-
-        console.log("🚀 ~ handleLogin ~ localStorage:", localStorage)
       // 调用action的登录方法
       const [err] = await to(userStore.login(loginForm.value));
       if (!err) {
         const redirectUrl = redirect.value || '/';
-        console.log("🚀 ~ handleLogin ~ redirectUrl:", redirectUrl)
         await router.push(redirectUrl);
         loading.value = false;
       } else {

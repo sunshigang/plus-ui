@@ -139,8 +139,8 @@
             <!-- 1. 动态提示的“修改”按钮：仅“填报中”“管委会驳回”显示 -->
             <el-tooltip v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status)
               && canEdit()
-              && !['superadmin', 'sysadmin'].includes(currentUserRole)" :content="getEditTooltipContent(scope.row.status)"
-              placement="top">
+              && !['superadmin', 'sysadmin'].includes(currentUserRole)"
+              :content="getEditTooltipContent(scope.row.status)" placement="top">
               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
                 v-hasPermi="['project:project:edit']"></el-button>
             </el-tooltip>
@@ -271,13 +271,13 @@
               </el-col>
             </el-row>
             <el-form-item label="规划依据" prop="planningBasis">
-              <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" :disabled="disabled" />
+              <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入规划依据" :disabled="disabled" />
             </el-form-item>
-            <el-form-item label="建设内容涉及规模">
-              <editor v-model="form.constructionContent" :min-height="192" />
+            <el-form-item label="建设内容涉及规模" prop="constructionContent">
+              <el-input v-model="form.constructionContent" type="textarea" placeholder="请输入建设内容涉及规模" :disabled="disabled" />
             </el-form-item>
             <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-              <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" :disabled="disabled" />
+              <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况" :disabled="disabled" />
             </el-form-item>
           </el-form>
         </div>
@@ -315,7 +315,7 @@
               <!-- 专家评审意见专属上传组件 -->
               <el-upload ref="expertOpinionsUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'expertOpinions')"
-                :file-list="auditExpertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="expertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'expertOpinions')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'expertOpinions')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -324,7 +324,7 @@
               <!-- 专家评审意见专属文件列表 -->
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditExpertOpinionsFileList" :key="file.uid"
+                <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -366,7 +366,7 @@
             <el-form-item label="选址方案核准申报表" prop="siteSelectionReport">
               <el-upload ref="siteSelectionReportUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'siteSelectionReport')"
-                :file-list="auditSiteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="siteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'siteSelectionReport')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'siteSelectionReport')"
                 :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -374,7 +374,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditSiteSelectionReportFileList" :key="file.uid"
+                <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -391,7 +391,7 @@
             <el-form-item label="立项文件" prop="approvalDocuments">
               <el-upload ref="approvalDocumentsUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'approvalDocuments')"
-                :file-list="auditApprovalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="approvalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'approvalDocuments')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -399,7 +399,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditApprovalDocumentsFileList" :key="file.uid"
+                <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -416,7 +416,7 @@
             <el-form-item label="项目用地红线图" prop="projectRedLine">
               <el-upload ref="projectRedLineUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'projectRedLine')"
-                :file-list="auditProjectRedLineFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="projectRedLineFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'projectRedLine')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'projectRedLine')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -424,7 +424,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditProjectRedLineFileList" :key="file.uid"
+                <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -441,7 +441,7 @@
             <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
               <el-upload ref="redLineCoordinateUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'redLineCoordinate')"
-                :file-list="auditRedLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="redLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'redLineCoordinate')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'redLineCoordinate')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
@@ -449,7 +449,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditRedLineCoordinateFileList" :key="file.uid"
+                <li v-for="(file, index) in redLineCoordinateFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -465,7 +465,7 @@
             </el-form-item>
             <el-form-item label="项目三维模型" prop="threeDModel">
               <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="auditThreeDModelFileList"
+                :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
                 :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')" :show-file-list="false"
@@ -474,7 +474,7 @@
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditThreeDModelFileList" :key="file.uid"
+                <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -487,7 +487,7 @@
                   </div>
                 </li>
                 <!-- 空数据提示 -->
-                <li v-if="auditThreeDModelFileList.length === 0" class="el-upload-list__item">
+                <li v-if="threeDModelFileList.length === 0" class="el-upload-list__item">
                   <span class="el-icon-info"> 暂无三维模型文件 </span>
                 </li>
               </transition-group>
@@ -745,11 +745,10 @@
           <div class="section project-documents">
             <h3 class="section-title">项目相关文件</h3>
             <el-form :model="auditForm" label-width="178px">
-              <!-- 选址方案 - 和查看对话框完全一致 -->
               <el-form-item label="选址方案">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditLocationPlanFileList" :key="file.uid"
+                  <li v-for="(file, index) in locationPlanFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -758,17 +757,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditLocationPlanFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="locationPlanFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无选址方案文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 专家评审意见 - 复用 auditExpertOpinionsFileList -->
               <el-form-item label="专家评审意见">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditExpertOpinionsFileList" :key="file.uid"
+                  <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -777,17 +774,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditExpertOpinionsFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="expertOpinionsFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无专家评审意见文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 会议材料 - 复用 auditMeetingMaterialsFileList -->
               <el-form-item label="会议材料">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditMeetingMaterialsFileList" :key="file.uid"
+                  <li v-for="(file, index) in meetingMaterialsFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -796,17 +791,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditMeetingMaterialsFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="meetingMaterialsFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无会议材料文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 选址方案核准申报表 - 复用 auditSiteSelectionReportFileList -->
               <el-form-item label="选址方案核准申报表">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditSiteSelectionReportFileList" :key="file.uid"
+                  <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -815,17 +808,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditSiteSelectionReportFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="siteSelectionReportFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无选址方案核准申报表文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 立项文件 - 复用 auditApprovalDocumentsFileList -->
               <el-form-item label="立项文件">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditApprovalDocumentsFileList" :key="file.uid"
+                  <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -834,17 +825,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditApprovalDocumentsFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="approvalDocumentsFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无立项文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 项目用地红线图 - 复用 auditProjectRedLineFileList -->
               <el-form-item label="项目用地红线图">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditProjectRedLineFileList" :key="file.uid"
+                  <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -853,17 +842,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditProjectRedLineFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="projectRedLineFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无项目用地红线图文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 项目红线矢量数据 - 复用 auditRedLineCoordinateFileList -->
               <el-form-item label="项目红线矢量数据">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditRedLineCoordinateFileList" :key="file.uid"
+                  <li v-for="(file, index) in redLineCoordinateFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -872,17 +859,15 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditRedLineCoordinateFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="redLineCoordinateFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无项目红线矢量数据文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
-
-              <!-- 项目三维模型 - 复用 auditThreeDModelFileList -->
               <el-form-item label="项目三维模型">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, index) in auditThreeDModelFileList" :key="file.uid"
+                  <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
                     class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="`${file.url}`" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -891,7 +876,7 @@
                       <el-button type="danger" link disabled>删除</el-button>
                     </div>
                   </li>
-                  <li v-if="auditThreeDModelFileList.length === 0" class="el-upload-list__item">
+                  <li v-if="threeDModelFileList.length === 0" class="el-upload-list__item">
                     <span class="el-icon-info"> 暂无项目三维模型文件 </span>
                   </li>
                 </transition-group>
@@ -1015,22 +1000,6 @@ const projectRedLineUploadRef = ref<ElUploadInstance>(); // 项目用地红线�
 const redLineCoordinateUploadRef = ref<ElUploadInstance>(); // 项目红线矢量数据
 const threeDModelUploadRef = ref<ElUploadInstance>(); // 项目三维模型
 const feedbackFileUploadRef = ref<ElUploadInstance>(); // 审核文件上传相关
-// 补充审核相关的文件列表变量
-const auditExpertOpinionsFileList = ref<any[]>([]); // 专家评审意见
-const auditMeetingMaterialsFileList = ref<any[]>([]); // 会议材料
-const auditSiteSelectionReportFileList = ref<any[]>([]); // 选址方案核准申报表
-const auditApprovalDocumentsFileList = ref<any[]>([]); // 立项文件
-// 审核相关的文件列表
-const auditLocationPlanFileList = ref<any[]>([]);
-const auditProjectRedLineFileList = ref<any[]>([]);
-const auditThreeDModelFileList = ref<any[]>([]);
-const feedbackFileList = ref<any[]>([]);
-const auditRedLineCoordinateFileList = ref<any[]>([]);
-// 新增审批反馈文件列表
-const managementFeedbackFileList = ref<any[]>([]);
-const forestryFeedbackFileList = ref<any[]>([]);
-
-
 // 2. 文件列表（每个字段一个）
 const locationPlanFileList = ref<any[]>([]);
 const expertOpinionsFileList = ref<any[]>([]);
@@ -1040,6 +1009,9 @@ const approvalDocumentsFileList = ref<any[]>([]);
 const projectRedLineFileList = ref<any[]>([]);
 const redLineCoordinateFileList = ref<any[]>([]);
 const threeDModelFileList = ref<any[]>([]);
+const feedbackFileList = ref<any[]>([]);
+const managementFeedbackFileList = ref<any[]>([]);
+const forestryFeedbackFileList = ref<any[]>([]);
 
 // 3. 上传计数与临时列表（按字段区分，用于批量上传管理）
 const uploadCount = reactive({
@@ -1247,9 +1219,7 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
       approvalReason: auditForm.feedback,
       approvalAttachment: listToString(feedbackFileList.value)
     };
-    // form.value.managementApprovalTime = auditForm.feedback;
-    // 👇 核心修改：增加对 status 为 undefined/空值的兜底处理
-    const currentStatus = form.value.status || auditForm.status; // 优先用 form.status，次之用 auditForm.status
+    const currentStatus = form.value.status || auditForm.status;
     if (!currentStatus) {
       // 状态完全获取失败时，提示用户并终止操作
       proxy?.$modal.msgError('获取项目状态失败，请刷新页面重试');
@@ -1406,13 +1376,12 @@ const uploadedSuccessfully = (field: FileFieldType) => {
       approvalDocuments: { list: approvalDocumentsFileList, formKey: 'approvalDocuments' },
       projectRedLine: { list: projectRedLineFileList, formKey: 'projectRedLine' },
       redLineCoordinate: { list: redLineCoordinateFileList, formKey: 'redLineCoordinate' },
-      threeDModel: { list: auditThreeDModelFileList, formKey: 'threeDModel' },
+      threeDModel: { list: threeDModelFileList, formKey: 'threeDModel' },
       feedback: { list: feedbackFileList, formKey: 'feedback' }
     };
     const { list, formKey } = fieldMap[field];
 
     list.value = [...list.value, ...uploadTempList[field]];
-    // 只有在主表单中存在该字段时才赋值（审核表单的feedback可能不需要绑定到form）
     if (form.value.hasOwnProperty(formKey)) {
       form.value[formKey] = listToString(list.value);
     }
@@ -1623,7 +1592,7 @@ const handleModelPreview = async () => {
     ElMessage.warning('请先保存项目信息');
     return;
   }
-  const modelFile = auditThreeDModelFileList.value.find(item => item.url);
+  const modelFile = threeDModelFileList.value.find(item => item.url);
   if (!modelFile?.url) {
     ElMessage.warning('请先上传项目三维模型文件');
     return;
@@ -1643,7 +1612,7 @@ const handleModelPreview = async () => {
   majorProjectStore.savePreviewProjectInfo(projectPreviewInfo); // 保存到store
   majorProjectStore.saveDialogData({
     formData: form.value, // 所有表单字段
-    threeDModelFileList: auditThreeDModelFileList.value, // 模型文件列表
+    threeDModelFileList: threeDModelFileList.value, // 模型文件列表
     disabled: disabled.value, // 禁用状态
     isViewMode: isViewMode.value
   });
@@ -1660,7 +1629,7 @@ const handleAuditSceneReview = async () => {
   }
 
   // 2. 校验三维模型文件（从审核用的模型列表中获取）
-  const modelFile = auditThreeDModelFileList.value.find(item => item.url);
+  const modelFile = threeDModelFileList.value.find(item => item.url);
   if (!modelFile?.url) {
     proxy?.$modal.msgError('请先上传项目三维模型文件');
     return;
@@ -1713,15 +1682,6 @@ const reset = async () => {
   threeDModelFileList.value = [];
   managementFeedbackFileList.value = [];
   forestryFeedbackFileList.value = [];
-  // 新增：清空审核列表
-  auditLocationPlanFileList.value = [];
-  auditExpertOpinionsFileList.value = [];
-  auditMeetingMaterialsFileList.value = [];
-  auditSiteSelectionReportFileList.value = [];
-  auditApprovalDocumentsFileList.value = [];
-  auditProjectRedLineFileList.value = [];
-  auditRedLineCoordinateFileList.value = [];
-  auditThreeDModelFileList.value = []; // 关键：清空三维模型审核列表
   feedbackFileList.value = [];
   return Promise.resolve();
 };
@@ -1792,98 +1752,98 @@ const loadAllFileLists = async (projectData: InfoForm) => {
   if (projectData.locationPlan) {
     const locationPlanOssIds = projectData.locationPlan.split(',').join(',');
     const locationPlanRes = await listByIds(locationPlanOssIds);
-    auditLocationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
+    locationPlanFileList.value = locationPlanRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditLocationPlanFileList.value = []; // 无数据时清空
+    locationPlanFileList.value = []; // 无数据时清空
   }
   // ---------- 2. 专家评审意见（新增，原遗漏） ----------
   if (projectData.expertOpinions) {
     const expertOpinionsOssIds = projectData.expertOpinions.split(',').join(',');
     const expertOpinionsRes = await listByIds(expertOpinionsOssIds);
-    auditExpertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
+    expertOpinionsFileList.value = expertOpinionsRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditExpertOpinionsFileList.value = [];
+    expertOpinionsFileList.value = [];
   }
   // ---------- 3. 会议材料（新增，原遗漏） ----------
   if (projectData.meetingMaterials) {
     const meetingMaterialsOssIds = projectData.meetingMaterials.split(',').join(',');
     const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
-    auditMeetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
+    meetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditMeetingMaterialsFileList.value = [];
+    meetingMaterialsFileList.value = [];
   }
   // ---------- 4. 选址方案核准申报表（新增，原遗漏） ----------
   if (projectData.siteSelectionReport) {
     const siteSelectionReportOssIds = projectData.siteSelectionReport.split(',').join(',');
     const siteSelectionReportRes = await listByIds(siteSelectionReportOssIds);
-    auditSiteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
+    siteSelectionReportFileList.value = siteSelectionReportRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditSiteSelectionReportFileList.value = [];
+    siteSelectionReportFileList.value = [];
   }
   // ---------- 5. 立项文件（新增，原遗漏） ----------
   if (projectData.approvalDocuments) {
     const approvalDocumentsOssIds = projectData.approvalDocuments.split(',').join(',');
     const approvalDocumentsRes = await listByIds(approvalDocumentsOssIds);
-    auditApprovalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
+    approvalDocumentsFileList.value = approvalDocumentsRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditApprovalDocumentsFileList.value = [];
+    approvalDocumentsFileList.value = [];
   }
   // ---------- 6. 项目用地红线图（新增，原遗漏） ----------
   if (projectData.projectRedLine) {
     const projectRedLineOssIds = projectData.projectRedLine.split(',').join(',');
     const projectRedLineRes = await listByIds(projectRedLineOssIds);
-    auditProjectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
+    projectRedLineFileList.value = projectRedLineRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditProjectRedLineFileList.value = [];
+    projectRedLineFileList.value = [];
   }
   // ---------- 7. 项目红线矢量数据（新增，原遗漏） ----------
   if (projectData.redLineCoordinate) {
     const redLineCoordinateOssIds = projectData.redLineCoordinate.split(',').join(',');
     const redLineCoordinateRes = await listByIds(redLineCoordinateOssIds);
-    auditRedLineCoordinateFileList.value = redLineCoordinateRes.data.map((oss: any) => ({
+    redLineCoordinateFileList.value = redLineCoordinateRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
   } else {
-    auditRedLineCoordinateFileList.value = [];
+    redLineCoordinateFileList.value = [];
   }
   // ---------- 8. 项目三维模型（新增，原遗漏） ----------
   if (projectData.threeDModel) {
     const threeDModelOssIds = projectData.threeDModel.split(',').join(',');
     const threeDModelRes = await listByIds(threeDModelOssIds);
-    auditThreeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
+    threeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
@@ -1891,7 +1851,7 @@ const loadAllFileLists = async (projectData: InfoForm) => {
     }));
     form.value.threeDModel = projectData.threeDModel;
   } else {
-    auditThreeDModelFileList.value = [];
+    threeDModelFileList.value = [];
     form.value.threeDModel = '';
   }
 
@@ -2095,7 +2055,7 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
       approvalDocuments: approvalDocumentsFileList,
       projectRedLine: projectRedLineFileList,
       redLineCoordinate: redLineCoordinateFileList,
-      threeDModel: auditThreeDModelFileList
+      threeDModel: threeDModelFileList
     };
     const fileList = fieldMap[field];
     const file = fileList.value[index];
@@ -2119,15 +2079,14 @@ const handleExport = () => {
     ...queryParams.value
   }, `info_${new Date().getTime()}.xlsx`)
 }
-onMounted(async () => { // 注意添加async关键字
+onMounted(async () => { // 保留async关键字
   try {
-    // 加载项目列表
     getList();
-    const { isEditDialogVisible, formData, threeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
+    const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
     // 若需要显示弹窗，恢复所有数据
     if (isEditDialogVisible) {
       form.value = { ...form.value, ...formData }; // 恢复表单字段
-      auditThreeDModelFileList.value = [...threeDModelFileList]; // 恢复模型文件列表
+      threeDModelFileList.value = [...storeThreeDModelFileList];
       disabled.value = storeDisabled; // 恢复禁用状态
       isViewMode.value = storeIsViewMode; // 恢复查看模式状态
       dialog.visible = true; // 自动弹出弹窗

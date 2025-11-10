@@ -72,12 +72,15 @@
               @click="handleHistory(scope.row)">历史版本</el-button>
             <el-button v-hasPermi="['document:planningFile:update']" link type="primary"
               @click="handleUpdate(scope.row)">更新</el-button>
-              <el-button v-hasPermi="['document:planningFile:download']" link type="primary"
-                @click="handleDownload(scope.row)">下载</el-button>
+            <el-button v-hasPermi="['document:planningFile:download']" link type="primary"
+              @click="handleDownload(scope.row)">下载</el-button>
             <el-tooltip content="停用" placement="top">
               <el-button v-hasPermi="['document:planningFile:disable']" link type="danger"
                 @click="handleDisable(scope.row)">停用</el-button>
             </el-tooltip>
+            <!-- <el-tooltip content="删除" placement="top">
+              <el-button  link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+            </el-tooltip> -->
           </template>
         </el-table-column>
       </el-table>
@@ -168,6 +171,7 @@
                   <el-button link type="danger" icon="Stop" size="small"
                     @click="handleHistoryDisable(scope.row.versionId)" />
                 </el-tooltip>
+
               </template>
             </el-table-column>
           </el-table>
@@ -194,6 +198,8 @@
 import { ref, onMounted, watch, VNode } from 'vue';
 import { listByIds } from '@/api/system/oss';
 import FileUpload from '@/components/FileUpload/index.vue';
+import { listOss, delOss } from '@/api/system/oss';
+import { OssForm, OssQuery, OssVO } from '@/api/system/oss/types';
 // 导入新接口和类型
 import {
   documentList as apiDocumentList,
@@ -260,7 +266,15 @@ const dialog = reactive<DialogOption>({
   visible: false,
   title: ''
 });
-
+/** 删除按钮操作 */
+const handleDelete = async (row?: OssVO) => {
+  const ossIds = row?.ossId || ids.value;
+  await proxy?.$modal.confirm('是否确认删除OSS对象存储编号为"' + ossIds + '"的数据项?');
+  loading.value = true;
+  await delOss(ossIds).finally(() => (loading.value = false));
+  await getList();
+  proxy?.$modal.msgSuccess('删除成功');
+};
 // 替换表单引用名
 const documentFormRef = ref<ElFormInstance>();
 const queryFormRef = ref<ElFormInstance>();
@@ -354,9 +368,11 @@ const submitForm = () => {
       buttonLoading.value = true;
       // 构造提交参数（根据后端接口需求调整字段）
       const submitData = {
-        ...form.value,
-        // 若后端不需要ossIds，可删除；若需要URL，确保urls已赋值
-        urls: form.value.urls || ''
+        ossIds: form.value.ossIds,
+        name: form.value.name,
+        urls: form.value.urls || '',
+        fileSuffix: form.value.fileSuffix,
+        disabledFlag: false
       };
       console.log("🚀 ~ submitForm ~ submitData:", submitData)
       console.log("🚀 ~ submitForm ~ form.value:", form.value)
@@ -404,7 +420,7 @@ const handleUpdate = async (row: DocumentVO) => {
 const handleFileUploadChange = (newOssIds: string) => {
   // 更新表单的 ossIds（确保表单数据与上传组件同步）
   form.value.ossIds = newOssIds;
-
+  console.log("🚀 ~ handleFileUploadChange ~ form.value.ossIds:", form.value.ossIds)
   // 关键：触发列表刷新，实时显示最新上传的文件
   getList();
 };
@@ -501,7 +517,7 @@ const handleHistoryDisable = async (historyId: string | number) => {
 const handleDownload = (row: DocumentVO) => {
   console.log("🚀 ~ handleDownload ~ row:", row)
   // 调用单文件下载接口
-  proxy?.$download.oss(row.id);
+  proxy?.$download.oss(row.ossIds);
 };
 // 监听ossIds变化，自动提取文件后缀和URL
 watch(
