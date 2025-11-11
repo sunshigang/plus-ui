@@ -324,6 +324,8 @@ const handlePreviewListResource = async (preview: boolean) => {
 /** 删除按钮操作 */
 const handleDelete = async (row?: OssVO) => {
   const ossIds = row?.ossId || ids.value;
+  console.log("🚀 ~ handleDelete ~ ossIds:", ossIds)
+    console.log("🚀 ~ handleDelete ~ ossIds类型:", Array.isArray(ossIds) ? "数组" : "单个字符串");
   await proxy?.$modal.confirm('是否确认删除OSS对象存储编号为"' + ossIds + '"的数据项?');
   loading.value = true;
   await delOss(ossIds).finally(() => (loading.value = false));

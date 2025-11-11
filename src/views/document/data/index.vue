@@ -49,18 +49,7 @@
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="文件名" align="center" prop="name" :show-overflow-tooltip="true" />
-        <el-table-column label="文件类型" align="center" prop="fileSuffix" />
-        <!-- <el-table-column label="文件地址" align="center" :show-overflow-tooltip="true" width="650">
-          <template #default="scope">
-            <div v-if="scope.row.urls">
-              <el-link v-for="(url, index) in scope.row.urls.split(',')" :key="index" :href="url" target="_blank"
-                :underline="false" class="block mb-1">
-                {{ url }}
-              </el-link>
-            </div>
-            <span v-else>-</span>
-          </template>
-        </el-table-column> -->
+        <el-table-column label="文件类型" align="center" prop="fileSuffix" :show-overflow-tooltip="true" />
         <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -74,12 +63,15 @@
               @click="handleUpdate(scope.row)">更新</el-button>
             <el-button v-hasPermi="['document:planningFile:download']" link type="primary"
               @click="handleDownload(scope.row)">下载</el-button>
-            <el-tooltip content="停用" placement="top">
-              <el-button v-hasPermi="['document:planningFile:disable']" link type="danger"
-                @click="handleDisable(scope.row)">停用</el-button>
-            </el-tooltip>
+            <el-button v-hasPermi="['document:planningFile:disable']" link
+              :type="scope.row.disabledFlag ? '' : 'danger'" :class="{
+                'disable-btn-active': !scope.row.disabledFlag,
+                'disable-btn-disabled': scope.row.disabledFlag
+              }" :disabled="scope.row.disabledFlag" @click="handleDisable(scope.row)">
+              {{ scope.row.disabledFlag ? '已停用' : '停用' }} <!-- 动态显示按钮文字 -->
+            </el-button>
             <!-- <el-tooltip content="删除" placement="top">
-              <el-button  link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
+              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
             </el-tooltip> -->
           </template>
         </el-table-column>
@@ -239,8 +231,8 @@ const historyQuery = reactive({
 
 // 新增：历史版本数据与状态
 interface HistoryVO { // 匹配接口返回的历史版本结构
-  versionId: string | number;
-  fileId: string | number;
+  versionId: string;
+  fileId: string;
   versionUrls: string;
   versionSuffix: string;
   versionCreateTime: string;
@@ -248,7 +240,7 @@ interface HistoryVO { // 匹配接口返回的历史版本结构
 }
 const historyList = ref<HistoryVO[]>([]); // 历史版本列表
 const historyLoading = ref(false);        // 表格加载状态
-const selectedHistoryIds = ref<Array<string | number>>([]); // 选中的历史版本ID
+const selectedHistoryIds = ref<Array<string>>([]); // 选中的历史版本ID
 
 // 替换ossList为documentList，类型改为DocumentVO
 const planningFileList = ref<DocumentVO[]>([]);
@@ -256,7 +248,7 @@ const showTable = ref(true);
 const buttonLoading = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
-const ids = ref<Array<string | number>>([]);
+const ids = ref<Array<string>>([]);
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
@@ -268,10 +260,10 @@ const dialog = reactive<DialogOption>({
 });
 /** 删除按钮操作 */
 const handleDelete = async (row?: OssVO) => {
-  const ossIds = row?.ossId || ids.value;
-  await proxy?.$modal.confirm('是否确认删除OSS对象存储编号为"' + ossIds + '"的数据项?');
+  await proxy?.$modal.confirm('是否确认删文件名为"' + row.name + '"的数据项?');
+  const ossIdsArray = row.ossIds ? row.ossIds.split(',') : [];
   loading.value = true;
-  await delOss(ossIds).finally(() => (loading.value = false));
+  await delOss(ossIdsArray).finally(() => (loading.value = false));
   await getList();
   proxy?.$modal.msgSuccess('删除成功');
 };
@@ -281,12 +273,14 @@ const queryFormRef = ref<ElFormInstance>();
 
 // 初始化表单数据（适配DocumentForm）
 const initFormData: DocumentForm = {
-  // id: '',
+  id: '',
   name: '',
   urls: '',
   fileSuffix: '',
   disabledFlag: false,
-  ossIds: '', // 初始化OSS ID为空
+  ossIds: '',
+  updateTime: '',
+  createTime: ''
 };
 const data = reactive<PageData<DocumentForm, DocumentQuery>>({
   form: { ...initFormData },
@@ -313,7 +307,9 @@ const getList = async () => {
   loading.value = true;
   const response = await apiDocumentList(queryParams.value);
   const resData = response.data || response;
+  console.log("🚀 ~ getList ~ resData:", resData)
   planningFileList.value = Array.isArray(resData.rows) ? resData.rows : [];
+  console.log("🚀 ~ getList ~ planningFileList.value:", planningFileList.value)
   total.value = resData.total || 0;
   loading.value = false;
   showTable.value = true;
@@ -360,56 +356,70 @@ const handleFile = () => {
   dialog.visible = true;
   dialog.title = '新增规划文件';
 };
-
+const getFileNameWithoutSuffix = (fileName: string) => {
+  const lastDotIndex = fileName.lastIndexOf('.');
+  return lastDotIndex !== -1 ? fileName.slice(0, lastDotIndex) : fileName;
+};
 /** 提交表单（新增/更新版本） */
 const submitForm = () => {
   documentFormRef.value?.validate(async (valid: boolean) => {
     if (valid) {
       buttonLoading.value = true;
-      // 构造提交参数（根据后端接口需求调整字段）
-      const submitData = {
-        ossIds: form.value.ossIds,
-        name: form.value.name,
-        urls: form.value.urls || '',
-        fileSuffix: form.value.fileSuffix,
-        disabledFlag: false
-      };
-      console.log("🚀 ~ submitForm ~ submitData:", submitData)
-      console.log("🚀 ~ submitForm ~ form.value:", form.value)
-      // 新增/更新接口调用
-      if (!form.value.id) {
-        await documentAdd(submitData); // 新增调用documentAdd
-      } else {
-        await documentUpdate(submitData); // 更新调用documentUpdate
+      try {
+        const submitData = {
+          id: form.value.id,
+          ossIds: form.value.ossIds,
+          name: form.value.name,
+          fileSuffix: form.value.fileSuffix,
+          urls: form.value.urls,
+          disabledFlag: false
+        };
+        console.log("修复后提交参数：", submitData);
+        // 新增/更新接口调用
+        if (!form.value.id) {
+          await documentAdd(submitData);
+        } else {
+          await documentUpdate(submitData);
+        }
+        proxy?.$modal.msgSuccess(`${!form.value.id ? '新增' : '更新'}成功`);
+        dialog.visible = false;
+        await getList();
+      } catch (err) {
+        proxy?.$modal.msgError(`${!form.value.id ? '新增' : '更新'}失败：${(err as Error).message || '未知错误'}`);
+        console.error("提交失败详情：", err);
+      } finally {
+        buttonLoading.value = false;
       }
-      proxy?.$modal.msgSuccess(`${!form.value.id ? '新增' : '更新'}成功`);
-      dialog.visible = false;
-      await getList();
-      buttonLoading.value = false;
     }
   });
+
 };
 /** 编辑操作（回显数据） */
 const handleUpdate = async (row: DocumentVO) => {
   reset();
   form.value = { ...row };
-  formFiles.value = []; // 重置多文件列表
+  formFiles.value = [];
 
   if (row.ossIds) {
     const res = await listByIds(row.ossIds);
     if (res.data && res.data.length > 0) {
-      // 遍历所有文件，回显到 formFiles
-      formFiles.value = res.data.map((file: any) => ({
-        name: file.originalName,
-        url: file.url,
-        ossId: file.ossId,
-        suffix: file.originalName.split('.').pop() || ''
-      }));
-
-      // 同步表单字段
-      form.value.name = formFiles.value.map(f => f.name).join('、');
-      form.value.fileSuffix = formFiles.value.map(f => f.suffix).join('、');
-      form.value.urls = formFiles.value.map(f => f.url).join(',');
+      // 仅取第一个文件回显（避免多文件拼接）
+      const firstFile = res.data[0];
+      formFiles.value = [{
+        name: firstFile.originalName,
+        url: firstFile.url,
+        ossId: firstFile.ossId,
+        suffix: firstFile.originalName.split('.').pop() || ''
+      }];
+      // 回显所有后缀（从文件信息中提取，而非直接用row.fileSuffix）
+      const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
+      form.value.fileSuffix = allSuffixes.join(',');
+      // 文件名：取第一个文件的无后缀名称
+      form.value.name = getFileNameWithoutSuffix(formFiles.value[0].name);
+      // URLs：所有文件URL拼接
+      form.value.urls = formFiles.value.map(file => file.url).join(',');
+      // ossIds：所有文件ID拼接（保持原有格式）
+      form.value.ossIds = formFiles.value.map(file => file.ossId).join(',');
     }
   }
 
@@ -418,28 +428,69 @@ const handleUpdate = async (row: DocumentVO) => {
 };
 // 新增：文件上传/删除后触发（同步表单并刷新列表）
 const handleFileUploadChange = (newOssIds: string) => {
-  // 更新表单的 ossIds（确保表单数据与上传组件同步）
+  console.log("🚀 ~ handleFileUploadChange ~ newOssIds:", newOssIds)
   form.value.ossIds = newOssIds;
-  console.log("🚀 ~ handleFileUploadChange ~ form.value.ossIds:", form.value.ossIds)
-  // 关键：触发列表刷新，实时显示最新上传的文件
-  getList();
+  // 立即同步表单其他字段（无需等待watch触发）
+  if (newOssIds) {
+    listByIds(newOssIds).then(res => {
+      if (res.data && res.data.length > 0) {
+        console.log("🚀 ~ handleFileUploadChange ~ formFiles.value:", formFiles.value)
+        formFiles.value = res.data.map((file: any) => ({
+          name: file.originalName,
+          url: file.url,
+          ossId: String(file.ossId),
+          suffix: file.originalName.split('.').pop() || ''
+        }));
+        // 收集所有文件的后缀（去重，可选）
+        const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
+        // 表单存储：数组转字符串（逗号分隔，适配接口存储）
+        form.value.fileSuffix = allSuffixes.join(',');
+        // 文件名：取第一个文件的无后缀名称（保持原有逻辑，可按需调整）
+        const fileName = formFiles.value[0].name;
+        form.value.name = getFileNameWithoutSuffix(fileName);
+        //  urls：存储所有文件URL（逗号分隔）
+        form.value.urls = formFiles.value.map(file => file.url).join(',');
+
+        console.log("🚀 ~ 所有文件后缀:", allSuffixes);
+        console.log("🚀 ~ 存储的后缀字符串:", form.value.fileSuffix);
+      }
+    });
+  } else {
+    formFiles.value = [];
+    form.value.name = '';
+    form.value.fileSuffix = '';
+    form.value.urls = '';
+  }
 };
 /** 批量停用 */
 const handleDisable = async (row?: DocumentVO) => {
+  console.log("🚀 ~ handleDisable ~ row:", row)
   const disableIds = row?.id ? [row.id] : ids.value; // 单个/多个ID统一处理为数组
   if (!disableIds.length) {
     proxy?.$modal.msgError('请选择需要停用的数据');
     return;
   }
-  await proxy?.$modal.confirm(`是否确认停用选中的${disableIds.length}条数据？`);
+  await proxy?.$modal.confirm(`请确认是否停用此规划文件，停用后相关数据信息将不再三维场景中展示。`);
   loading.value = true;
-  // 循环调用单条停用接口
-  for (const id of disableIds) {
-    await documentDisable([id]); // 每次传单个ID数组
+  try {
+    await documentDisable(disableIds);
+
+    // 手动更新表格数据的 disabledFlag（无需重新请求接口，提升体验）
+    if (row) {
+      row.disabledFlag = !row.disabledFlag; // 单个行状态反转
+    } else {
+      planningFileList.value.forEach(item => {
+        if (disableIds.includes(item.id)) {
+          item.disabledFlag = true; // 批量停用，统一设为 true
+        }
+      });
+    }
+    getList();
+  } catch (err) {
+    proxy?.$modal.msgError(`失败：${(err as Error).message || '未知错误'}`);
+  } finally {
+    loading.value = false;
   }
-  await getList(); // 刷新列表
-  proxy?.$modal.msgSuccess('停用成功');
-  loading.value = false;
 };
 
 /** 批量下载 */
@@ -480,14 +531,13 @@ const resetHistoryQuery = () => {
   getHistoryList();
 };
 const handleHistory = async (row: DocumentVO) => {
-  historyDialog.visible = true;       // 显示弹窗
-  historyDialog.fileName = row.name;  // 设置当前文件名称
-  historyQuery.fileId = row.id;       // 关联主文件ID
-  // 2. 重置查询参数并加载历史版本数据
-  resetHistoryQuery();
-  // 3. 首次加载数据
-  await getHistoryList();
-
+  historyDialog.visible = true;
+  historyDialog.fileName = row.name;
+  historyQuery.fileId = row.id;
+  historyQuery.pageNum = 1; // 重置页码
+  historyQuery.startTime = '';
+  historyQuery.endTime = '';
+  await getHistoryList(); // 重新加载数据
 };
 // 新增：历史版本表格选中事件（记录选中的版本ID）
 const handleHistorySelectionChange = (selection: HistoryVO[]) => {
@@ -506,7 +556,7 @@ const handleHistoryBatchDownload = async () => {
 };
 
 // 新增：单个历史版本停用（复用原有逻辑）
-const handleHistoryDisable = async (historyId: string | number) => {
+const handleHistoryDisable = async (historyId: string) => {
   await proxy?.$modal.confirm('是否确认停用该历史版本？');
   await documentDisable([historyId]);
   proxy?.$modal.msgSuccess('历史版本停用成功');
@@ -514,10 +564,49 @@ const handleHistoryDisable = async (historyId: string | number) => {
 };
 
 /** 下载文件 */
-const handleDownload = (row: DocumentVO) => {
-  console.log("🚀 ~ handleDownload ~ row:", row)
-  // 调用单文件下载接口
-  proxy?.$download.oss(row.ossIds);
+/** 下载文件（修复批量下载报错） */
+const handleDownload = async (row: DocumentVO) => {
+  // 1. 校验并转换 ossIds 为数组（过滤空值和无效项）
+  const ossIdsArray = row.ossIds
+    ? row.ossIds.split(',').filter(ossId => ossId.trim() && /^\d+$/.test(ossId.trim()))
+    : [];
+
+  if (ossIdsArray.length === 0) {
+    proxy?.$modal.msgError('无有效文件可下载');
+    return;
+  }
+
+  // 2. 提示用户开始下载
+  proxy?.$modal.msg(`开始下载${ossIdsArray.length}个文件，请耐心等待...`);
+
+  // 3. 串行下载（逐个下载，避免并发压力）
+  let successCount = 0;
+  let failCount = 0;
+  const failOssIds: string[] = [];
+
+  for (const [index, ossId] of ossIdsArray.entries()) {
+    try {
+      console.log(`正在下载第${index + 1}个文件，ossId:`, ossId);
+      // 逐个下载，等待前一个完成再执行下一个
+      await proxy?.$download.oss(ossId.trim());
+      successCount++;
+    } catch (err) {
+      failCount++;
+      failOssIds.push(ossId);
+      console.error(`第${index + 1}个文件下载失败，ossId:${ossId}，错误：`, err);
+      // 单个文件失败仅日志提示，不中断整体下载
+    }
+  }
+
+  // 4. 下载完成后汇总结果
+  const resultMsg = `下载完成！成功：${successCount}个，失败：${failCount}个${failCount > 0 ? `（失败ossId：${failOssIds.join(',')}）` : ''
+    }`;
+
+  if (failCount === 0) {
+    proxy?.$modal.msgSuccess(resultMsg);
+  } else {
+    proxy?.$modal.msgWarning(resultMsg + '\n失败文件可尝试重新下载或联系管理员');
+  }
 };
 // 监听ossIds变化，自动提取文件后缀和URL
 watch(
@@ -526,24 +615,23 @@ watch(
     if (ossIds) {
       const res = await listByIds(ossIds);
       if (res.data && res.data.length > 0) {
-        // 关键：遍历所有文件，而非仅取第一个
+        console.log("🚀 ~ formFiles.value:", formFiles.value)
         formFiles.value = res.data.map((file: any) => ({
           name: file.originalName,
           url: file.url,
           ossId: file.ossId,
           suffix: file.originalName.split('.').pop() || ''
         }));
+        // 收集所有后缀并存储
+        const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
+        form.value.fileSuffix = allSuffixes.join(',');
+        // 文件名和URL同步
+        form.value.name = getFileNameWithoutSuffix(formFiles.value[0].name);
+        form.value.urls = formFiles.value.map(file => file.url).join(',');
 
-        // 3. 表单字段处理（根据后端需求调整）
-        // - name：拼接所有文件名（或取第一个，根据业务需求）
-        form.value.name = formFiles.value.map(f => f.name).join('、');
-        // - fileSuffix：拼接所有文件后缀（或用逗号分隔）
-        form.value.fileSuffix = formFiles.value.map(f => f.suffix).join('、');
-        // - urls：拼接所有文件URL（用逗号分隔，后端需支持多URL存储）
-        form.value.urls = formFiles.value.map(f => f.url).join(',');
+        console.log("🚀 ~ watch 所有文件后缀:", allSuffixes);
       }
     } else {
-      // 未选择文件时清空
       formFiles.value = [];
       form.value.name = '';
       form.value.fileSuffix = '';
@@ -619,5 +707,17 @@ onMounted(() => {
 
 .mb-1 {
   margin-bottom: 4px;
+}
+
+.disable-btn-active {
+  color: #f19a0e !important;
+  cursor: pointer;
+}
+
+/* 停用状态：不可点击，颜色灰色 */
+.disable-btn-disabled {
+  color: #c0c4cc !important;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 </style>

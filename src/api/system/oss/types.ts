@@ -6,6 +6,11 @@ export interface OssVO extends BaseEntity {
   url: string;
   createByName: string;
   service: string;
+  ossIds?: string;
+  name?: string;
+  id?: string;
+  disabledFlag?: boolean;
+  urls?: string;
 }
 
 export interface OssQuery extends PageQuery {

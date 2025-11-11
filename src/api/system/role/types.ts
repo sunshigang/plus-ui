@@ -30,7 +30,10 @@ export interface RoleVO extends BaseEntity {
   deptIds?: Array<string | number>;
   admin: boolean;
 }
-
+export interface ProjectVO extends BaseEntity {
+  projectName: string;
+  projectId: string;
+}
 export interface RoleQuery extends PageQuery {
   roleName: string;
   roleKey: string;

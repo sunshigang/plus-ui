@@ -113,9 +113,9 @@ export interface InfoVO {
   expertOpinions: string;
 
   /**
-   * 会议材料URL
+   * 公示材料URL
    */
-  meetingMaterials: string;
+  publicMaterial: string;
 
   /**
    * 选址方案核准申报表URL
@@ -272,9 +272,9 @@ export interface InfoForm extends BaseEntity {
   expertOpinions?: string;
 
   /**
-   * 会议材料URL
+   * 公示材料URL
    */
-  meetingMaterials?: string;
+  publicMaterial?: string;
 
   /**
    * 选址方案核准申报表URL
@@ -409,9 +409,9 @@ export interface InfoQuery extends PageQuery {
   expertOpinions?: string;
 
   /**
-   * 会议材料URL
+   * 公示材料URL
    */
-  meetingMaterials?: string;
+  publicMaterial?: string;
 
   /**
    * 选址方案核准申报表URL
