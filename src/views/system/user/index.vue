@@ -379,6 +379,7 @@ const getList = async () => {
   loading.value = true;
   const res = await api.listUser(proxy?.addDateRange(queryParams.value, dateRange.value));
   const projectRes = await listInfo(queryParams.value);
+  console.log("🚀 ~ getList ~ projectRes:", projectRes)
   projectOptions.value = projectRes.rows
   loading.value = false;
   userList.value = res.rows;

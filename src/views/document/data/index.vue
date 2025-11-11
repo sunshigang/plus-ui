@@ -121,7 +121,6 @@
             </el-form-item>
           </el-form>
         </div>
-
         <!-- 2. 文件名称与批量下载按钮（参考示例的信息展示区） -->
         <div class="history-file-info mb-6 flex justify-between items-center">
           <span class="text-gray-700">当前文件：{{ historyDialog.fileName }}</span>
@@ -130,7 +129,6 @@
             批量下载选中版本
           </el-button>
         </div>
-
         <!-- 3. 历史版本表格（核心内容区） -->
         <div class="history-table">
           <el-table v-loading="historyLoading" :data="historyList" border
@@ -148,22 +146,15 @@
             </el-table-column>
             <el-table-column label="更新时间" align="center" width="180">
               <template #default="scope">
-                {{ proxy.parseTime(scope.row.versionCreateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+                {{ proxy.parseTime(scope.row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="180">
+            <el-table-column label="操作" align="center" width="220">
               <template #default="scope">
-                <!-- 下载操作 -->
-                <el-tooltip content="下载该版本" placement="top">
-                  <el-button link type="primary" icon="Download" size="small"
-                    @click="proxy.$download.oss(scope.row.versionId)" />
-                </el-tooltip>
-                <!-- 停用操作 -->
-                <el-tooltip content="停用该版本" placement="top">
-                  <el-button link type="danger" icon="Stop" size="small"
-                    @click="handleHistoryDisable(scope.row.versionId)" />
-                </el-tooltip>
-
+                <el-button link type="primary" icon="Download" size="small"
+                  @click="handleDownload(scope.row)">下载该版本</el-button>
+                <el-button link type="danger" icon="Stop" size="small"
+                  @click="handleHistoryDisable(scope.row.versionId)">停用该版本</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -235,12 +226,13 @@ interface HistoryVO { // 匹配接口返回的历史版本结构
   fileId: string;
   versionUrls: string;
   versionSuffix: string;
-  versionCreateTime: string;
+  updateTime: string;
   name?: string;
+  ossIds?: string[];
 }
 const historyList = ref<HistoryVO[]>([]); // 历史版本列表
 const historyLoading = ref(false);        // 表格加载状态
-const selectedHistoryIds = ref<Array<string>>([]); // 选中的历史版本ID
+const selectedHistoryIds = ref<Array<{ versionId: string; ossIds: string[] }>>([]);
 
 // 替换ossList为documentList，类型改为DocumentVO
 const planningFileList = ref<DocumentVO[]>([]);
@@ -248,7 +240,7 @@ const showTable = ref(true);
 const buttonLoading = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
-const ids = ref<Array<string>>([]);
+const ids = ref<Array<{ id: string; ossIds: string }>>([]);
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
@@ -325,7 +317,8 @@ function cancel() {
 function reset() {
   form.value = { ...initFormData };
   documentFormRef.value?.resetFields();
-  form.value.ossIds = '';
+  form.value.ossIds = ''; // 强制清空OSS ID
+  formFiles.value = []; // 强制清空文件列表
 }
 
 /** 搜索按钮操作 */
@@ -345,7 +338,10 @@ function resetQuery() {
 
 /** 表格多选选中事件 */
 function handleSelectionChange(selection: DocumentVO[]) {
-  ids.value = selection.map(item => item.id);
+  ids.value = selection.map(item => ({
+    id: item.id,
+    ossIds: item.ossIds || '' // 兼容 ossIds 可能为空的情况
+  }));
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
 }
@@ -396,32 +392,13 @@ const submitForm = () => {
 };
 /** 编辑操作（回显数据） */
 const handleUpdate = async (row: DocumentVO) => {
-  reset();
-  form.value = { ...row };
-  formFiles.value = [];
-
-  if (row.ossIds) {
-    const res = await listByIds(row.ossIds);
-    if (res.data && res.data.length > 0) {
-      // 仅取第一个文件回显（避免多文件拼接）
-      const firstFile = res.data[0];
-      formFiles.value = [{
-        name: firstFile.originalName,
-        url: firstFile.url,
-        ossId: firstFile.ossId,
-        suffix: firstFile.originalName.split('.').pop() || ''
-      }];
-      // 回显所有后缀（从文件信息中提取，而非直接用row.fileSuffix）
-      const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
-      form.value.fileSuffix = allSuffixes.join(',');
-      // 文件名：取第一个文件的无后缀名称
-      form.value.name = getFileNameWithoutSuffix(formFiles.value[0].name);
-      // URLs：所有文件URL拼接
-      form.value.urls = formFiles.value.map(file => file.url).join(',');
-      // ossIds：所有文件ID拼接（保持原有格式）
-      form.value.ossIds = formFiles.value.map(file => file.ossId).join(',');
-    }
-  }
+  reset(); // 先重置表单
+  form.value.id = row.id;
+  form.value.ossIds = '';
+  form.value.name = '';
+  form.value.fileSuffix = '';
+  form.value.urls = '';
+  formFiles.value = []; // 清空文件列表
 
   dialog.visible = true;
   dialog.title = '更新规划文件';
@@ -462,49 +439,88 @@ const handleFileUploadChange = (newOssIds: string) => {
     form.value.urls = '';
   }
 };
-/** 批量停用 */
+/** 批量停用（适配新的 ids 结构） */
 const handleDisable = async (row?: DocumentVO) => {
-  console.log("🚀 ~ handleDisable ~ row:", row)
-  const disableIds = row?.id ? [row.id] : ids.value; // 单个/多个ID统一处理为数组
+  // 从新结构中提取 id 数组（单个行或批量选中）
+  const disableIds = row?.id
+    ? [row.id]
+    : ids.value.map(item => item.id);
+
   if (!disableIds.length) {
     proxy?.$modal.msgError('请选择需要停用的数据');
     return;
   }
-  await proxy?.$modal.confirm(`请确认是否停用此规划文件，停用后相关数据信息将不再三维场景中展示。`);
+
+  await proxy?.$modal.confirm(`请确认是否停用选中的${disableIds.length}个规划文件，停用后相关数据信息将不再三维场景中展示。`);
   loading.value = true;
+
   try {
     await documentDisable(disableIds);
-
-    // 手动更新表格数据的 disabledFlag（无需重新请求接口，提升体验）
+    // 更新表格状态
     if (row) {
-      row.disabledFlag = !row.disabledFlag; // 单个行状态反转
+      row.disabledFlag = !row.disabledFlag;
     } else {
       planningFileList.value.forEach(item => {
         if (disableIds.includes(item.id)) {
-          item.disabledFlag = true; // 批量停用，统一设为 true
+          item.disabledFlag = true;
         }
       });
     }
     getList();
+    proxy?.$modal.msgSuccess('停用成功');
   } catch (err) {
-    proxy?.$modal.msgError(`失败：${(err as Error).message || '未知错误'}`);
+    proxy?.$modal.msgError(`停用失败：${(err as Error).message || '未知错误'}`);
   } finally {
     loading.value = false;
   }
 };
 
 /** 批量下载 */
+/** 批量下载（适配新的 ids 结构） */
 const handleBatchDownload = async () => {
   if (ids.value.length === 0) {
     proxy?.$modal.msgError('请选择需要下载的文件');
     return;
   }
   await proxy?.$modal.confirm(`是否确认下载选中的${ids.value.length}个文件？`);
-  // 循环调用单文件下载接口
-  ids.value.forEach(id => {
-    proxy?.$download.oss(id); // 复用单个下载逻辑
+
+  // 收集所有需要下载的 ossId（处理多文件场景）
+  const allOssIds: string[] = [];
+  ids.value.forEach(item => {
+    if (item.ossIds) {
+      // 拆分逗号分隔的 ossIds 并过滤无效值
+      const ossIdsArray = item.ossIds.split(',')
+        .map(id => id.trim())
+        .filter(id => id && /^\d+$/.test(id));
+      allOssIds.push(...ossIdsArray);
+    }
   });
-  proxy?.$modal.msgSuccess('下载请求已提交，文件将陆续下载');
+
+  if (allOssIds.length === 0) {
+    proxy?.$modal.msgError('选中的文件中无有效可下载资源');
+    return;
+  }
+
+  // 串行下载所有文件
+  let successCount = 0;
+  let failCount = 0;
+  const failIds: string[] = [];
+
+  for (const ossId of allOssIds) {
+    try {
+      await proxy?.$download.oss(ossId);
+      successCount++;
+    } catch (err) {
+      failCount++;
+      failIds.push(ossId);
+      console.error(`文件 ${ossId} 下载失败:`, err);
+    }
+  }
+
+  // 显示下载结果
+  const resultMsg = `下载完成！成功：${successCount}个，失败：${failCount}个${failCount > 0 ? `（失败ID：${failIds.join(',')}）` : ''
+    }`;
+  failCount === 0 ? proxy?.$modal.msgSuccess(resultMsg) : proxy?.$modal.msgWarning(resultMsg);
 };
 /** 数据共享 */
 const handleDataShare = async () => {
@@ -513,14 +529,21 @@ const handleDataShare = async () => {
   // await documentDataShare(ids.value);
   proxy?.$modal.msgSuccess('共享成功');
 };
-
-/** 查看历史版本 */
 /** 查看历史版本（新增时间筛选、批量下载、操作列） */
 const getHistoryList = async () => {
   historyLoading.value = true;
   const res = await documentHistory(historyQuery.fileId);
   const rawData = res.data || [];
-  historyList.value = historyList.value = rawData as HistoryVO[];
+  console.log("🚀 ~ getHistoryList ~ rawData:", rawData)
+  historyList.value = rawData.map((item: any) => ({
+    ...item,
+    // 若 ossIds 是字符串，按逗号拆分并过滤无效ID；否则直接取数组（兼容后端返回数组的情况）
+    ossIds: item.ossIds
+      ? typeof item.ossIds === 'string'
+        ? item.ossIds.split(',').filter((id: string) => id.trim() && /^\d+$/.test(id.trim()))
+        : item.ossIds
+      : []
+  })) as HistoryVO[];
   historyQuery.total = historyList.value.length;
   historyLoading.value = false;
 };
@@ -541,17 +564,29 @@ const handleHistory = async (row: DocumentVO) => {
 };
 // 新增：历史版本表格选中事件（记录选中的版本ID）
 const handleHistorySelectionChange = (selection: HistoryVO[]) => {
-  selectedHistoryIds.value = selection.map(item => item.versionId);
+  console.log("🚀 ~ handleHistorySelectionChange ~ selection:", selection)
+  // 遍历选中的历史版本，提取 versionId 和 ossIds 存储
+  selectedHistoryIds.value = selection.map(item => ({
+    versionId: item.versionId,
+    ossIds: item.ossIds || [] // 兼容 ossIds 可能为空的情况
+  }));
 };
-
-// 新增：历史版本批量下载（复用原有逻辑）
 const handleHistoryBatchDownload = async () => {
+  console.log("🚀 ~ handleHistoryBatchDownload ~ selectedHistoryIds.value:", selectedHistoryIds.value)
   if (selectedHistoryIds.value.length === 0) {
     proxy?.$modal.msgError('请选择需要下载的历史版本');
     return;
   }
   await proxy?.$modal.confirm(`是否确认下载选中的${selectedHistoryIds.value.length}个历史版本？`);
-  selectedHistoryIds.value.forEach(id => proxy.$download.oss(id));
+  selectedHistoryIds.value.forEach(id => {
+    console.log("🚀 ~ handleHistoryBatchDownload ~ id:", id.ossIds)
+    if (id.ossIds && id.ossIds.length > 0) {
+      id.ossIds.forEach(ossId => {
+        proxy?.$download.oss(ossId); // 复用单个下载逻辑
+      });
+    }
+  });
+
   proxy?.$modal.msgSuccess('历史版本下载请求已提交');
 };
 

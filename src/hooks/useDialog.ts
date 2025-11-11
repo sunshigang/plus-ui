@@ -12,7 +12,6 @@ interface Return {
 export default (ops?: Options): Return => {
   const visible = ref(false);
   const title = ref(ops.title || '');
-
   const openDialog = () => {
     visible.value = true;
   };
@@ -24,7 +23,6 @@ export default (ops?: Options): Return => {
   return {
     title,
     visible,
-
     openDialog,
     closeDialog
   };
