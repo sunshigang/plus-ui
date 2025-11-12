@@ -106,19 +106,29 @@
         <el-table-column label="组织机构代码" align="center" prop="organizationCode" width="150" />
         <el-table-column label="拟选位置" align="center" prop="projectPurpose" width="150" />
         <el-table-column label="保护区等级" align="center" prop="protectionLevel" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="97" />
+        <el-table-column label="创建时间" align="center" prop="createTime" width="120">
+          <template #default="scope">
+            {{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
           <template #default="scope">
             <el-button
               v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) && canEdit() && !['superadmin', 'sysadmin'].includes(currentUserRole)"
-              link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">修改</el-button>
-            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
-              v-else>查看</el-button>
+              link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
+              <!-- 状态为驳回时显示“二次填报”，否则显示“信息填报” -->
+              {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
+            </el-button>
+            <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
+              v-else>详情查看</el-button> -->
+            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']" v-else>
+              {{ ['superadmin', 'sysadmin'].includes(currentUserRole) ? '详情查看' : '查看' }}
+            </el-button>
             <el-button v-if="['填报中', '管委会审批中'].includes(scope.row.status)" link type="primary"
-              @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']">管委会审核</el-button>
+              @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']">审核</el-button>
             <el-button v-if="scope.row.status === '管委会通过'" link type="primary" @click="handleAudit(scope.row)"
-              v-hasPermi="['project:project:lyjApprove']">林业局审核</el-button>
-            <el-button link type="primary" @click="handleDelete(scope.row)"
+              v-hasPermi="['project:project:lyjApprove']">审核</el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row)"
               v-hasPermi="['project:project:remove']">删除</el-button>
             <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
               @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">数据共享</el-button>
@@ -1726,7 +1736,19 @@ const handleAdd = async () => {
   dialog.visible = true;
 }
 const loadAllFileLists = async (projectData: InfoForm) => {
-  form.value.approveRecord.gwhApprovalReason = projectData.approveRecord.gwhApprovalReason || '';
+  if (!form.value.approveRecord) {
+    form.value.approveRecord = {
+      gwhApprovalAttachment: undefined,
+      gwhApprovalReason: undefined,
+      gwhApproveResult: undefined,
+      gwhApproveTime: undefined,
+      lyjApprovalAttachment: undefined,
+      lyjApprovalReason: undefined,
+      lyjApproveResult: undefined,
+      lyjApproveTime: undefined,
+    };
+  }
+  form.value.approveRecord.gwhApprovalReason = projectData.approveRecord?.gwhApprovalReason || '';
   // ---------- 新增：加载管委会审批反馈文件（关键修复） ----------
   if (projectData.approveRecord?.gwhApprovalAttachment) {
     const managementOssIds = projectData.approveRecord.gwhApprovalAttachment.split(',').filter(id => id.trim()); // 过滤空ID
@@ -1889,6 +1911,18 @@ const handleView = async (row: InfoVO) => {
     const projectData = res.data;
     console.log("🚀 ~ handleView ~ projectData:", projectData)
     Object.assign(form.value, res.data);
+    if (!form.value.approveRecord) {
+      form.value.approveRecord = {
+        gwhApprovalAttachment: undefined,
+        gwhApprovalReason: undefined,
+        gwhApproveResult: undefined,
+        gwhApproveTime: undefined,
+        lyjApprovalAttachment: undefined,
+        lyjApprovalReason: undefined,
+        lyjApproveResult: undefined,
+        lyjApproveTime: undefined,
+      };
+    }
     await loadAllFileLists(projectData);
     dialog.visible = true;
     dialog.title = "查看重大项目信息";
@@ -1952,6 +1986,18 @@ const handleUpdate = async (row?: InfoVO) => {
   const res = await getInfo(_id);
   const projectData = res.data;
   Object.assign(form.value, res.data);
+  if (!form.value.approveRecord) {
+    form.value.approveRecord = {
+      gwhApprovalAttachment: undefined,
+      gwhApprovalReason: undefined,
+      gwhApproveResult: undefined,
+      gwhApproveTime: undefined,
+      lyjApprovalAttachment: undefined,
+      lyjApprovalReason: undefined,
+      lyjApproveResult: undefined,
+      lyjApproveTime: undefined,
+    };
+  }
   await loadAllFileLists(projectData);
   dialog.title = "修改重大项目信息";
   disabled.value = false; // 启用表单
@@ -2189,7 +2235,7 @@ h3 {
 }
 
 .modelPreview {
-  margin-left: 1350px;
+  margin-left: 1500px;
   margin-top: -50px;
 
 }

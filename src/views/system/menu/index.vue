@@ -60,20 +60,14 @@
             <span>{{ scope.row.createTime }}</span>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="180">
+        <el-table-column fixed="right" label="操作" width="280">
           <template #default="scope">
-            <el-tooltip content="修改" placement="top">
               <el-button v-hasPermi="['system:menu:edit']" link type="primary" icon="Edit"
-                @click="handleUpdate(scope.row)" />
-            </el-tooltip>
-            <el-tooltip content="新增" placement="top">
+                @click="handleUpdate(scope.row)">编辑</el-button>
               <el-button v-hasPermi="['system:menu:add']" link type="primary" icon="Plus"
-                @click="handleAdd(scope.row)" />
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:menu:remove']" link type="primary" icon="Delete"
-                @click="handleDelete(scope.row)" />
-            </el-tooltip>
+                @click="handleAdd(scope.row)">新增</el-button>
+              <el-button v-hasPermi="['system:menu:remove']" link type="danger" icon="Delete"
+                @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

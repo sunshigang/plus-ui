@@ -4,69 +4,30 @@
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
       <div class="title-box">
         <h3 class="title">{{ title }}</h3>
-        <lang-select />
       </div>
-      <el-form-item v-if="tenantEnabled" prop="tenantId">
-        <el-select v-model="loginForm.tenantId" filterable :placeholder="proxy.$t('login.selectPlaceholder')"
-          style="width: 100%">
-          <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName"
-            :value="item.tenantId"></el-option>
-          <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select>
-      </el-form-item>
-      <el-form-item prop="username">
+      <el-form-item prop="username" class="form-item-top">
         <el-input v-model="loginForm.username" type="text" size="large" auto-complete="off"
           :placeholder="proxy.$t('login.username')">
           <template #prefix><svg-icon icon-class="user" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <el-form-item prop="password">
+      <el-form-item prop="password" class="form-item-top">
         <el-input v-model="loginForm.password" type="password" size="large" auto-complete="off"
-          :placeholder="proxy.$t('login.password')"  show-password @keyup.enter="handleLogin">
+          :placeholder="proxy.$t('login.password')" show-password @keyup.enter="handleLogin">
           <template #prefix><svg-icon icon-class="password" class="el-input__icon input-icon" /></template>
         </el-input>
       </el-form-item>
-      <el-form-item v-if="captchaEnabled" prop="code">
-        <el-input v-model="loginForm.code" size="large" auto-complete="off" :placeholder="proxy.$t('login.code')"
-          style="width: 63%" @keyup.enter="handleLogin">
-          <template #prefix><svg-icon icon-class="validCode" class="el-input__icon input-icon" /></template>
-        </el-input>
-        <div class="login-code">
-          <img :src="codeUrl" class="login-code-img" @click="getCode" />
-        </div>
-      </el-form-item>
       <el-checkbox v-model="loginForm.rememberMe"
-        style="margin: 0 0 25px 0">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
-      <!-- <el-form-item style="float: right">
-        <el-button circle :title="proxy.$t('login.social.wechat')" @click="doSocialLogin('wechat')">
-          <svg-icon icon-class="wechat" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.maxkey')" @click="doSocialLogin('maxkey')">
-          <svg-icon icon-class="maxkey" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.topiam')" @click="doSocialLogin('topiam')">
-          <svg-icon icon-class="topiam" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.gitee')" @click="doSocialLogin('gitee')">
-          <svg-icon icon-class="gitee" />
-        </el-button>
-        <el-button circle :title="proxy.$t('login.social.github')" @click="doSocialLogin('github')">
-          <svg-icon icon-class="github" />
-        </el-button>
-      </el-form-item> -->
-      <el-form-item style="width: 100%">
-        <el-button :loading="loading" size="large" type="primary" style="width: 100%" @click.prevent="handleLogin">
-          <span v-if="!loading">{{ proxy.$t('login.login') }}</span>
-          <span v-else>{{ proxy.$t('login.logging') }}</span>
-        </el-button>
-        <div v-if="register" style="float: right">
-          <router-link class="link-type" :to="'/register'">{{ proxy.$t('login.switchRegisterPage') }}</router-link>
-        </div>
-      </el-form-item>
+        class="remember-me">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
+      <div class="form-footer">
+        <el-form-item style="width: 100%">
+          <el-button :loading="loading" size="large" type="primary" style="width: 100%;font-size:20px;border-radius: 22px;" @click.prevent="handleLogin">账号登录
+          </el-button>
+        </el-form-item>
+      </div>
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <!-- <span>Copyright © 2018-2025 疯狂的狮子Li All Rights Reserved.</span> -->
     </div>
   </div>
 </template>
@@ -242,10 +203,10 @@ onMounted(() => {
   display: flex;
 
   .title {
-    margin: 0px auto 30px auto;
+    margin: 40px auto 50px auto;
     text-align: center;
     font-weight: 500;
-    font-size: 24px;
+    font-size: 26px;
     color: rgba(0, 0, 0, 0.85);
   }
 
@@ -256,36 +217,58 @@ onMounted(() => {
 }
 
 .login-img {
-  width: 450px;
-  height: 450px;
+  width: 680px;
+  height: 680px;
 }
 
 .login-form {
   border-radius: 6px;
   background: #ffffff;
-  width: 450px;
-  height: 450px;
-  padding: 25px 25px 5px 25px;
+  width: 680px;
+  height: 680px;
+  padding: 45px 25px 5px 25px;
   z-index: 1;
   border-radius: 0px 15px 15px 0px;
 
   .el-input {
-    height: 40px;
+    height: 60px;
+    font-size: 20px;
 
     input {
-      height: 40px;
+      height: 60px;
     }
   }
 
   .input-icon {
     height: 39px;
-    width: 14px;
-    margin-left: 0px;
+    width: 20px;
+    margin-left: 10px;
   }
 }
 
+.form-item-top {
+  margin-top: 60px;
+  /* 可根据需求调整间距大小 */
+}
+
+/* 记住密码：添加上外边距，移除默认margin */
+.remember-me {
+  margin: 60px 0 !important;
+  /* 上外边距20px，左右下0 */
+  display: block;
+  /* 独占一行，对齐更整齐 */
+}
+
+/* 按钮组父容器：固定在底部 */
+.form-footer {
+  margin-top: auto;
+  /* 自动占据剩余空间，把自己推到底部 */
+  padding-bottom: 40px;
+  /* 底部内边距，避免贴边 */
+}
+
 .login-tip {
-  font-size: 13px;
+  font-size: 16px;
   text-align: center;
   color: #bfbfbf;
 }

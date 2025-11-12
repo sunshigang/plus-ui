@@ -51,9 +51,7 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
-            <el-tooltip content="取消授权" placement="top">
-              <el-button v-hasPermi="['system:role:remove']" link type="primary" icon="CircleClose" @click="cancelAuthUser(scope.row)"> </el-button>
-            </el-tooltip>
+              <el-button v-hasPermi="['system:role:remove']" link type="primary" @click="cancelAuthUser(scope.row)">取消授权</el-button>
           </template>
         </el-table-column>
       </el-table>

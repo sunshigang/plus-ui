@@ -1,6 +1,7 @@
 <template>
   <div class="p-2">
-    <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
@@ -8,11 +9,13 @@
               <el-input v-model="queryParams.deptName" placeholder="请输入部门名称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="类别编码" prop="deptCategory">
-              <el-input v-model="queryParams.deptCategory" placeholder="请输入类别编码" clearable style="width: 240px" @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.deptCategory" placeholder="请输入类别编码" clearable style="width: 240px"
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-select v-model="queryParams.status" placeholder="部门状态" clearable>
-                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
+                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label"
+                  :value="dict.value" />
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -28,7 +31,8 @@
       <template #header>
         <el-row :gutter="10">
           <el-col :span="1.5">
-            <el-button v-hasPermi="['system:dept:add']" type="primary" plain icon="Plus" @click="handleAdd()">新增 </el-button>
+            <el-button v-hasPermi="['system:dept:add']" type="primary" plain icon="Plus" @click="handleAdd()">新增
+            </el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button type="info" plain icon="Sort" @click="handleToggleExpandAll">展开/折叠</el-button>
@@ -37,15 +41,8 @@
         </el-row>
       </template>
 
-      <el-table
-        ref="deptTableRef"
-        v-loading="loading"
-        :data="deptList"
-        row-key="deptId"
-        border
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        :default-expand-all="isExpandAll"
-      >
+      <el-table ref="deptTableRef" v-loading="loading" :data="deptList" row-key="deptId" border
+        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" :default-expand-all="isExpandAll">
         <el-table-column prop="deptName" label="部门名称" width="260"></el-table-column>
         <el-table-column prop="deptCategory" align="center" label="类别编码" width="200"></el-table-column>
         <el-table-column prop="orderNum" align="center" label="排序" width="200"></el-table-column>
@@ -61,15 +58,12 @@
         </el-table-column>
         <el-table-column fixed="right" align="center" label="操作">
           <template #default="scope">
-            <el-tooltip content="修改" placement="top">
-              <el-button v-hasPermi="['system:dept:edit']" link type="primary" icon="Edit" @click="handleUpdate(scope.row)" />
-            </el-tooltip>
-            <el-tooltip content="新增" placement="top">
-              <el-button v-hasPermi="['system:dept:add']" link type="primary" icon="Plus" @click="handleAdd(scope.row)" />
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top">
-              <el-button v-hasPermi="['system:dept:remove']" link type="primary" icon="Delete" @click="handleDelete(scope.row)" />
-            </el-tooltip>
+            <el-button v-hasPermi="['system:dept:edit']" link type="primary" icon="Edit"
+              @click="handleUpdate(scope.row)">编辑</el-button>
+            <el-button v-hasPermi="['system:dept:add']" link type="primary" icon="Plus"
+              @click="handleAdd(scope.row)">新增</el-button>
+            <el-button v-hasPermi="['system:dept:remove']" link type="danger" icon="Delete"
+              @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -80,14 +74,9 @@
         <el-row>
           <el-col v-if="form.parentId !== 0" :span="24">
             <el-form-item label="上级部门" prop="parentId">
-              <el-tree-select
-                v-model="form.parentId"
-                :data="deptOptions"
-                :props="{ value: 'deptId', label: 'deptName', children: 'children' } as any"
-                value-key="deptId"
-                placeholder="选择上级部门"
-                check-strictly
-              />
+              <el-tree-select v-model="form.parentId" :data="deptOptions"
+                :props="{ value: 'deptId', label: 'deptName', children: 'children' } as any" value-key="deptId"
+                placeholder="选择上级部门" check-strictly />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -106,13 +95,14 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="负责人" prop="leader">
-              <el-select v-model="form.leader" placeholder="请选择负责人">
-                <el-option v-for="item in deptUserList" :key="item.userId" :label="item.userName" :value="item.userId" />
+            <el-form-item label="账号" prop="leader">
+              <el-select v-model="form.leader" placeholder="请选择账号">
+                <el-option v-for="item in deptUserList" :key="item.userId" :label="item.userName"
+                  :value="item.userId" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <!-- <el-col :span="12">
             <el-form-item label="联系电话" prop="phone">
               <el-input v-model="form.phone" placeholder="请输入联系电话" maxlength="11" />
             </el-form-item>
@@ -121,11 +111,12 @@
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
             </el-form-item>
-          </el-col>
+          </el-col> -->
           <el-col :span="12">
             <el-form-item label="部门状态">
               <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
+                <el-radio v-for="dict in sys_normal_disable" :key="dict.value"
+                  :value="dict.value">{{ dict.label }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </el-col>

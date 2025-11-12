@@ -65,17 +65,18 @@ const sideTheme = computed(() => settingsStore.sideTheme);
       width: 38px;
       height: 32px;
       vertical-align: middle;
-      margin-right: 10px;
+      margin-right: 5px;
 
     }
 
     & .sidebar-title {
       display: inline-block;
-      margin: 0;
+      margin-top: 10px;
+      margin-left: 11px;
       color: #fff;
       font-weight: 600;
       line-height: 50px;
-      font-size: 15px;
+      font-size: 20px;
       font-family:
         Avenir,
         Helvetica Neue,

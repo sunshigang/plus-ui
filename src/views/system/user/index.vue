@@ -16,17 +16,9 @@
           <div v-show="showSearch" class="mb-[10px]">
             <el-card shadow="hover">
               <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-                <el-form-item label="用户名称" prop="userName">
-                  <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable @keyup.enter="handleQuery" />
+                <el-form-item label="账号名称" prop="userName">
+                  <el-input v-model="queryParams.userName" placeholder="请输入账号名称" clearable @keyup.enter="handleQuery" />
                 </el-form-item>
-                <el-form-item label="用户昵称" prop="nickName">
-                  <el-input v-model="queryParams.nickName" placeholder="请输入用户昵称" clearable @keyup.enter="handleQuery" />
-                </el-form-item>
-                <el-form-item label="手机号码" prop="phonenumber">
-                  <el-input v-model="queryParams.phonenumber" placeholder="请输入手机号码" clearable
-                    @keyup.enter="handleQuery" />
-                </el-form-item>
-
                 <el-form-item label="状态" prop="status">
                   <el-select v-model="queryParams.status" placeholder="用户状态" clearable>
                     <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label"
@@ -97,8 +89,16 @@
               :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[3].visible" key="deptName" label="所属角色" align="center" prop="deptName"
               :show-overflow-tooltip="true" />
-            <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" prop="projectName"
-              width="120" />
+            <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" width="260">
+              <template #default="scope">
+                <el-tooltip placement="top"
+                  :content="scope.row.projects?.map(item => item.projectName).join('、') || '无'">
+                  <div class="project-name-wrapper">
+                    {{scope.row.projects?.map(item => item.projectName).join('、') || '无'}}
+                  </div>
+                </el-tooltip>
+              </template>
+            </el-table-column>
             <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
               <template #default="scope">
                 <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
@@ -107,33 +107,22 @@
             </el-table-column>
             <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="160">
               <template #default="scope">
-                <span>{{ scope.row.createTime }}</span>
+                <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
               </template>
             </el-table-column>
-            <el-table-column v-if="columns[4].visible" key="phonenumber" label="手机号码" align="center" prop="phonenumber"
-              width="120" />
-              <el-table-column  key="remark" label="备注" align="center" prop="remark"
-              width="120" />
-            <el-table-column label="操作" fixed="right" width="180" class-name="small-padding fixed-width">
+            <el-table-column key="remark" label="备注" align="center" prop="remark" width="120" />
+            <el-table-column label="操作" fixed="right" width="330" class-name="small-padding fixed-width">
               <template #default="scope">
-                <el-tooltip v-if="scope.row.userId !== 1" content="修改" placement="top">
-                  <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="Edit"
-                    @click="handleUpdate(scope.row)"></el-button>
-                </el-tooltip>
-                <el-tooltip v-if="scope.row.userId !== 1" content="删除" placement="top">
-                  <el-button v-hasPermi="['system:user:remove']" link type="primary" icon="Delete"
-                    @click="handleDelete(scope.row)"></el-button>
-                </el-tooltip>
-
-                <el-tooltip v-if="scope.row.userId !== 1" content="重置密码" placement="top">
-                  <el-button v-hasPermi="['system:user:resetPwd']" link type="primary" icon="Key"
-                    @click="handleResetPwd(scope.row)"></el-button>
-                </el-tooltip>
-
-                <el-tooltip v-if="scope.row.userId !== 1" content="分配角色" placement="top">
-                  <el-button v-hasPermi="['system:user:edit']" link type="primary" icon="CircleCheck"
-                    @click="handleAuthRole(scope.row)"></el-button>
-                </el-tooltip>
+                <el-button v-hasPermi="['system:user:view']" link type="primary"
+                  @click="handleView(scope.row)">查看</el-button>
+                <el-button v-hasPermi="['system:user:edit']" link type="primary"
+                  @click="handleUpdate(scope.row)">编辑</el-button>
+                <el-button v-hasPermi="['system:user:resetPwd']" link type="primary"
+                  @click="handleResetPwd(scope.row)">重置密码</el-button>
+                <el-button v-hasPermi="['system:user:edit']" link type="primary"
+                  @click="handleAuthRole(scope.row)">分配角色</el-button>
+                <el-button v-hasPermi="['system:user:remove']" link type="danger"
+                  @click="handleDelete(scope.row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -144,18 +133,15 @@
       </el-col>
     </el-row>
 
-    <!-- 添加或修改用户配置对话框 -->
+    <!-- 添加或修改账号配置对话框 -->
     <el-dialog ref="formDialogRef" v-model="dialog.visible" :title="dialog.title" width="500px" append-to-body
       @close="closeDialog">
       <el-form ref="userFormRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item v-if="form.userId == undefined" label="用户名称" prop="userName">
-          <el-input v-model="form.userName" placeholder="请输入用户名称" maxlength="30" />
+        <el-form-item v-if="form.userId == undefined" label="账号名称" prop="userName">
+          <el-input v-model="form.userName" placeholder="请输入账号名称" maxlength="30" />
         </el-form-item>
-          <el-form-item label="用户昵称" prop="nickName">
-            <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
-          </el-form-item>
-        <el-form-item v-if="form.userId == undefined" label="用户密码" prop="password">
-          <el-input v-model="form.password" placeholder="请输入用户密码" type="password" maxlength="20" show-password />
+        <el-form-item v-if="form.userId == undefined" label="账号密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入账号密码" type="password" maxlength="20" show-password />
         </el-form-item>
         <el-form-item label="所属角色" prop="roleIds">
           <el-select v-model="form.roleIds" filterable multiple placeholder="请选择">
@@ -163,10 +149,10 @@
               :disabled="item.status == '1'"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="项目权限" prop="projectName">
-          <el-select v-model="form.projectName" filterable multiple placeholder="请选择">
+        <el-form-item label="项目权限" prop="projectIds">
+          <el-select v-model="form.projectIds" filterable multiple placeholder="请选择">
             <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName"
-              :value="item.projectName"></el-option>
+              :value="String(item.id)"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="归属部门" prop="deptId">
@@ -191,7 +177,40 @@
         </div>
       </template>
     </el-dialog>
-
+    <!-- 查看账号对话框（不可编辑） -->
+    <el-dialog ref="viewDialogRef" v-model="viewDialog.visible" :title="viewDialog.title" width="500px" append-to-body>
+      <el-form :model="viewForm" label-width="80px">
+        <!-- 密码查看栏（新增） -->
+        <el-form-item label="账号名称">
+          <el-input v-model="viewForm.userName" disabled />
+        </el-form-item>
+        <el-form-item label="所属角色">
+          <el-select v-model="viewForm.roleIds" multiple disabled>
+            <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="项目权限">
+          <el-select v-model="viewForm.projectIds" multiple disabled>
+            <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName"
+              :value="String(item.id)" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="归属部门">
+          <el-input v-model="viewForm.deptName" placeholder="无" disabled />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-input v-model="viewForm.statusLabel" disabled />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="viewForm.remark" type="textarea" disabled />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="viewDialog.visible = false">关 闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
     <!-- 用户导入对话框 -->
     <el-dialog v-model="upload.open" :title="upload.title" width="400px" append-to-body>
       <el-upload ref="uploadRef" :limit="1" accept=".xlsx, .xls" :headers="upload.headers"
@@ -252,6 +271,13 @@ const initPassword = ref<string>('');
 const postOptions = ref<PostVO[]>([]);
 const roleOptions = ref<RoleVO[]>([]);
 const projectOptions = ref<InfoVO[]>([]);
+// 查看对话框相关
+const viewDialog = reactive<DialogOption>({
+  visible: false,
+  title: '查看账号'
+});
+const viewDialogRef = ref<ElDialogInstance>();
+
 /*** 用户导入参数 */
 const upload = reactive<ImportOption>({
   // 是否显示弹出层（用户导入）
@@ -269,9 +295,9 @@ const upload = reactive<ImportOption>({
 });
 // 列显隐信息
 const columns = ref<FieldOption[]>([
-  { key: 0, label: `用户编号`, visible: false, children: [] },
-  { key: 1, label: `用户名称`, visible: true, children: [] },
-  { key: 2, label: `用户昵称`, visible: true, children: [] },
+  { key: 0, label: `账号编号`, visible: false, children: [] },
+  { key: 1, label: `账号名称`, visible: true, children: [] },
+  { key: 2, label: `账号昵称`, visible: true, children: [] },
   { key: 3, label: `部门`, visible: true, children: [] },
   { key: 4, label: `手机号码`, visible: false, children: [] },
   { key: 5, label: `状态`, visible: true, children: [] },
@@ -303,8 +329,15 @@ const initFormData: UserForm = {
   remark: '',
   postIds: [],
   roleIds: [],
-  projectName: []
+  projectName: '',
+  projectIds: [],//项目权限的 ID 数组例如["1987713629520900098","1987714038566203394"]
 };
+// 查看表单（存储不可编辑数据）
+const viewForm = reactive<UserForm & { statusLabel: string; deptName: string }>({
+  ...initFormData,
+  statusLabel: '',
+  deptName: ''
+});
 
 const initData: PageData<UserForm, UserQuery> = {
   form: { ...initFormData },
@@ -319,21 +352,21 @@ const initData: PageData<UserForm, UserQuery> = {
   },
   rules: {
     userName: [
-      { required: true, message: '用户名称不能为空', trigger: 'blur' },
+      { required: true, message: '账号名称不能为空', trigger: 'blur' },
       {
         min: 2,
         max: 20,
-        message: '用户名称长度必须介于 2 和 20 之间',
+        message: '账号名称长度必须介于 2 和 20 之间',
         trigger: 'blur'
       }
     ],
-    nickName: [{ required: true, message: '用户昵称不能为空', trigger: 'blur' }],
+    nickName: [{ required: true, message: '账号昵称不能为空', trigger: 'blur' }],
     password: [
-      { required: true, message: '用户密码不能为空', trigger: 'blur' },
+      { required: true, message: '账号密码不能为空', trigger: 'blur' },
       {
         min: 5,
         max: 20,
-        message: '用户密码长度必须介于 5 和 20 之间',
+        message: '账号密码长度必须介于 5 和 20 之间',
         trigger: 'blur'
       },
       { pattern: /^[^<>"'|\\]+$/, message: '不能包含非法字符：< > " \' \\ |', trigger: 'blur' }
@@ -352,7 +385,7 @@ const initData: PageData<UserForm, UserQuery> = {
         trigger: 'blur'
       }
     ],
-    roleIds: [{ required: true, message: '用户角色不能为空', trigger: 'blur' }]
+    roleIds: [{ required: true, message: '账号角色不能为空', trigger: 'blur' }]
   }
 };
 const data = reactive<PageData<UserForm, UserQuery>>(initData);
@@ -411,7 +444,41 @@ const handleNodeClick = (data: DeptVO) => {
   queryParams.value.deptId = data.id;
   handleQuery();
 };
+/** 查看按钮操作 */
+const handleView = async (row: UserVO) => {
+  // 重置查看表单
+  Object.assign(viewForm, { ...initFormData, statusLabel: '', deptName: '' });
+  // 获取用户完整信息
+  const { data } = await api.getUser(row.userId);
+  console.log("🚀 ~ handleView ~ data:", data)
+  // 赋值基础信息
+  Object.assign(viewForm, data.user);
+  // 处理角色回显（保持与编辑框一致）
+  viewForm.roleIds = Array.isArray(data.roleIds) ? data.roleIds : [];
+  // 处理项目权限回显
+  viewForm.projectIds = Array.isArray(data.projects)
+    ? data.projects.map(item => String(item.id))
+    : [];
+  // 处理状态文本显示（将 0/1 转为 启用/停用）
+  viewForm.statusLabel = data.user.status === '0' ? '启用' : '停用';
+  // 处理部门名称显示（从部门树中匹配）
+  viewForm.deptName = getDeptNameById(data.user.deptId, deptOptions.value) || '无';
+  // 打开查看对话框
+  viewDialog.visible = true;
+};
 
+/** 辅助函数：根据部门ID获取部门名称 */
+const getDeptNameById = (deptId: number | string | undefined, deptList: DeptTreeVO[]): string => {
+  if (!deptId) return '';
+  for (const dept of deptList) {
+    if (dept.id === deptId) return dept.label;
+    if (dept.children && dept.children.length) {
+      const childName = getDeptNameById(deptId, dept.children);
+      if (childName) return childName;
+    }
+  }
+  return '';
+};
 /** 搜索按钮操作 */
 const handleQuery = () => {
   queryParams.value.pageNum = 1;
@@ -456,7 +523,7 @@ const handleDelete = async (row?: UserVO) => {
 const handleStatusChange = async (row: UserVO) => {
   const text = row.status === '0' ? '启用' : '停用';
   try {
-    await proxy?.$modal.confirm('确认要"' + text + '""' + row.userName + '"用户吗?');
+    await proxy?.$modal.confirm('确认要"' + text + '""' + row.userName + '"账号吗?');
     await api.changeUserStatus(row.userId, row.status);
     proxy?.$modal.msgSuccess(text + '成功');
   } catch (err) {
@@ -477,7 +544,7 @@ const handleResetPwd = async (row: UserVO) => {
       cancelButtonText: '取消',
       closeOnClickModal: false,
       inputPattern: /^.{5,20}$/,
-      inputErrorMessage: '用户密码长度必须介于 5 和 20 之间',
+      inputErrorMessage: '账号密码长度必须介于 5 和 20 之间',
       inputValidator: (value) => {
         if (/<|>|"|'|\||\\/.test(value)) {
           return '不能包含非法字符：< > " \' \\ |';
@@ -500,7 +567,7 @@ const handleSelectionChange = (selection: UserVO[]) => {
 
 /** 导入按钮操作 */
 const handleImport = () => {
-  upload.title = '用户导入';
+  upload.title = '账号导入';
   upload.open = true;
 };
 /** 导出按钮操作 */
@@ -567,13 +634,17 @@ const handleUpdate = async (row?: UserForm) => {
   const { data } = await api.getUser(userId);
   console.log("🚀 ~ handleUpdate ~ data:", data)
   dialog.visible = true;
-  dialog.title = '修改用户';
+  dialog.title = '修改账号';
   Object.assign(form.value, data.user);
-  postOptions.value = data.posts;
-  roleOptions.value = data.roles;
-  form.value.postIds = data.postIds;
-  form.value.roleIds = data.roleIds;
+  postOptions.value = data.posts || [];
+  roleOptions.value = data.roles || [];
+  form.value.postIds = Array.isArray(data.postIds) ? data.postIds : [];
+  form.value.roleIds = Array.isArray(data.roleIds) ? data.roleIds : [];
   form.value.password = '';
+  form.value.projectIds = []; // 强制初始化为空数组，避免 null/undefined
+  if (Array.isArray(data.projects)) { // 只在 data.projects 是有效数组时处理
+    form.value.projectIds = data.projects.map(item => String(item.id)); // 直接赋值，比 push 更高效
+  }
 };
 
 /** 提交按钮 */
@@ -620,3 +691,16 @@ async function handleDeptChange(value: number | string) {
   form.value.postIds = [];
 }
 </script>
+<style scoped>
+/* 关键样式：控制文本只显示一行，超出隐藏并显示省略号 */
+.project-name-wrapper {
+  white-space: nowrap;
+  /* 禁止文本换行 */
+  overflow: hidden;
+  /* 超出容器部分隐藏 */
+  text-overflow: ellipsis;
+  /* 超出部分显示省略号 */
+  width: 100%;
+  /* 继承容器宽度 */
+}
+</style>

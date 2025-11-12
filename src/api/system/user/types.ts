@@ -48,6 +48,7 @@ export interface UserVO extends BaseEntity {
   postIds: any;
   roleId: any;
   admin: boolean;
+  projectName: string;
 }
 
 /**
@@ -67,7 +68,8 @@ export interface UserForm {
   remark?: string;
   postIds: string[];
   roleIds: string[];
-  projectName: string[];
+  projectName: string;
+  projectIds: string[];
 }
 
 export interface UserInfoVO {
@@ -78,6 +80,8 @@ export interface UserInfoVO {
   postIds: string[];
   roleGroup: string;
   postGroup: string;
+  projectIds: string[];
+  projects: { id: string; projectName: string }[];
 }
 
 export interface ResetPwdForm {

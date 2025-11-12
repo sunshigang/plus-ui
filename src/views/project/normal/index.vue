@@ -62,7 +62,6 @@
         </el-card>
       </div>
     </transition>
-
     <el-card shadow="never">
       <template #header>
         <el-row :gutter="10" class="mb8">
@@ -96,90 +95,53 @@
         <el-table-column label="单位或个人" align="center" prop="applicantType" />
         <el-table-column label="状态" align="center" prop="status" width="150">
           <template #default="scope">
-            <!-- 彩色圆点：根据status动态切换背景色 -->
-            <span class="status-dot" :style="{
-              backgroundColor: getStatusColor(scope.row.status),
-              display: 'inline-block',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              marginRight: '6px',
-              verticalAlign: 'middle' // 与文字垂直居中对齐
-            }"></span>
-            <!-- 状态文本 -->
-            <span class="status-text" :style="{ verticalAlign: 'middle' }">
-              {{ scope.row.status }}
-            </span>
+            <span class="status-dot"
+              :style="{ backgroundColor: getStatusColor(scope.row.status), display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', marginRight: '6px', verticalAlign: 'middle' }"></span>
+            <span class="status-text" :style="{ verticalAlign: 'middle' }">{{ scope.row.status }}</span>
           </template>
         </el-table-column>
         <el-table-column label="项目类型" align="center" prop="projectType" />
         <el-table-column label="项目用途" align="center" prop="projectUsage" />
         <el-table-column label="建设单位名称" align="center" prop="constructionUnit" width="150" />
         <el-table-column label="组织机构代码" align="center" prop="organizationCode" width="150" />
-        <el-table-column label="经办人" align="center" prop="contactPerson" />
-        <el-table-column label="经办人联系方式" align="center" prop="contactPhone" />
-        <el-table-column label="保护等级" align="center" prop="protectionLevel" />
         <el-table-column label="拟选位置" align="center" prop="projectPurpose" width="150" />
-        <el-table-column label="建设项目总投资（万元）" align="center" prop="projectInvestment" />
-        <el-table-column label="规划依据" align="center" prop="planningBasis" width="150" />
-        <el-table-column label="建设内容涉及规模" align="center" prop="constructionContent" width="150" />
-        <el-table-column label="其他需要说明的情况" align="center" prop="otherExplanations" />
-        <el-table-column label="选址方案" align="center" prop="locationPlan" />
-        <el-table-column label="专家评审意见" align="center" prop="expertOpinions" />
-        <el-table-column label="会议材料" align="center" prop="meetingMaterials" />
-        <el-table-column label="选址方案核准申报表" align="center" prop="siteSelectionReport" />
-        <el-table-column label="立项文件L" align="center" prop="approvalDocuments" />
-        <el-table-column label="项目用地红线图" align="center" prop="projectRedLine" />
-        <el-table-column label="项目红线矢量数据" align="center" prop="redLineCoordinate" />
-        <el-table-column label="项目三维模型" align="center" prop="threeDModel" />
-        <el-table-column label="模型坐标" align="center" prop="modelCoordinate" />
+        <el-table-column label="保护区等级" align="center" prop="protectionLevel" />
         <el-table-column label="创建时间" align="center" prop="createTime" width="97" />
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="120">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
           <template #default="scope">
-            <!-- 1. 动态提示的“修改”按钮：仅“填报中”“管委会驳回”显示 -->
-            <el-tooltip v-if="['填报中', '管委会驳回'].includes(scope.row.status) && canEdit()"
-              :content="getEditTooltipContent(scope.row.status)" placement="top">
-              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)"
-                v-hasPermi="['project:project:edit']"></el-button>
-            </el-tooltip>
-            <el-tooltip content="详情查看" placement="top" v-else>
-              <el-button link type="primary" icon="View" @click="handleView(scope.row)"
-                v-hasPermi="['project:project:query']"></el-button>
-            </el-tooltip>
-            <el-tooltip content="管委会审核" placement="top" v-if="scope.row.status === '填报中'">
-              <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
-                v-hasPermi="['project:project:gwhApprove']"></el-button>
-            </el-tooltip>
-            <el-tooltip content="管委会审核" placement="top" v-if="scope.row.status === '管委会审批中'">
-              <el-button link type="primary" icon="Check" @click="handleAudit(scope.row)"
-                v-hasPermi="['project:project:gwhApprove']"></el-button>
-            </el-tooltip>
-            <el-tooltip content="删除" placement="top">
-              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"
-                v-hasPermi="['project:project:remove']"></el-button>
-            </el-tooltip>
-            <el-tooltip content="数据共享" placement="top" v-if="['管委会通过'].includes(scope.row.status)">
-              <el-button link type="primary" icon="Share" @click="handleShare(scope.row)"
-                v-hasPermi="['project:project:share']"></el-button>
-            </el-tooltip>
+            <el-button
+              v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) && canEdit() && !['superadmin', 'sysadmin'].includes(currentUserRole)"
+              link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
+              <!-- 状态为驳回时显示“二次填报”，否则显示“信息填报” -->
+              {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
+            </el-button>
+            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
+              v-else>详情查看</el-button>
+            <el-button v-if="['填报中', '管委会审批中'].includes(scope.row.status)" link type="primary"
+              @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']">审核</el-button>
+            <el-button v-if="scope.row.status === '管委会通过'" link type="primary" @click="handleAudit(scope.row)"
+              v-hasPermi="['project:project:lyjApprove']">审核</el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row)"
+              v-hasPermi="['project:project:remove']">删除</el-button>
+            <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
+              @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">数据共享</el-button>
           </template>
         </el-table-column>
       </el-table>
-
       <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
         v-model:limit="queryParams.pageSize" @pagination="getList" />
     </el-card>
     <!-- 添加或修改对话框 -->
-    <el-dialog :title="dialog.title" v-model="dialog.visible" width="1000px" append-to-body>
+    <el-dialog :title="dialog.title" v-model="dialog.visible" width="1800px" append-to-body>
       <!-- 分为三部分容器 -->
       <div class="dialog-content">
         <!-- 上部分：项目基础信息 -->
         <div class="section project-basic-info">
           <h3 class="section-title">项目基础信息</h3>
-          <el-form ref="infoFormRef" :model="form" label-width="178px" :rules="rules">
+          <el-form ref="infoFormRef" :model="form" label-width="190px" :rules="rules">
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="建设项目名称" prop="projectName">
+                <el-form-item label="建设活动（建设项目）名称" prop="projectName">
                   <el-input v-model="form.projectName" placeholder="请输入建设项目名称" :disabled="disabled" />
                 </el-form-item>
               </el-col>
@@ -201,249 +163,275 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-form-item label="单位建设/个人建设" prop="applicantType">
+              <el-radio-group v-model="form.applicantType" :disabled="disabled">
+                <el-radio-button label="单位">单位</el-radio-button>
+                <el-radio-button label="个人">个人</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+          </el-form>
+        </div>
+        <div class="section project-documents">
+          <h3 class="section-title">建设信息</h3>
+          <el-button type="primary" :icon="isViewMode ? 'View' : 'Edit'" :disabled="!form.id"
+            @click="handleModelPreview" class="modelPreview">
+            三维场景效果预览
+          </el-button>
+          <el-form :model="form" label-width="180px">
             <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="项目类型" prop="projectType">
-                  <el-input v-model="form.projectType" placeholder="请输入项目类型" :disabled="disabled" />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="项目用途" prop="projectUsage">
-                  <el-input v-model="form.projectUsage" placeholder="请输入项目用途" :disabled="disabled" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <el-form-item label="申请人类型" prop="applicantType">
-                  <el-radio-group v-model="form.applicantType" :disabled="disabled">
-                    <el-radio-button label="单位">单位</el-radio-button>
-                    <el-radio-button label="个人">个人</el-radio-button>
-                  </el-radio-group>
-                </el-form-item>
-              </el-col>
               <el-col :span="12">
                 <el-form-item label="建设单位名称" prop="constructionUnit">
                   <el-input v-model="form.constructionUnit" placeholder="请输入建设单位名称" :disabled="disabled" />
                 </el-form-item>
               </el-col>
-            </el-row>
-            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="组织机构代码" prop="organizationCode">
                   <el-input v-model="form.organizationCode" placeholder="请输入组织机构代码" :disabled="disabled" />
                 </el-form-item>
               </el-col>
+            </el-row>
+            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="经办人" prop="contactPerson">
                   <el-input v-model="form.contactPerson" placeholder="请输入经办人" :disabled="disabled" />
                 </el-form-item>
               </el-col>
-            </el-row>
-            <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="经办人联系方式" prop="contactPhone">
                   <el-input v-model="form.contactPhone" placeholder="请输入经办人联系方式" :disabled="disabled" />
                 </el-form-item>
               </el-col>
+            </el-row>
+            <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="保护等级" prop="protectionLevel">
+                <el-form-item label="保护区等级" prop="protectionLevel">
                   <el-input v-model="form.protectionLevel" placeholder="请输入保护等级" :disabled="disabled" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目占用类型" prop="projectType">
+                  <el-input v-model="form.projectType" placeholder="请输入项目占用类型" :disabled="disabled" />
                 </el-form-item>
               </el-col>
             </el-row>
             <el-row :gutter="20">
               <el-col :span="12">
+                <el-form-item label="项目用途" prop="projectUsage">
+                  <el-input v-model="form.projectUsage" placeholder="请输入项目用途" :disabled="disabled" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
                 <el-form-item label="拟选位置" prop="projectPurpose">
                   <el-input v-model="form.projectPurpose" placeholder="请输入拟选位置" :disabled="disabled" />
                 </el-form-item>
               </el-col>
+            </el-row>
+            <el-form-item label="建设项目拟投资额（万元）" prop="projectInvestment">
+              <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" :disabled="disabled" />
+            </el-form-item>
+            <el-form-item label="规划依据" prop="planningBasis">
+              <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入规划依据" :disabled="disabled" />
+            </el-form-item>
+            <el-form-item label="建设内容涉及规模" prop="constructionContent">
+              <el-input v-model="form.constructionContent" type="textarea" placeholder="请输入建设内容涉及规模"
+                :disabled="disabled" />
+            </el-form-item>
+            <el-form-item label="其他需要说明的情况" prop="otherExplanations">
+              <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况"
+                :disabled="disabled" />
+            </el-form-item>
+            <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="建设项目总投资（万元）" prop="projectInvestment">
-                  <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" :disabled="disabled" />
+                <el-form-item label="选址方案" prop="locationPlan">
+                  <!-- 选址方案专属上传组件 -->
+                  <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')"
+                    :file-list="locationPlanFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'locationPlan')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'locationPlan')" :show-file-list="false"
+                    :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <!-- 选址方案专属文件列表 -->
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in locationPlanFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'locationPlan')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="专家评审意见" prop="expertOpinions">
+                  <!-- 专家评审意见专属上传组件 -->
+                  <el-upload ref="expertOpinionsUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'expertOpinions')"
+                    :file-list="expertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'expertOpinions')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'expertOpinions')"
+                    :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <!-- 专家评审意见专属文件列表 -->
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'expertOpinions')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
                 </el-form-item>
               </el-col>
             </el-row>
-            <el-form-item label="规划依据" prop="planningBasis">
-              <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入内容" :disabled="disabled" />
-            </el-form-item>
-            <el-form-item label="建设内容涉及规模">
-              <editor v-model="form.constructionContent" :min-height="192" />
-            </el-form-item>
-            <el-form-item label="其他需要说明的情况" prop="otherExplanations">
-              <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入内容" :disabled="disabled" />
-            </el-form-item>
-          </el-form>
-        </div>
-        <div class="section project-documents">
-          <h3 class="section-title">项目相关文件</h3>
-          <el-form :model="form" label-width="178px">
-            <el-form-item label="选址方案" prop="locationPlan">
-              <!-- 选址方案专属上传组件 -->
-              <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')" :file-list="locationPlanFileList"
-                :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'locationPlan')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'locationPlan')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <!-- 选址方案专属文件列表 -->
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in locationPlanFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'locationPlan')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
-            <el-form-item label="专家评审意见" prop="expertOpinions">
-              <!-- 专家评审意见专属上传组件 -->
-              <el-upload ref="expertOpinionsUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'expertOpinions')"
-                :file-list="auditExpertOpinionsFileList" :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'expertOpinions')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'expertOpinions')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <!-- 专家评审意见专属文件列表 -->
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditExpertOpinionsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'expertOpinions')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
-            <el-form-item label="会议材料" prop="meetingMaterials">
-              <el-upload ref="meetingMaterialsUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'meetingMaterials')"
-                :file-list="meetingMaterialsFileList" :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'meetingMaterials')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'meetingMaterials')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in meetingMaterialsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'meetingMaterials')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
-            <el-form-item label="选址方案核准申报表" prop="siteSelectionReport">
-              <el-upload ref="siteSelectionReportUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'siteSelectionReport')"
-                :file-list="auditSiteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'siteSelectionReport')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'siteSelectionReport')"
-                :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditSiteSelectionReportFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
-            <el-form-item label="立项文件" prop="approvalDocuments">
-              <el-upload ref="approvalDocumentsUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'approvalDocuments')"
-                :file-list="auditApprovalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'approvalDocuments')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditApprovalDocumentsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'approvalDocuments')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
-            <el-form-item label="项目用地红线图" prop="projectRedLine">
-              <el-upload ref="projectRedLineUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'projectRedLine')"
-                :file-list="auditProjectRedLineFileList" :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'projectRedLine')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'projectRedLine')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditProjectRedLineFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'projectRedLine')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-form-item>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="公示材料" prop="publicMaterial">
+                  <el-upload ref="publicMaterialUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'publicMaterial')"
+                    :file-list="publicMaterialFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'publicMaterial')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'publicMaterial')"
+                    :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in publicMaterialFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'publicMaterial')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="选址方案核准申报表" prop="siteSelectionReport">
+                  <el-upload ref="siteSelectionReportUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'siteSelectionReport')"
+                    :file-list="siteSelectionReportFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'siteSelectionReport')"
+                    :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'siteSelectionReport')"
+                    :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="立项文件" prop="approvalDocuments">
+                  <el-upload ref="approvalDocumentsUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'approvalDocuments')"
+                    :file-list="approvalDocumentsFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'approvalDocuments')"
+                    :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')"
+                    :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'approvalDocuments')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目用地红线图" prop="projectRedLine">
+                  <el-upload ref="projectRedLineUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'projectRedLine')"
+                    :file-list="projectRedLineFileList" :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'projectRedLine')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'projectRedLine')"
+                    :show-file-list="false" :headers="headers" class="upload-file-uploader" v-if="!disabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'projectRedLine')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
               <el-upload ref="redLineCoordinateUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'redLineCoordinate')"
-                :file-list="auditRedLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
+                :file-list="redLineCoordinateFileList" :limit="props.limit" :accept="fileAccept"
                 :on-error="(err, file) => handleUploadError(err, file, 'redLineCoordinate')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'redLineCoordinate')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader" v-if="!disabled">
-                <el-button type="primary">选取文件</el-button>
+                <el-button type="primary">点击上传</el-button>
               </el-upload>
+              <div class="operation-group" v-if="!disabled">
+                <el-button link type="primary" @click="handleDownloadTemplate('instructions')">填写说明</el-button>
+                <el-button link type="primary" @click="handleDownloadTemplate('polygonTemplate')">面模板下载</el-button>
+                <el-button link type="primary" @click="handleDownloadTemplate('polylineTemplate')">线模板下载</el-button>
+                <div>（使用前，请删除模板中的实例数据）</div>
+              </div>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
-                <li v-for="(file, index) in auditRedLineCoordinateFileList" :key="file.uid"
+                <li v-for="(file, index) in redLineCoordinateFileList" :key="file.uid"
                   class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="`${file.url}`" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
@@ -457,53 +445,53 @@
                 </li>
               </transition-group>
             </el-form-item>
-            <el-form-item label="项目三维模型" prop="threeDModel">
-              <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
-                :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="auditThreeDModelFileList"
-                :limit="props.limit" :accept="fileAccept"
-                :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
-                :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')" :show-file-list="false"
-                :headers="headers" class="upload-file-uploader" v-if="!disabled"> <!-- 查看模式（disabled=true）隐藏上传按钮 -->
-                <el-button type="primary">选取文件</el-button>
-              </el-upload>
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditThreeDModelFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'threeDModel')">
-                      删除
-                    </el-button>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="项目三维模型" prop="threeDModel">
+                  <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
+                    :limit="props.limit" :accept="fileAccept"
+                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')" :show-file-list="false"
+                    :headers="headers" class="upload-file-uploader" v-if="!disabled"> <!-- 查看模式（disabled=true）隐藏上传按钮 -->
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
+                  <div class="operation-group" v-if="!disabled">
+                    <el-button link type="primary" icon="Download"
+                      @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
                   </div>
-                </li>
-                <!-- 空数据提示 -->
-                <li v-if="auditThreeDModelFileList.length === 0" class="el-upload-list__item">
-                  <span class="el-icon-info"> 暂无三维模型文件 </span>
-                </li>
-              </transition-group>
-              <el-button link type="primary" icon="Download">模型规范与模板下载</el-button>
-            </el-form-item>
-            <el-form-item label="模型坐标" prop="modelCoordinate">
-              <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
-            </el-form-item>
-            <el-form-item label="模型预览" prop="modelPreview">
-              <el-button type="primary" :icon="isViewMode ? 'View' : 'Edit'" :disabled="!form.id"
-                @click="handleModelPreview">
-                三维场景效果预览
-              </el-button>
-            </el-form-item>
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" v-if="!disabled" link
+                          @click="handleDeleteUploadFile(index, 'threeDModel')">
+                          删除
+                        </el-button>
+                      </div>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="模型坐标" prop="modelCoordinate">
+                  <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
+                </el-form-item>
+              </el-col>
+            </el-row>
           </el-form>
         </div>
         <!-- 修改审批信息部分 - 不仅在查看模式且在二次填报修改也可查看审批信息 -->
-        <div v-if="isViewMode || (!isViewMode && ['管委会驳回'].includes(form.status))" class="section approval-info">
+        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))"
+          class="section approval-info">
           <h3 class="section-title"> 审批信息</h3>
           <el-form label-width="178px" disabled>
             <!-- 1. 管委会审批信息：状态为“管委会审批中”或“管委会通过”时显示 -->
-            <template v-if="['管委会通过', '管委会驳回', '已通过'].includes(form.status)">
+            <template v-if="['管委会通过', '管委会驳回', '林业局通过', '林业局驳回', '已通过'].includes(form.status)">
               <el-form-item label="管委会审批状态">
                 <div class="approval-item">
                   <span :class="['status-icon',
@@ -545,6 +533,52 @@
                 </transition-group>
               </el-form-item>
             </template>
+
+            <!-- 2. 市林业局审批信息：不仅查看模式且管委会已通过时显示，另外在林业局通过和林业局驳回也显示审批信息 -->
+            <template v-if="['林业局通过', '林业局驳回', '已通过'].includes(form.status)">
+              <el-divider content="市林业局审核信息" />
+              <el-form-item label="市林业局审核状态">
+                <div class="approval-item">
+                  <span :class="['status-icon',
+                    form.approveRecord.lyjApproveResult === '通过' ? 'success' :
+                      form.approveRecord.lyjApproveResult === '驳回' ? 'error' : 'pending'
+                  ]">
+                    {{
+                      form.approveRecord.lyjApproveResult === '通过' ? '✓' :
+                        form.approveRecord.lyjApproveResult === '驳回' ? '✗' : '-'
+                    }}
+                  </span>
+                  <span class="status-text">
+                    {{ form.approveRecord.lyjApproveResult || '待审核' }}
+                  </span>
+                </div>
+              </el-form-item>
+
+              <el-form-item label="审核时间">
+                <span>{{ form.approveRecord.lyjApproveTime || '暂无时间' }}</span>
+              </el-form-item>
+
+              <el-form-item label="审核反馈">
+                <el-input type="textarea" :value="form.approveRecord.lyjApprovalReason || '暂无反馈意见'" :rows="2"
+                  style="background: #fff;" />
+              </el-form-item>
+
+              <el-form-item label="审核反馈文件">
+                <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
+                  tag="ul">
+                  <li v-for="(file, index) in forestryFeedbackFileList" :key="file.uid"
+                    class="el-upload-list__item ele-upload-list__item-content">
+                    <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                      <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                    </el-link>
+                  </li>
+                  <li v-if="forestryFeedbackFileList.length === 0" class="el-upload-list__item">
+                    <span class="el-icon-info"> 暂无反馈文件 </span>
+                  </li>
+                </transition-group>
+              </el-form-item>
+            </template>
+
             <!-- 3. 状态为“填报中”时：显示提示文本（可选，增强用户体验） -->
             <template v-if="isViewMode && !form.approveRecord.gwhApproveResult && form.status !== '管委会驳回'">
               <el-form-item>
@@ -564,158 +598,247 @@
         </div>
         <div class="dialog-footer" v-if="isViewMode">
           <el-button @click="cancel">取消</el-button>
-          <template v-if="form.id && canAudit(form) && !['管委会通过'].includes(form.status)">
+          <template v-if="form.id && canAudit(form) && !['已通过'].includes(form.status)">
             <!-- 场景1：管委会审批权限（包括林业局驳回、管委会驳回、未审批） -->
-            <el-button v-if="!form.approveRecord.gwhApproveResult || form.approveRecord.gwhApproveResult === '驳回'"
+            <el-button
+              v-if="!form.approveRecord.gwhApproveResult || form.approveRecord.gwhApproveResult === '驳回' || form.approveRecord.lyjApproveResult === '驳回'"
               type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:gwhApprove']">
               审批
+            </el-button>
+            <!-- 场景2：林业局审批权限（管委会通过、林业局未审批） -->
+            <el-button v-else-if="form.approveRecord.gwhApproveResult === '通过' && !form.approveRecord.lyjApproveResult"
+              type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:lyjApprove']">
+              二次审批
             </el-button>
           </template>
         </div>
       </template>
     </el-dialog>
     <!-- 审批对话框 -->
-    <el-dialog :title="`项目审批 - ${auditForm.projectName || ''}`" v-model="auditDialog.visible" width="1000px"
-      append-to-body>
-      <div class="audit-content">
-        <!-- 第一部分：项目信息展示 -->
-        <div class="audit-project-info mb-6">
-          <h3 class="mb-4">项目基本信息</h3>
-          <el-descriptions :column="1" border>
-            <el-descriptions-item label="建设项目名称">{{ auditForm.projectName }}</el-descriptions-item>
-            <el-descriptions-item label="项目代码">{{ auditForm.projectCode }}</el-descriptions-item>
-            <el-descriptions-item label="所属行政区划">{{ auditForm.administrativeRegion }}</el-descriptions-item>
-            <el-descriptions-item label="涉及风景名胜区名称">{{ auditForm.scenicArea }}</el-descriptions-item>
-            <el-descriptions-item label="单位或个人">{{ auditForm.applicantType }}</el-descriptions-item>
-            <el-descriptions-item label="建设单位名称">{{ auditForm.constructionUnit }}</el-descriptions-item>
-            <el-descriptions-item label="组织机构代码">{{ auditForm.organizationCode }}</el-descriptions-item>
-            <el-descriptions-item label="经办人">{{ auditForm.contactPerson }}</el-descriptions-item>
-            <el-descriptions-item label="经办人联系方式">{{ auditForm.contactPhone }}</el-descriptions-item>
-            <el-descriptions-item label="保护等级">{{ auditForm.protectionLevel }}</el-descriptions-item>
-            <el-descriptions-item label="状态">{{ auditForm.status }}</el-descriptions-item>
-            <el-descriptions-item label="项目类型">{{ auditForm.projectType }}</el-descriptions-item>
-            <el-descriptions-item label="项目用途">{{ auditForm.projectUsage }}</el-descriptions-item>
-            <el-descriptions-item label="拟选位置">{{ auditForm.projectPurpose }}</el-descriptions-item>
-            <el-descriptions-item label="建设项目总投资（万元）">{{ auditForm.projectInvestment }}</el-descriptions-item>
-            <el-descriptions-item label="规划依据">{{ auditForm.planningBasis }}</el-descriptions-item>
-            <el-descriptions-item label="建设内容涉及规模">{{ auditForm.constructionContent }}</el-descriptions-item>
-            <el-descriptions-item label="其他需要说明的情况">{{ auditForm.otherExplanations }}</el-descriptions-item>
-          </el-descriptions>
-
-          <h3 class="mt-6 mb-4">项目相关文件</h3>
-          <el-descriptions :column="1" border>
-            <!-- 选址方案 -->
-            <el-descriptions-item label="选址方案">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in auditLocationPlanFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <!-- 审核场景通常不允许删除文件，这里禁用删除按钮（可根据实际业务调整） -->
-                    <el-button type="danger" link @click="handleDeleteUploadFile(index, 'locationPlan')" disabled>
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-
-            <!-- 专家评审意见 -->
-            <el-descriptions-item label="专家评审意见">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'expertOpinions')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-
-            <!-- 会议材料 -->
-            <el-descriptions-item label="会议材料">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in meetingMaterialsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'meetingMaterials')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-
-            <!-- 选址方案核准申报表 -->
-            <el-descriptions-item label="选址方案核准申报表">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-
-            <!-- 立项文件 -->
-            <el-descriptions-item label="立项文件">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'approvalDocuments')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-            <el-descriptions-item label="项目用地红线图">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'projectRedLine')">
-                      删除
-                    </el-button>
-                  </div>
-                </li>
-              </transition-group>
-            </el-descriptions-item>
-            <el-descriptions-item label="项目红线矢量数据">
+    <el-dialog
+      :title="`${['管委会通过'].includes(form.status || auditForm.status) ? '林业局审批' : '项目审批'} - ${auditForm.projectName || ''}`"
+      v-model="auditDialog.visible" width="1800px" append-to-body>
+      <div class="dialog-content">
+        <div class="section project-basic-info">
+          <h3 class="section-title">项目基本信息</h3>
+          <el-form :model="auditForm" label-width="190px" disabled>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="建设活动（建设项目）名称">
+                  <el-input v-model="auditForm.projectName" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目代码">
+                  <el-input v-model="auditForm.projectCode" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="所属行政区划">
+                  <el-input v-model="auditForm.administrativeRegion" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="涉及风景名胜区名称">
+                  <el-input v-model="auditForm.scenicArea" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="单位或个人">
+              <el-input v-model="auditForm.applicantType" disabled />
+            </el-form-item>
+          </el-form>
+        </div>
+        <div class="section project-documents">
+          <h3 class="section-title">建设信息</h3>
+          <el-button type="primary" link icon="Plus" @click="handleAuditSceneReview"
+            v-hasPermi="['project:project:3dAudit']" class="modelPreview">
+            三维场景方案审查
+          </el-button>
+          <el-form :model="form" label-width="180px">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="建设单位名称">
+                  <el-input v-model="auditForm.constructionUnit" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="组织机构代码">
+                  <el-input v-model="auditForm.organizationCode" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="经办人">
+                  <el-input v-model="auditForm.contactPerson" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="经办人联系方式">
+                  <el-input v-model="auditForm.contactPhone" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="保护区等级">
+                  <el-input v-model="auditForm.protectionLevel" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目占用类型">
+                  <el-input v-model="auditForm.projectType" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="项目用途">
+                  <el-input v-model="auditForm.projectUsage" disabled />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="拟选位置">
+                  <el-input v-model="auditForm.projectPurpose" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="建设项目总投资（万元）">
+              <el-input v-model="auditForm.projectInvestment" disabled />
+            </el-form-item>
+            <el-form-item label="规划依据">
+              <el-input v-model="auditForm.planningBasis" type="textarea" disabled />
+            </el-form-item>
+            <el-form-item label="建设内容涉及规模">
+              <el-input v-model="auditForm.constructionContent" type="textarea" disabled />
+            </el-form-item>
+            <el-form-item label="其他需要说明的情况">
+              <el-input v-model="auditForm.otherExplanations" type="textarea" disabled />
+            </el-form-item>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="选址方案">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in locationPlanFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="locationPlanFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无选址方案文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="专家评审意见">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in expertOpinionsFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="expertOpinionsFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无专家评审意见文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="公示材料">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in publicMaterialFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="publicMaterialFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无公示材料文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="选址方案核准申报表">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in siteSelectionReportFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="siteSelectionReportFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无选址方案核准申报表文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="立项文件">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in approvalDocumentsFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="approvalDocumentsFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无立项文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="项目用地红线图">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in projectRedLineFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="projectRedLineFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无项目用地红线图文件 </span>
+                    </li>
+                  </transition-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-form-item label="项目红线矢量数据">
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
                 <li v-for="(file, index) in redLineCoordinateFileList" :key="file.uid"
@@ -724,39 +847,46 @@
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                   <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
-                      删除
-                    </el-button>
+                    <el-button type="danger" link disabled>删除</el-button>
                   </div>
                 </li>
-              </transition-group>
-            </el-descriptions-item>
-            <el-descriptions-item label="项目三维模型">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
-                  class="el-upload-list__item ele-upload-list__item-content">
-                  <el-link :href="`${file.url}`" :underline="false" target="_blank">
-                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                  </el-link>
-                  <div class="ele-upload-list__item-content-action">
-                    <el-button type="danger" v-if="!disabled" link
-                      @click="handleDeleteUploadFile(index, 'threeDModel')">
-                      删除
-                    </el-button>
-                  </div>
+                <li v-if="redLineCoordinateFileList.length === 0" class="el-upload-list__item">
+                  <span class="el-icon-info"> 暂无项目红线矢量数据文件 </span>
                 </li>
               </transition-group>
-            </el-descriptions-item>
-            <el-descriptions-item label="模型坐标">{{ auditForm.modelCoordinate || '-' }}</el-descriptions-item>
-          </el-descriptions>
+            </el-form-item>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="项目三维模型">
+                  <transition-group class="upload-file-list el-upload-list el-upload-list--text"
+                    name="el-fade-in-linear" tag="ul">
+                    <li v-for="(file, index) in threeDModelFileList" :key="file.uid"
+                      class="el-upload-list__item ele-upload-list__item-content">
+                      <el-link :href="`${file.url}`" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                      <div class="ele-upload-list__item-content-action">
+                        <el-button type="danger" link disabled>删除</el-button>
+                      </div>
+                    </li>
+                    <li v-if="threeDModelFileList.length === 0" class="el-upload-list__item">
+                      <span class="el-icon-info"> 暂无项目三维模型文件 </span>
+                    </li>
+                  </transition-group>
+                  <el-button link type="primary" icon="Download" disabled>模型规范与模板下载</el-button>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="模型坐标">
+                  <el-input v-model="auditForm.modelCoordinate" disabled />
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
         </div>
-
-        <!-- 第二部分：审核操作区 -->
-        <div class="audit-operation-area">
-          <h3 class="mb-4">{{ form.approveRecord.gwhApproveResult === '通过' ? '市林业局审核信息' : '审核信息' }}</h3>
-          <el-form ref="auditFormRef" :model="auditForm" label-width="120px">
+        <div class="section approval-info">
+          <h3 class="section-title">{{ form.approveRecord.gwhApproveResult === '通过' ? '市林业局审核信息' : '审核信息' }}</h3>
+          <el-form ref="auditFormRef" :model="auditForm" label-width="178px">
             <el-form-item label="反馈意见" prop="feedback"
               :rules="[{ required: auditForm.auditResult === '驳回', message: '驳回必须填写反馈意见', trigger: 'blur' }]">
               <el-input v-model="auditForm.feedback" type="textarea" :rows="4" placeholder="请输入审核意见（驳回时必须填写）" />
@@ -768,7 +898,7 @@
                 :on-error="(err, file) => handleUploadError(err, file, 'feedback')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'feedback')" :show-file-list="false"
                 :headers="headers" class="upload-file-uploader">
-                <el-button type="primary">选取文件</el-button>
+                <el-button type="primary">点击上传</el-button>
               </el-upload>
               <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                 tag="ul">
@@ -826,6 +956,7 @@ const multiple = ref(true);
 const total = ref(0);
 const previewListResource = ref(false);
 const isViewMode = ref(false); // 新增：是否为查看模式
+const currentUserRole = ref<string>('');
 // 状态颜色映射：返回对应Hex颜色值
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -834,9 +965,11 @@ const getStatusColor = (status: string) => {
     case '管委会审批中':
       return '#faad14'; // 橙色
     case '管委会通过':
+    case '林业局通过':
     case '已通过':
       return '#62c232'; // 绿色
     case '管委会驳回':
+    case '林业局驳回':
       return '#ff4d4f'; // 红色
     default:
       return '#bfbfbf'; // 默认灰色（应对未定义状态）
@@ -852,43 +985,31 @@ const majorProjectStore = useMajorProjectStore();
 // 1. 上传组件 ref（每个字段一个）
 const locationPlanUploadRef = ref<ElUploadInstance>(); // 选址方案
 const expertOpinionsUploadRef = ref<ElUploadInstance>(); // 专家评审意见
-const meetingMaterialsUploadRef = ref<ElUploadInstance>(); // 会议材料
+const publicMaterialUploadRef = ref<ElUploadInstance>(); // 公示材料
 const siteSelectionReportUploadRef = ref<ElUploadInstance>(); // 选址方案核准申报表
 const approvalDocumentsUploadRef = ref<ElUploadInstance>(); // 立项文件
 const projectRedLineUploadRef = ref<ElUploadInstance>(); // 项目用地红线图
 const redLineCoordinateUploadRef = ref<ElUploadInstance>(); // 项目红线矢量数据
 const threeDModelUploadRef = ref<ElUploadInstance>(); // 项目三维模型
 const feedbackFileUploadRef = ref<ElUploadInstance>(); // 审核文件上传相关
-// 补充审核相关的文件列表变量
-const auditExpertOpinionsFileList = ref<any[]>([]); // 专家评审意见
-const auditMeetingMaterialsFileList = ref<any[]>([]); // 会议材料
-const auditSiteSelectionReportFileList = ref<any[]>([]); // 选址方案核准申报表
-const auditApprovalDocumentsFileList = ref<any[]>([]); // 立项文件
-// 审核相关的文件列表
-const auditLocationPlanFileList = ref<any[]>([]);
-const auditProjectRedLineFileList = ref<any[]>([]);
-const auditThreeDModelFileList = ref<any[]>([]);
-const feedbackFileList = ref<any[]>([]);
-const auditRedLineCoordinateFileList = ref<any[]>([]);
-// 新增审批反馈文件列表
-const managementFeedbackFileList = ref<any[]>([]);
-
-
 // 2. 文件列表（每个字段一个）
 const locationPlanFileList = ref<any[]>([]);
 const expertOpinionsFileList = ref<any[]>([]);
-const meetingMaterialsFileList = ref<any[]>([]);
+const publicMaterialFileList = ref<any[]>([]);
 const siteSelectionReportFileList = ref<any[]>([]);
 const approvalDocumentsFileList = ref<any[]>([]);
 const projectRedLineFileList = ref<any[]>([]);
 const redLineCoordinateFileList = ref<any[]>([]);
 const threeDModelFileList = ref<any[]>([]);
+const feedbackFileList = ref<any[]>([]);
+const managementFeedbackFileList = ref<any[]>([]);
+const forestryFeedbackFileList = ref<any[]>([]);
 
 // 3. 上传计数与临时列表（按字段区分，用于批量上传管理）
 const uploadCount = reactive({
   locationPlan: 0,
   expertOpinions: 0,
-  meetingMaterials: 0,
+  publicMaterial: 0,
   siteSelectionReport: 0,
   approvalDocuments: 0,
   projectRedLine: 0,
@@ -899,7 +1020,7 @@ const uploadCount = reactive({
 const uploadTempList = reactive({
   locationPlan: [] as any[],
   expertOpinions: [] as any[],
-  meetingMaterials: [] as any[],
+  publicMaterial: [] as any[],
   siteSelectionReport: [] as any[],
   approvalDocuments: [] as any[],
   projectRedLine: [] as any[],
@@ -909,7 +1030,7 @@ const uploadTempList = reactive({
 });
 
 type FileFieldType =
-  'locationPlan' | 'expertOpinions' | 'meetingMaterials' |
+  'locationPlan' | 'expertOpinions' | 'publicMaterial' |
   'siteSelectionReport' | 'approvalDocuments' | 'projectRedLine' |
   'redLineCoordinate' | 'threeDModel' | 'feedback';
 
@@ -917,7 +1038,7 @@ type FileFieldType =
 const uploadLoading = reactive<Record<FileFieldType | 'feedback', boolean>>({
   locationPlan: false,
   expertOpinions: false,
-  meetingMaterials: false,
+  publicMaterial: false,
   siteSelectionReport: false,
   approvalDocuments: false,
   projectRedLine: false,
@@ -961,6 +1082,10 @@ const auditForm = reactive({
     gwhApprovalReason: '',// 管委会审批反馈
     gwhApproveResult: '',// 管委会审批状态
     gwhApproveTime: '',// 管委会审批时间
+    lyjApprovalAttachment: '',// 市林业局审核反馈文件
+    lyjApprovalReason: '',// 市林业局审核反馈
+    lyjApproveResult: '',// 市林业局审核状态
+    lyjApproveTime: '',// 市林业局审核时间
   },
 });
 const auditFormRef = ref<ElFormInstance>();
@@ -974,13 +1099,21 @@ const canAudit = async (row: InfoForm) => {
       return false;
     }
     const userRole = res.data.roles[0];
-    // 仅保留管委会审批权限判断
     if (userRole === 'mca' && (
       !row.approveRecord.gwhApproveResult ||
-      row.approveRecord.gwhApproveResult === '驳回'
+      row.approveRecord.gwhApproveResult === '驳回' ||
+      row.approveRecord.lyjApproveResult === '驳回'
     )) {
       return true;
+    }
+    // 后续权限判断逻辑
+    if (userRole === 'mca' && ['待审核', '管委会已驳回'].includes(row.status)) {
+      return true;
     } else if (userRole === 'constructor' && row.status === '填报中') {
+      return true;
+    } else if (userRole === 'clb_audit' && row.approveRecord.gwhApproveResult === '通过' && !row.approveRecord.lyjApproveResult) {
+      return true;
+    } else if (userRole === 'plb_approve' && row.status === '省林业局待审核') {
       return true;
     }
     return false;
@@ -1050,7 +1183,20 @@ const handleAudit = async (row: InfoForm) => {
     console.error('handleAudit 方法报错：', err); // 打印日志给后端排查
   }
 };
+// 新增下载模板方法
+const handleDownloadTemplate = (type: string) => {
+  // 根据type区分下载不同模板
+  if (type === 'instructions') {
+    proxy?.$download.oss('1987829892356124674');
+  } else if (type === 'polylineTemplate') {
+    proxy?.$download.oss('1987829924379635713');
+  } else if (type === 'polygonTemplate') {
+    proxy?.$download.oss('1987829950501761026');
+  } else if (type === 'threeD') {
+    proxy?.$download.oss('1987830717459607554');
+  }
 
+};
 // 处理审核通过
 const handleApprove = async () => {
   await submitAuditResult('通过');
@@ -1064,10 +1210,14 @@ const handleReject = async () => {
   }
   await submitAuditResult('驳回');
 };
+
+// 修改提交审核结果方法（按 form.status 选择接口）
 const submitAuditResult = async (result: '通过' | '驳回') => {
+
   try {
     buttonLoading.value = true;
-    // 准备审核数据
+
+    // 准备审核数据（原有逻辑不变）
     const auditData: AuditData = {
       projectId: auditForm.projectId,
       approveResult: result,
@@ -1076,16 +1226,23 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
     };
     const currentStatus = form.value.status || auditForm.status;
     if (!currentStatus) {
+      // 状态完全获取失败时，提示用户并终止操作
       proxy?.$modal.msgError('获取项目状态失败，请刷新页面重试');
       return;
     }
-    // 仅调用管委会审批接口
+
+    // 按状态选择接口（逻辑不变，仅将 form.value.status 改为 currentStatus）
     if (currentStatus === '管委会审批中' || currentStatus === '填报中') {
-      await gwhApprove(auditData);
+      await gwhApprove(auditData); // 管委会接口
+    } else if (currentStatus === '管委会通过') {
+      await lyjApprove(auditData); // 市林业局接口
     } else {
+      // 仍有未匹配状态时，提示具体异常（便于排查）
       proxy?.$modal.msgError(`未匹配的项目状态：${currentStatus}，请联系管理员`);
       return;
     }
+
+    // 审核成功后的逻辑（原有不变）
     proxy?.$modal.msgSuccess(`审核${result}成功`);
     auditDialog.visible = false;
     getList();
@@ -1095,16 +1252,24 @@ const submitAuditResult = async (result: '通过' | '驳回') => {
     buttonLoading.value = false;
   }
 };
-
 // 动态获取审批所需权限
 const getAuditPermi = (row: InfoForm) => {
-  // 仅保留管委会审批权限
+  if (row.approveRecord.lyjApproveResult === '驳回') {
+    return ['project:project:gwhApprove'];
+  }
+  // 场景1：未审批/管委会驳回 → 管委会审批权限
   if (!row.approveRecord.gwhApproveResult || row.approveRecord.gwhApproveResult === '驳回') {
     return ['project:project:gwhApprove'];
   }
-  if (row.status === '管委会通过') {
+  // 场景2：管委会通过、林业局未审批 → 林业局审批权限
+  if (row.approveRecord.gwhApproveResult === '通过' && !row.approveRecord.lyjApproveResult) {
+    return ['project:project:lyjApprove'];
+  }
+  // 场景3：已通过（最终状态）→ 无审批权限，返回空数组（但通过模板层控制不渲染按钮）
+  if (row.status === '已通过') {
     return [];
   }
+  // 其他场景兜底
   return [];
 };
 const disabled = ref(false);
@@ -1192,7 +1357,7 @@ const handleUploadSuccess = (res: any, file: UploadFile, field: FileFieldType) =
     const uploadRefs = {
       locationPlan: locationPlanUploadRef,
       expertOpinions: expertOpinionsUploadRef,
-      meetingMaterials: meetingMaterialsUploadRef,
+      publicMaterial: publicMaterialUploadRef,
       siteSelectionReport: siteSelectionReportUploadRef,
       approvalDocuments: approvalDocumentsUploadRef,
       projectRedLine: projectRedLineUploadRef,
@@ -1211,18 +1376,17 @@ const uploadedSuccessfully = (field: FileFieldType) => {
     const fieldMap: Record<FileFieldType, { list: any; formKey: string }> = {
       locationPlan: { list: locationPlanFileList, formKey: 'locationPlan' },
       expertOpinions: { list: expertOpinionsFileList, formKey: 'expertOpinions' },
-      meetingMaterials: { list: meetingMaterialsFileList, formKey: 'meetingMaterials' },
+      publicMaterial: { list: publicMaterialFileList, formKey: 'publicMaterial' },
       siteSelectionReport: { list: siteSelectionReportFileList, formKey: 'siteSelectionReport' },
       approvalDocuments: { list: approvalDocumentsFileList, formKey: 'approvalDocuments' },
       projectRedLine: { list: projectRedLineFileList, formKey: 'projectRedLine' },
       redLineCoordinate: { list: redLineCoordinateFileList, formKey: 'redLineCoordinate' },
-      threeDModel: { list: auditThreeDModelFileList, formKey: 'threeDModel' },
+      threeDModel: { list: threeDModelFileList, formKey: 'threeDModel' },
       feedback: { list: feedbackFileList, formKey: 'feedback' }
     };
     const { list, formKey } = fieldMap[field];
 
     list.value = [...list.value, ...uploadTempList[field]];
-    // 只有在主表单中存在该字段时才赋值（审核表单的feedback可能不需要绑定到form）
     if (form.value.hasOwnProperty(formKey)) {
       form.value[formKey] = listToString(list.value);
     }
@@ -1245,7 +1409,7 @@ const handleUploadError = (err: any, file: UploadFile, field: FileFieldType) => 
   const fieldName = {
     locationPlan: '选址方案',
     expertOpinions: '专家评审意见',
-    meetingMaterials: '会议材料',
+    publicMaterial: '公示材料',
     siteSelectionReport: '选址方案核准申报表',
     approvalDocuments: '立项文件',
     projectRedLine: '项目用地红线图',
@@ -1281,7 +1445,7 @@ const handleBeforeUpload = (file: any, field: FileFieldType) => {
     const fieldName = {
       locationPlan: '选址方案',
       expertOpinions: '专家评审意见',
-      meetingMaterials: '会议材料',
+      publicMaterial: '公示材料',
       siteSelectionReport: '选址方案核准申报表',
       approvalDocuments: '立项文件',
       projectRedLine: '项目用地红线图',
@@ -1345,7 +1509,7 @@ const initFormData: InfoForm = {
   otherExplanations: undefined,
   locationPlan: undefined,
   expertOpinions: undefined,
-  meetingMaterials: undefined,
+  publicMaterial: undefined,
   siteSelectionReport: undefined,
   approvalDocuments: undefined,
   projectRedLine: undefined,
@@ -1359,6 +1523,10 @@ const initFormData: InfoForm = {
     gwhApprovalReason: undefined,// 管委会审批反馈
     gwhApproveResult: undefined,// 管委会审批状态
     gwhApproveTime: undefined,// 管委会审批时间
+    lyjApprovalAttachment: undefined,// 市林业局审核反馈文件
+    lyjApprovalReason: undefined,// 市林业局审核反馈
+    lyjApproveResult: undefined,// 市林业局审核状态
+    lyjApproveTime: undefined,// 市林业局审核时间
   },
 }
 const data = reactive<PageData<InfoForm, InfoQuery>>({
@@ -1386,7 +1554,7 @@ const data = reactive<PageData<InfoForm, InfoQuery>>({
     otherExplanations: undefined,
     locationPlan: undefined,
     expertOpinions: undefined,
-    meetingMaterials: undefined,
+    publicMaterial: undefined,
     siteSelectionReport: undefined,
     approvalDocuments: undefined,
     projectRedLine: undefined,
@@ -1419,6 +1587,7 @@ const { queryParams, form, rules } = toRefs(data);
 const getList = async () => {
   loading.value = true;
   const res = await listInfo(queryParams.value);
+  console.log("🚀 ~ getList ~ queryParams.value:", queryParams.value)
   infoList.value = res.rows;
   total.value = res.total;
   loading.value = false;
@@ -1429,7 +1598,7 @@ const handleModelPreview = async () => {
     ElMessage.warning('请先保存项目信息');
     return;
   }
-  const modelFile = auditThreeDModelFileList.value.find(item => item.url);
+  const modelFile = threeDModelFileList.value.find(item => item.url);
   if (!modelFile?.url) {
     ElMessage.warning('请先上传项目三维模型文件');
     return;
@@ -1439,24 +1608,61 @@ const handleModelPreview = async () => {
     ElMessage.warning('请先填写模型坐标');
     return;
   }
-  majorProjectStore.saveDialogData({
-    formData: form.value, // 所有表单字段
-    threeDModelFileList: auditThreeDModelFileList.value, // 模型文件列表
-    disabled: disabled.value, // 禁用状态
-    isViewMode: isViewMode.value
-  });
-  await router.push('/screen/preview');
-  bus.emit('previewModel', {
+  // 核心新增：保存项目预览信息到状态管理
+  const projectPreviewInfo = {
     id: form.value.id,
     threeDModel: modelFile.url,
     modelCoordinate: form.value.modelCoordinate,
     type: '一般项目'
+  };
+  majorProjectStore.savePreviewProjectInfo(projectPreviewInfo); // 保存到store
+  majorProjectStore.saveDialogData({
+    formData: form.value, // 所有表单字段
+    threeDModelFileList: threeDModelFileList.value, // 模型文件列表
+    disabled: disabled.value, // 禁用状态
+    isViewMode: isViewMode.value
   });
-  console.log('已通过Bus发送模型预览数据：', {
-    id: form.value.id,
-    threeDModel: modelFile.url,
-    modelCoordinate: form.value.modelCoordinate
-  });
+  await router.push('/screen/preview');
+  bus.emit('previewModel', projectPreviewInfo);
+  console.log('已保存项目预览信息到状态管理：', projectPreviewInfo);
+};
+// 审批场景 - 三维场景方案审查点击事件
+const handleAuditSceneReview = async () => {
+  // 1. 校验项目ID
+  if (!auditForm.projectId) {
+    proxy?.$modal.msgError('项目ID无效，无法进行场景审查');
+    return;
+  }
+
+  // 2. 校验三维模型文件（从审核用的模型列表中获取）
+  const modelFile = threeDModelFileList.value.find(item => item.url);
+  if (!modelFile?.url) {
+    proxy?.$modal.msgError('请先上传项目三维模型文件');
+    return;
+  }
+
+  // 3. 校验模型坐标
+  if (!auditForm.modelCoordinate) {
+    proxy?.$modal.msgError('请先填写模型坐标');
+    return;
+  }
+
+  // 4. 构造项目信息（与预览功能字段一致）
+  const projectSceneInfo = {
+    id: auditForm.projectId.toString(),  // 项目ID
+    threeDModel: modelFile.url,          // 模型文件URL
+    modelCoordinate: auditForm.modelCoordinate,  // 模型坐标
+    type: '一般项目'                     // 项目类型
+  };
+
+  // 5. 保存到状态管理（复用现有store逻辑，确保screen.vue能获取）
+  majorProjectStore.savePreviewProjectInfo(projectSceneInfo);
+  // 6. 通过bus传递信息到screen.vue（触发场景加载）
+  bus.emit('auditPreviewModel', projectSceneInfo);
+
+  // 7. 跳转到screen页面（可选，根据需求决定是否跳转）
+  await router.push('/screen/screen');
+  console.log('已传递审批场景审查项目信息：', projectSceneInfo);
 };
 /** 取消按钮 */
 const cancel = async () => {
@@ -1474,22 +1680,14 @@ const reset = async () => {
   // 清空主列表（原有）
   locationPlanFileList.value = [];
   expertOpinionsFileList.value = [];
-  meetingMaterialsFileList.value = [];
+  publicMaterialFileList.value = [];
   siteSelectionReportFileList.value = [];
   approvalDocumentsFileList.value = [];
   projectRedLineFileList.value = [];
   redLineCoordinateFileList.value = [];
   threeDModelFileList.value = [];
   managementFeedbackFileList.value = [];
-  // 新增：清空审核列表
-  auditLocationPlanFileList.value = [];
-  auditExpertOpinionsFileList.value = [];
-  auditMeetingMaterialsFileList.value = [];
-  auditSiteSelectionReportFileList.value = [];
-  auditApprovalDocumentsFileList.value = [];
-  auditProjectRedLineFileList.value = [];
-  auditRedLineCoordinateFileList.value = [];
-  auditThreeDModelFileList.value = []; // 关键：清空三维模型审核列表
+  forestryFeedbackFileList.value = [];
   feedbackFileList.value = [];
   return Promise.resolve();
 };
@@ -1531,10 +1729,22 @@ const handleAdd = async () => {
   dialog.visible = true;
 }
 const loadAllFileLists = async (projectData: InfoForm) => {
-  form.value.approveRecord.gwhApprovalReason = projectData.approveRecord.gwhApprovalReason || '';
+  if (!form.value.approveRecord) {
+    form.value.approveRecord = {
+      gwhApprovalAttachment: undefined,
+      gwhApprovalReason: undefined,
+      gwhApproveResult: undefined,
+      gwhApproveTime: undefined,
+      lyjApprovalAttachment: undefined,
+      lyjApprovalReason: undefined,
+      lyjApproveResult: undefined,
+      lyjApproveTime: undefined,
+    };
+  }
+  form.value.approveRecord.gwhApprovalReason = projectData.approveRecord?.gwhApprovalReason || '';
   // ---------- 新增：加载管委会审批反馈文件（关键修复） ----------
   if (projectData.approveRecord?.gwhApprovalAttachment) {
-    const managementOssIds = projectData.approveRecord.gwhApprovalAttachment.split(',').filter(id => id.trim());
+    const managementOssIds = projectData.approveRecord.gwhApprovalAttachment.split(',').filter(id => id.trim()); // 过滤空ID
     if (managementOssIds.length > 0) {
       try {
         const managementRes = await listByIds(managementOssIds.join(','));
@@ -1546,12 +1756,13 @@ const loadAllFileLists = async (projectData: InfoForm) => {
         }));
       } catch (err) {
         console.error('加载管委会反馈文件失败：', err);
-        managementFeedbackFileList.value = [];
+        managementFeedbackFileList.value = []; // 失败时清空列表
       }
     } else {
       managementFeedbackFileList.value = [];
     }
   } else {
+    // 无反馈文件时，强制清空列表，避免残留旧数据
     managementFeedbackFileList.value = [];
   }
 
@@ -1565,6 +1776,8 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    locationPlanFileList.value = []; // 无数据时清空
   }
   // ---------- 2. 专家评审意见（新增，原遗漏） ----------
   if (projectData.expertOpinions) {
@@ -1576,17 +1789,21 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    expertOpinionsFileList.value = [];
   }
-  // ---------- 3. 会议材料（新增，原遗漏） ----------
-  if (projectData.meetingMaterials) {
-    const meetingMaterialsOssIds = projectData.meetingMaterials.split(',').join(',');
-    const meetingMaterialsRes = await listByIds(meetingMaterialsOssIds);
-    meetingMaterialsFileList.value = meetingMaterialsRes.data.map((oss: any) => ({
+  // ---------- 3. 公示材料（新增，原遗漏） ----------
+  if (projectData.publicMaterial) {
+    const publicMaterialOssIds = projectData.publicMaterial.split(',').join(',');
+    const publicMaterialRes = await listByIds(publicMaterialOssIds);
+    publicMaterialFileList.value = publicMaterialRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    publicMaterialFileList.value = [];
   }
   // ---------- 4. 选址方案核准申报表（新增，原遗漏） ----------
   if (projectData.siteSelectionReport) {
@@ -1598,6 +1815,8 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    siteSelectionReportFileList.value = [];
   }
   // ---------- 5. 立项文件（新增，原遗漏） ----------
   if (projectData.approvalDocuments) {
@@ -1609,6 +1828,8 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    approvalDocumentsFileList.value = [];
   }
   // ---------- 6. 项目用地红线图（新增，原遗漏） ----------
   if (projectData.projectRedLine) {
@@ -1620,6 +1841,8 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    projectRedLineFileList.value = [];
   }
   // ---------- 7. 项目红线矢量数据（新增，原遗漏） ----------
   if (projectData.redLineCoordinate) {
@@ -1631,24 +1854,46 @@ const loadAllFileLists = async (projectData: InfoForm) => {
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
+  } else {
+    redLineCoordinateFileList.value = [];
   }
   // ---------- 8. 项目三维模型（新增，原遗漏） ----------
   if (projectData.threeDModel) {
     const threeDModelOssIds = projectData.threeDModel.split(',').join(',');
     const threeDModelRes = await listByIds(threeDModelOssIds);
-    auditThreeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
+    threeDModelFileList.value = threeDModelRes.data.map((oss: any) => ({
       name: oss.originalName,
       url: oss.url,
       ossId: oss.ossId,
       uid: new Date().getTime() + Math.random()
     }));
-    // 同步更新表单 threeDModel 字段（确保数据一致性）
     form.value.threeDModel = projectData.threeDModel;
   } else {
-    // 若无模型数据，清空两个列表避免残留
-    auditThreeDModelFileList.value = [];
     threeDModelFileList.value = [];
     form.value.threeDModel = '';
+  }
+
+  // ---------- 新增：10. 市林业局审核反馈文件 ----------
+  if (projectData.approveRecord?.lyjApprovalAttachment) {
+    const forestryOssIds = projectData.approveRecord.lyjApprovalAttachment.split(',').filter(id => id.trim());
+    if (forestryOssIds.length > 0) {
+      try {
+        const forestryRes = await listByIds(forestryOssIds.join(','));
+        forestryFeedbackFileList.value = forestryRes.data.map((oss: any) => ({
+          name: oss.originalName,
+          url: oss.url,
+          ossId: oss.ossId,
+          uid: new Date().getTime() + Math.random()
+        }));
+      } catch (err) {
+        console.error('加载市林业局反馈文件失败：', err);
+        forestryFeedbackFileList.value = [];
+      }
+    } else {
+      forestryFeedbackFileList.value = [];
+    }
+  } else {
+    forestryFeedbackFileList.value = [];
   }
 };
 // 详情查看
@@ -1659,6 +1904,18 @@ const handleView = async (row: InfoVO) => {
     const projectData = res.data;
     console.log("🚀 ~ handleView ~ projectData:", projectData)
     Object.assign(form.value, res.data);
+    if (!form.value.approveRecord) {
+      form.value.approveRecord = {
+        gwhApprovalAttachment: undefined,
+        gwhApprovalReason: undefined,
+        gwhApproveResult: undefined,
+        gwhApproveTime: undefined,
+        lyjApprovalAttachment: undefined,
+        lyjApprovalReason: undefined,
+        lyjApproveResult: undefined,
+        lyjApproveTime: undefined,
+      };
+    }
     await loadAllFileLists(projectData);
     dialog.visible = true;
     dialog.title = "查看一般项目信息";
@@ -1692,11 +1949,17 @@ const handleShare = async (row: InfoVO) => {
     }
   }
 };
+
 // 校验当前用户是否有修改权限
 const canEdit = async () => {
   try {
     const res = await getUserInfo();
     const userRoles = res.data?.roles || [];
+    currentUserRole.value = userRoles[0] || '';
+    console.log("🚀 ~ canEdit ~ currentUserRole.value:", currentUserRole.value)
+    if (['superadmin', 'sysadmin'].includes(currentUserRole.value)) {
+      return false;
+    }
     // 根据角色判断是否有修改权限（示例：管理员、建设单位有修改权限）
     return userRoles.some(role => ['superadmin', 'sysadmin', 'constructor', 'mca', 'clb_audit', 'plb_approve'].includes(role));
   } catch (err) {
@@ -1716,6 +1979,18 @@ const handleUpdate = async (row?: InfoVO) => {
   const res = await getInfo(_id);
   const projectData = res.data;
   Object.assign(form.value, res.data);
+  if (!form.value.approveRecord) {
+    form.value.approveRecord = {
+      gwhApprovalAttachment: undefined,
+      gwhApprovalReason: undefined,
+      gwhApproveResult: undefined,
+      gwhApproveTime: undefined,
+      lyjApprovalAttachment: undefined,
+      lyjApprovalReason: undefined,
+      lyjApproveResult: undefined,
+      lyjApproveTime: undefined,
+    };
+  }
   await loadAllFileLists(projectData);
   dialog.title = "修改一般项目信息";
   disabled.value = false; // 启用表单
@@ -1790,7 +2065,7 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
   const fieldName = {
     locationPlan: '选址方案',
     expertOpinions: '专家评审意见',
-    meetingMaterials: '会议材料',
+    publicMaterial: '公示材料',
     siteSelectionReport: '选址方案核准申报表',
     approvalDocuments: '立项文件',
     projectRedLine: '项目用地红线图',
@@ -1817,12 +2092,12 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
     const fieldMap = {
       locationPlan: locationPlanFileList,
       expertOpinions: expertOpinionsFileList,
-      meetingMaterials: meetingMaterialsFileList,
+      publicMaterial: publicMaterialFileList,
       siteSelectionReport: siteSelectionReportFileList,
       approvalDocuments: approvalDocumentsFileList,
       projectRedLine: projectRedLineFileList,
       redLineCoordinate: redLineCoordinateFileList,
-      threeDModel: auditThreeDModelFileList
+      threeDModel: threeDModelFileList
     };
     const fileList = fieldMap[field];
     const file = fileList.value[index];
@@ -1846,15 +2121,14 @@ const handleExport = () => {
     ...queryParams.value
   }, `info_${new Date().getTime()}.xlsx`)
 }
-onMounted(async () => { // 注意添加async关键字
+onMounted(async () => { // 保留async关键字
   try {
-    // 加载项目列表
     getList();
-    const { isEditDialogVisible, formData, threeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
+    const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
     // 若需要显示弹窗，恢复所有数据
     if (isEditDialogVisible) {
       form.value = { ...form.value, ...formData }; // 恢复表单字段
-      auditThreeDModelFileList.value = [...threeDModelFileList]; // 恢复模型文件列表
+      threeDModelFileList.value = [...storeThreeDModelFileList];
       disabled.value = storeDisabled; // 恢复禁用状态
       isViewMode.value = storeIsViewMode; // 恢复查看模式状态
       dialog.visible = true; // 自动弹出弹窗
@@ -1945,6 +2219,18 @@ h3 {
   color: #1f2329;
   padding-left: 5px;
   border-left: 3px solid #409eff;
+}
+
+.operation-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.modelPreview {
+  margin-left: 1500px;
+  margin-top: -50px;
+
 }
 
 // 审批状态样式

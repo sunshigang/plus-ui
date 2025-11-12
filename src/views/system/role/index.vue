@@ -58,40 +58,32 @@
       <el-table ref="roleTableRef" border v-loading="loading" :data="roleList"
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column v-if="false" label="角色编号" prop="roleId" width="120" />
-        <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" width="150" />
-        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" width="200" />
-        <el-table-column label="显示顺序" prop="roleSort" width="100" />
-        <el-table-column label="状态" align="center" width="100">
+        <el-table-column  label="序号" prop="roleId"  />
+        <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" />
+        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true"  />
+        <el-table-column label="显示顺序" prop="roleSort"/>
+        <el-table-column label="状态" align="center" >
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
               @change="handleStatusChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" align="center" prop="createTime" >
+        <el-table-column label="创建时间" align="center" prop="createTime" width="230">
           <template #default="scope">
-            <span>{{ proxy.parseTime(scope.row.createTime) }}</span>
+            <span>{{ scope.row.createTime  }}</span>
           </template>
         </el-table-column>
         <el-table-column label="备注" prop="remark" width="200" />
-        <el-table-column fixed="right" label="操作" width="180">
+        <el-table-column fixed="right" label="操作" width="360">
           <template #default="scope">
-            <el-tooltip v-if="scope.row.roleId !== 1" content="修改" placement="top">
-              <el-button v-hasPermi="['system:role:edit']" link type="primary" icon="Edit"
-                @click="handleUpdate(scope.row)"></el-button>
-            </el-tooltip>
-            <el-tooltip v-if="scope.row.roleId !== 1" content="删除" placement="top">
-              <el-button v-hasPermi="['system:role:remove']" link type="primary" icon="Delete"
-                @click="handleDelete(scope.row)"></el-button>
-            </el-tooltip>
-            <el-tooltip v-if="scope.row.roleId !== 1" content="数据权限" placement="top">
-              <el-button v-hasPermi="['system:role:edit']" link type="primary" icon="CircleCheck"
-                @click="handleDataScope(scope.row)"></el-button>
-            </el-tooltip>
-            <el-tooltip v-if="scope.row.roleId !== 1" content="分配账号" placement="top">
-              <el-button v-hasPermi="['system:role:edit']" link type="primary" icon="User"
-                @click="handleAuthUser(scope.row)"></el-button>
-            </el-tooltip>
+            <el-button v-hasPermi="['system:role:edit']" link type="primary"
+              @click="handleUpdate(scope.row)">编辑</el-button>
+            <!-- <el-button v-hasPermi="['system:role:edit']" link type="primary"
+              @click="handleDataScope(scope.row)">数据权限</el-button> -->
+            <el-button v-hasPermi="['system:role:edit']" link type="primary"
+              @click="handleAuthUser(scope.row)">分配账号</el-button>
+            <el-button v-hasPermi="['system:role:remove']" link type="danger"
+              @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -100,7 +92,7 @@
         v-model:limit="queryParams.pageSize" @pagination="getList" />
     </el-card>
 
-    <el-dialog v-model="dialog.visible" :title="dialog.title" width="1000px"  append-to-body>
+    <el-dialog v-model="dialog.visible" :title="dialog.title" width="1000px" append-to-body>
       <el-form ref="roleFormRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="角色名称" prop="roleName">
           <el-input v-model="form.roleName" placeholder="请输入角色名称" />
@@ -461,7 +453,7 @@ const dataScopeSelectChange = (value: string) => {
     deptRef.value?.setCheckedKeys([]);
   }
 };
-/** 分配数据权限操作 */
+/** 分配数据权限操作 
 const handleDataScope = async (row: RoleVO) => {
   const response = await getRole(row.roleId);
   Object.assign(form.value, response.data);
@@ -471,7 +463,7 @@ const handleDataScope = async (row: RoleVO) => {
   await nextTick(() => {
     deptRef.value?.setCheckedKeys(res.checkedKeys);
   });
-};
+};*/
 /** 提交按钮（数据权限） */
 const submitDataScope = async () => {
   if (form.value.roleId) {
