@@ -91,6 +91,15 @@
               :show-overflow-tooltip="true" />
             <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" width="260">
               <template #default="scope">
+                <el-tooltip placement="top" :content="getProjectTooltip(scope.row)">
+                  <div class="project-name-wrapper">
+                    {{isAllProjects(scope.row) ? '全部' : scope.row.projects?.map(item => item.projectName).join('、') || '无'}}
+                  </div>
+                </el-tooltip>
+              </template>
+            </el-table-column>
+            <!-- <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" width="260">
+              <template #default="scope">
                 <el-tooltip placement="top"
                   :content="scope.row.projects?.map(item => item.projectName).join('、') || '无'">
                   <div class="project-name-wrapper">
@@ -98,7 +107,7 @@
                   </div>
                 </el-tooltip>
               </template>
-            </el-table-column>
+            </el-table-column> -->
             <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
               <template #default="scope">
                 <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
@@ -150,7 +159,13 @@
           </el-select>
         </el-form-item>
         <el-form-item label="项目权限" prop="projectIds">
-          <el-select v-model="form.projectIds" filterable multiple placeholder="请选择">
+          <el-select v-model="form.projectIds" filterable multiple clearable collapse-tags placeholder="请选择项目"
+            :max-collapse-tags="1" popper-class="custom-header">
+            <template #header>
+              <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll">
+                All
+              </el-checkbox>
+            </template>
             <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName"
               :value="String(item.id)"></el-option>
           </el-select>
@@ -240,6 +255,7 @@
 </template>
 
 <script setup name="User" lang="ts">
+import { ref, watch } from 'vue'
 import api from '@/api/system/user';
 import { UserForm, UserQuery, UserVO } from '@/api/system/user/types';
 import { DeptTreeVO, DeptVO } from '@/api/system/dept/types';
@@ -253,6 +269,7 @@ import { hasPermi } from '@/directive/permission';
 import { checkPermi } from '@/utils/permission';
 import { listInfo } from '@/api/project/normal/index';
 import { InfoVO } from '@/api/project/normal/types';
+import type { CheckboxValueType } from 'element-plus'
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_normal_disable, sys_user_sex } = toRefs<any>(proxy?.useDict('sys_normal_disable', 'sys_user_sex'));
@@ -271,6 +288,19 @@ const initPassword = ref<string>('');
 const postOptions = ref<PostVO[]>([]);
 const roleOptions = ref<RoleVO[]>([]);
 const projectOptions = ref<InfoVO[]>([]);
+const checkAll = ref(false)
+const indeterminate = ref(false)
+const value = ref<CheckboxValueType[]>([])
+const handleCheckAll = (val: boolean) => {
+  indeterminate.value = false;
+  if (val) {
+    // 全选时，将所有项目的id（字符串类型）赋值给form.projectIds
+    form.value.projectIds = projectOptions.value.map(item => String(item.id));
+  } else {
+    // 取消全选时，清空数组
+    form.value.projectIds = [];
+  }
+};
 // 查看对话框相关
 const viewDialog = reactive<DialogOption>({
   visible: false,
@@ -330,7 +360,7 @@ const initFormData: UserForm = {
   postIds: [],
   roleIds: [],
   projectName: '',
-  projectIds: [],//项目权限的 ID 数组例如["1987713629520900098","1987714038566203394"]
+  projectIds: [],
 };
 // 查看表单（存储不可编辑数据）
 const viewForm = reactive<UserForm & { statusLabel: string; deptName: string }>({
@@ -406,13 +436,27 @@ watchEffect(
     flush: 'post' // watchEffect会在DOM挂载或者更新之前就会触发，此属性控制在DOM元素更新后运行
   }
 );
+// 判断是否选中了“全部”项目
+const isAllProjects = (row: UserVO) => {
+  if (!row.projects || row.projects.length === 0) return false;
+  // 若项目权限的ID数量等于所有项目的ID数量，则视为“全部”
+  return row.projectIds?.length === projectOptions.value.length;
+};
 
+// 生成 tooltip 提示文本（选中“全部”时显示所有项目名）
+const getProjectTooltip = (row: UserVO) => {
+  if (isAllProjects(row)) {
+    return projectOptions.value.map(item => item.projectName).join('、');
+  }
+  return row.projects?.map(item => item.projectName).join('、') || '无';
+};
 /** 查询用户列表 */
 const getList = async () => {
   loading.value = true;
   const res = await api.listUser(proxy?.addDateRange(queryParams.value, dateRange.value));
-  const projectRes = await listInfo(queryParams.value);
-  console.log("🚀 ~ getList ~ projectRes:", projectRes)
+  console.log("🚀 ~ getList ~ queryParams.value:", queryParams.value)
+  const projectRes = await listInfo();
+  console.log("🚀 ~ getList ~ projectRes.rows:", projectRes.rows)
   projectOptions.value = projectRes.rows
   loading.value = false;
   userList.value = res.rows;
@@ -677,6 +721,17 @@ const resetForm = () => {
   form.value.id = undefined;
   form.value.status = '1';
 };
+watch(() => form.value.projectIds, (val) => {
+  if (val.length === 0) {
+    checkAll.value = false;
+    indeterminate.value = false;
+  } else if (val.length === projectOptions.value.length) {
+    checkAll.value = true;
+    indeterminate.value = false;
+  } else {
+    indeterminate.value = true;
+  }
+}, { immediate: true, deep: true });
 onMounted(() => {
   getDeptTree(); // 初始化部门数据
   getList(); // 初始化列表数据
@@ -702,5 +757,12 @@ async function handleDeptChange(value: number | string) {
   /* 超出部分显示省略号 */
   width: 100%;
   /* 继承容器宽度 */
+}
+
+.custom-header {
+  .el-checkbox {
+    display: flex;
+    height: unset;
+  }
 }
 </style>

@@ -49,6 +49,8 @@ export interface UserVO extends BaseEntity {
   roleId: any;
   admin: boolean;
   projectName: string;
+  projectIds: string[];
+  projects: { id: string; projectName: string }[];
 }
 
 /**

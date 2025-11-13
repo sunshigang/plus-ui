@@ -21,7 +21,8 @@
         class="remember-me">{{ proxy.$t('login.rememberPassword') }}</el-checkbox>
       <div class="form-footer">
         <el-form-item style="width: 100%">
-          <el-button :loading="loading" size="large" type="primary" style="width: 100%;font-size:20px;border-radius: 22px;" @click.prevent="handleLogin">账号登录
+          <el-button :loading="loading" size="large" type="primary"
+            style="width: 100%;font-size:20px;border-radius: 22px;height: 60px" @click.prevent="handleLogin">账号登录
           </el-button>
         </el-form-item>
       </div>

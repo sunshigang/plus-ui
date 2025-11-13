@@ -479,7 +479,7 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="模型坐标" prop="modelCoordinate">
-                  <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
+                  <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标格式为：经度,纬度,高度,旋转方向" :disabled="disabled" />
                 </el-form-item>
               </el-col>
             </el-row>

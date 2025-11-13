@@ -113,25 +113,39 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
           <template #default="scope">
-            <el-button
-              v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) && canEdit() && !['superadmin', 'sysadmin'].includes(currentUserRole)"
-              link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
-              <!-- 状态为驳回时显示“二次填报”，否则显示“信息填报” -->
+            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
               {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
             </el-button>
-            <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
-              v-else>详情查看</el-button> -->
-            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']" v-else>
+            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
               {{ ['superadmin', 'sysadmin'].includes(currentUserRole) ? '详情查看' : '查看' }}
             </el-button>
-            <el-button v-if="['填报中', '管委会审批中'].includes(scope.row.status)" link type="primary"
-              @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']">审核</el-button>
-            <el-button v-if="scope.row.status === '管委会通过'" link type="primary" @click="handleAudit(scope.row)"
+            <el-button link type="primary" @click="handleAudit(scope.row)"
+              v-hasPermi="['project:project:gwhApprove']">审核</el-button>
+            <el-button link type="primary" @click="handleAudit(scope.row)"
               v-hasPermi="['project:project:lyjApprove']">审核</el-button>
             <el-button link type="danger" @click="handleDelete(scope.row)"
               v-hasPermi="['project:project:remove']">删除</el-button>
             <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
               @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">数据共享</el-button>
+            <!-- <template v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status)">
+              <el-button v-if="canEdit() && !['superadmin', 'sysadmin'].includes(currentUserRole)" link type="primary"
+                @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
+                {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
+              </el-button>
+            </template>
+    <el-button
+      v-if="!['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) || !canEdit() || ['superadmin', 'sysadmin'].includes(currentUserRole)"
+      link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+      {{ ['superadmin', 'sysadmin'].includes(currentUserRole) ? '详情查看' : '查看' }}
+    </el-button>
+    <el-button v-if="['填报中', '管委会审批中'].includes(scope.row.status)" link type="primary" @click="handleAudit(scope.row)"
+      v-hasPermi="['project:project:gwhApprove']">审核</el-button>
+    <el-button v-if="scope.row.status === '管委会通过'" link type="primary" @click="handleAudit(scope.row)"
+      v-hasPermi="['project:project:lyjApprove']">审核</el-button>
+    <el-button link type="danger" @click="handleDelete(scope.row)"
+      v-hasPermi="['project:project:remove']">删除</el-button>
+    <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary" @click="handleShare(scope.row)"
+      v-hasPermi="['project:project:share']">数据共享</el-button> -->
           </template>
         </el-table-column>
       </el-table>
@@ -486,7 +500,8 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="模型坐标" prop="modelCoordinate">
-                  <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标" :disabled="disabled" />
+                  <el-input v-model="form.modelCoordinate" placeholder="请输入模型坐标格式为：经度,纬度,高度,旋转方向"
+                    :disabled="disabled" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -600,7 +615,7 @@
           <el-button @click="cancel">取消</el-button>
           <el-button type="warning" @click="resetForm">重置</el-button>
           <el-button type="success" v-hasPermi="['project:project:stage']" @click="temporarilyForm">暂存</el-button>
-          <el-button :loading="buttonLoading" v-hasPermi="['project:project:edit']" type="primary"
+          <el-button :loading="buttonLoading"  type="primary"
             @click="submitForm">确定</el-button>
         </div>
         <div class="dialog-footer" v-if="isViewMode">
@@ -1968,7 +1983,7 @@ const canEdit = async () => {
       return false;
     }
     // 根据角色判断是否有修改权限（示例：管理员、建设单位有修改权限）
-    return userRoles.some(role => ['superadmin', 'sysadmin', 'constructor', 'mca', 'clb_audit', 'plb_approve'].includes(role));
+    return userRoles.some(role => ['constructor', 'mca', 'clb_audit', 'plb_approve'].includes(role));
   } catch (err) {
     console.error('校验修改权限失败：', err);
     return false;
@@ -2130,6 +2145,10 @@ const handleExport = () => {
 }
 onMounted(async () => { // 保留async关键字
   try {
+    const res = await getUserInfo();
+    const userRoles = res.data?.roles || [];
+    currentUserRole.value = userRoles[0] || '';
+    console.log("🚀 ~ canEdit ~ currentUserRole.value:", currentUserRole.value)
     getList();
     const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
     // 若需要显示弹窗，恢复所有数据
@@ -2250,24 +2269,39 @@ h3 {
     width: 20px;
     height: 20px;
     border-radius: 50%;
+    /* 圆形 */
     text-align: center;
-    line-height: 20px;
-    margin-right: 8px;
+    line-height: 15px;
+    /* 垂直居中符号 */
+    margin-right: 18px;
     font-weight: bold;
+    background-color: white;
+    /* 白色背景 */
+    border: 2px solid;
+    /* 边框颜色由状态决定 */
+    font-size: 14px;
+  }
 
-    &.success {
-      background-color: #52c41a;
-      color: white;
-    }
+  .status-icon.success {
+    border-color: #52c41a;
+    color: #52c41a;
+  }
 
-    &.error {
-      background-color: #f5222d;
-      color: white;
-    }
+  /* 驳回状态：红色边框 + 红色叉号 */
+  .status-icon.error {
+    border-color: #f5222d;
+    color: #f5222d;
+  }
 
-    &.pending {
-      background-color: #faad14; // 未审核-橙色
-    }
+  /* 待审批状态：橙色边框 + 橙色横线（可选） */
+  .status-icon.pending {
+    border-color: #faad14;
+    color: #faad14;
+  }
+
+  .status-text {
+    color: #333;
+    /* 文字颜色加深，提升可读性 */
   }
 }
 
