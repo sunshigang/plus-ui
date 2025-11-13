@@ -293,9 +293,12 @@ const indeterminate = ref(false)
 const value = ref<CheckboxValueType[]>([])
 const handleCheckAll = (val: boolean) => {
   indeterminate.value = false;
+  console.log("🚀 ~ handleCheckAll ~ form.value.projectIds:", form.value.projectIds)
   if (val) {
     // 全选时，将所有项目的id（字符串类型）赋值给form.projectIds
-    form.value.projectIds = projectOptions.value.map(item => String(item.id));
+    // form.value.projectIds = projectOptions.value.map(item => String(item.id));
+    form.value.projectIds=['0']
+
   } else {
     // 取消全选时，清空数组
     form.value.projectIds = [];

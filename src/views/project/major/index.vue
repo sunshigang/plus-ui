@@ -78,8 +78,10 @@
               v-hasPermi="['project:project:remove']">删除</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="warning" plain icon="Download" @click="handleExport"
-              v-hasPermi="['project:project:export']">导出</el-button>
+            <el-button type="primary" plain icon="Download" @click="handleExports"
+              v-hasPermi="['project:project:export']">批量数据下载</el-button>
+            <!-- <el-button type="warning" plain icon="Download" @click="handleExport"
+              v-hasPermi="['project:project:export']">导出</el-button> -->
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
@@ -87,7 +89,7 @@
 
       <el-table v-loading="loading" border :data="infoList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="" align="center" prop="id" v-if="false" />
+        <el-table-column label="序号" align="center" prop="id" />
         <el-table-column label="建设项目名称" align="center" prop="projectName" width="150" />
         <el-table-column label="项目代码" align="center" prop="projectCode" width="150" />
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
@@ -113,39 +115,118 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
           <template #default="scope">
-            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
-              {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
-            </el-button>
-            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-              {{ ['superadmin', 'sysadmin'].includes(currentUserRole) ? '详情查看' : '查看' }}
-            </el-button>
-            <el-button link type="primary" @click="handleAudit(scope.row)"
-              v-hasPermi="['project:project:gwhApprove']">审核</el-button>
-            <el-button link type="primary" @click="handleAudit(scope.row)"
-              v-hasPermi="['project:project:lyjApprove']">审核</el-button>
-            <el-button link type="danger" @click="handleDelete(scope.row)"
-              v-hasPermi="['project:project:remove']">删除</el-button>
-            <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
-              @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">数据共享</el-button>
-            <!-- <template v-if="['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status)">
-              <el-button v-if="canEdit() && !['superadmin', 'sysadmin'].includes(currentUserRole)" link type="primary"
-                @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
-                {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
+            <!-- 1. 建设单位 (constructor) -->
+            <template v-if="currentUserRole === 'constructor'">
+              <!-- 管委会驳回/林业局驳回：仅二次填报 -->
+              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+                v-if="['管委会驳回', '林业局驳回'].includes(scope.row.status)">
+                二次填报
+              </el-button>
+
+              <!-- 填报中：仅信息填报 -->
+              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+                v-if="scope.row.status === '填报中'">
+                信息填报
+              </el-button>
+
+              <!-- 其他状态：仅查看 -->
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
+                v-if="!['管委会驳回', '林业局驳回', '填报中'].includes(scope.row.status)">
+                查看
               </el-button>
             </template>
-    <el-button
-      v-if="!['填报中', '管委会驳回', '林业局驳回'].includes(scope.row.status) || !canEdit() || ['superadmin', 'sysadmin'].includes(currentUserRole)"
-      link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-      {{ ['superadmin', 'sysadmin'].includes(currentUserRole) ? '详情查看' : '查看' }}
-    </el-button>
-    <el-button v-if="['填报中', '管委会审批中'].includes(scope.row.status)" link type="primary" @click="handleAudit(scope.row)"
-      v-hasPermi="['project:project:gwhApprove']">审核</el-button>
-    <el-button v-if="scope.row.status === '管委会通过'" link type="primary" @click="handleAudit(scope.row)"
-      v-hasPermi="['project:project:lyjApprove']">审核</el-button>
-    <el-button link type="danger" @click="handleDelete(scope.row)"
-      v-hasPermi="['project:project:remove']">删除</el-button>
-    <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary" @click="handleShare(scope.row)"
-      v-hasPermi="['project:project:share']">数据共享</el-button> -->
+
+            <!-- 2. 系统管理员 (sysadmin) -->
+            <template v-else-if="currentUserRole === 'sysadmin'">
+              <!-- 林业局通过：数据共享 + 删除 -->
+              <template v-if="scope.row.status === '林业局通过'">
+                <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">
+                  数据共享
+                </el-button>
+                <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
+                  删除
+                </el-button>
+              </template>
+
+              <!-- 其他状态：详情查看 + 删除 -->
+              <template v-else>
+                <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+                  详情查看
+                </el-button>
+                <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
+                  删除
+                </el-button>
+              </template>
+            </template>
+
+            <!-- 3. 管委会 (mca) -->
+            <template v-else-if="currentUserRole === 'mca'">
+              <!-- 管委会审批中：仅审核 -->
+              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
+                v-if="scope.row.status === '管委会审批中'">
+                审核
+              </el-button>
+
+              <!-- 其他状态：仅查看 -->
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
+                v-if="scope.row.status !== '管委会审批中'">
+                查看
+              </el-button>
+            </template>
+
+            <!-- 4. 市林业局 (clb_audit) -->
+            <template v-else-if="currentUserRole === 'clb_audit'">
+              <!-- 管委会通过：仅审核 -->
+              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:lyjApprove']"
+                v-if="scope.row.status === '管委会通过'">
+                审核
+              </el-button>
+
+              <!-- 其他状态：仅查看 -->
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
+                v-if="scope.row.status !== '管委会通过'">
+                查看
+              </el-button>
+            </template>
+
+            <!-- 5. 省林业局 (plb_approve)：所有状态仅查看 -->
+            <template v-else-if="currentUserRole === 'plb_approve'">
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+                查看
+              </el-button>
+            </template>
+
+            <!-- 6. 超级管理员 (superadmin)：所有按钮权限 -->
+            <template v-else-if="currentUserRole === 'superadmin'">
+              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
+                {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
+              </el-button>
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+                详情查看
+              </el-button>
+              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
+                v-if="scope.row.status === '管委会审批中'">
+                审核
+              </el-button>
+              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:lyjApprove']"
+                v-if="scope.row.status === '管委会通过'">
+                审核
+              </el-button>
+              <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
+                删除
+              </el-button>
+              <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
+                @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">
+                数据共享
+              </el-button>
+            </template>
+
+            <!-- 7. 其他角色：仅查看 -->
+            <template v-else>
+              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+                查看
+              </el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -194,9 +275,8 @@
         </div>
         <div class="section project-documents">
           <h3 class="section-title">建设信息</h3>
-          <el-button type="primary" :icon="isViewMode ? 'View' : 'Edit'" :disabled="!form.id"
-            @click="handleModelPreview" class="modelPreview">
-            三维场景效果预览
+          <el-button type="primary" :disabled="!form.id" @click="handleModelPreview" class="modelPreview">
+            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
           </el-button>
           <el-form :model="form" label-width="180px">
             <el-row :gutter="20">
@@ -508,7 +588,7 @@
           </el-form>
         </div>
         <!-- 修改审批信息部分 - 不仅在查看模式且在二次填报修改也可查看审批信息 -->
-        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))"
+        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))|| dialog.title === '数据共享'"
           class="section approval-info">
           <h3 class="section-title"> 审批信息</h3>
           <el-form label-width="178px" disabled>
@@ -611,28 +691,36 @@
         </div>
       </div>
       <template #footer>
-        <div class="dialog-footer" v-if="!isViewMode">
+        <!-- 原有新增/修改模式按钮 -->
+        <div class="dialog-footer" v-if="!isViewMode && dialog.title !== '数据共享'">
           <el-button @click="cancel">取消</el-button>
           <el-button type="warning" @click="resetForm">重置</el-button>
           <el-button type="success" v-hasPermi="['project:project:stage']" @click="temporarilyForm">暂存</el-button>
-          <el-button :loading="buttonLoading"  type="primary"
-            @click="submitForm">确定</el-button>
+          <el-button :loading="buttonLoading" type="primary" @click="submitForm">确定</el-button>
         </div>
-        <div class="dialog-footer" v-if="isViewMode">
+
+        <!-- 查看模式按钮 -->
+        <div class="dialog-footer" v-if="isViewMode && dialog.title !== '数据共享'">
           <el-button @click="cancel">取消</el-button>
           <template v-if="form.id && canAudit(form) && !['已通过'].includes(form.status)">
-            <!-- 场景1：管委会审批权限（包括林业局驳回、管委会驳回、未审批） -->
             <el-button
               v-if="!form.approveRecord.gwhApproveResult || form.approveRecord.gwhApproveResult === '驳回' || form.approveRecord.lyjApproveResult === '驳回'"
               type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:gwhApprove']">
               审批
             </el-button>
-            <!-- 场景2：林业局审批权限（管委会通过、林业局未审批） -->
             <el-button v-else-if="form.approveRecord.gwhApproveResult === '通过' && !form.approveRecord.lyjApproveResult"
               type="primary" @click="handleAudit(form)" v-hasPermi="['project:project:lyjApprove']">
               二次审批
             </el-button>
           </template>
+        </div>
+
+        <!-- 数据共享模式按钮（新增） -->
+        <div class="dialog-footer" v-if="dialog.title === '数据共享'">
+          <el-button @click="cancel">取消</el-button>
+          <el-button type="primary" icon="Download" @click="handleDataDownload">数据下载</el-button>
+          <el-button type="default" style="background: #faad14; color: white; border: none;"
+            @click="confirmShare">数据共享</el-button>
         </div>
       </template>
     </el-dialog>
@@ -675,9 +763,10 @@
         </div>
         <div class="section project-documents">
           <h3 class="section-title">建设信息</h3>
-          <el-button type="primary" link icon="Plus" @click="handleAuditSceneReview"
+
+          <el-button type="primary" icon="model" @click="handleAuditSceneReview"
             v-hasPermi="['project:project:3dAudit']" class="modelPreview">
-            三维场景方案审查
+            <img class="imgModel" src="../../../assets/images/model.png" />三维场景方案审查
           </el-button>
           <el-form :model="form" label-width="180px">
             <el-row :gutter="20">
@@ -979,6 +1068,7 @@ const total = ref(0);
 const previewListResource = ref(false);
 const isViewMode = ref(false); // 新增：是否为查看模式
 const currentUserRole = ref<string>('');
+
 // 状态颜色映射：返回对应Hex颜色值
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -1950,28 +2040,6 @@ const handleView = async (row: InfoVO) => {
     proxy?.$modal.msgError('加载项目信息失败，请重试');
   }
 };
-// 数据共享
-const handleShare = async (row: InfoVO) => {
-  try {
-    // 显示确认对话框
-    await proxy?.$modal.confirm('确定要将此项目数据共享吗？');
-
-    // 调用数据共享接口
-    // await shareInfo(row.id);
-
-    // 显示成功消息
-    proxy?.$modal.msgSuccess("数据共享成功");
-
-    // 刷新列表
-    getList();
-  } catch (err) {
-    // 如果用户取消或发生错误，不做处理或显示错误消息
-    if (err !== 'cancel') {
-      proxy?.$modal.msgError("数据共享失败：" + (err as Error).message || "未知错误");
-    }
-  }
-};
-
 // 校验当前用户是否有修改权限
 const canEdit = async () => {
   try {
@@ -2138,11 +2206,68 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
   }
 };
 /** 导出按钮操作 */
-const handleExport = () => {
-  proxy?.download('system/info/export', {
-    ...queryParams.value
-  }, `info_${new Date().getTime()}.xlsx`)
+const handleExports = () => {
+  // proxy?.download('document/planningFile/export', {
+  //   ...queryParams.value
+  // }, `info_${new Date().getTime()}.xlsx`)
 }
+// 1. 数据下载方法（下载项目所有相关文件/信息）
+const handleDataDownload = async () => {
+  try {
+    proxy?.$modal.loading('正在打包下载数据，请稍候...');
+    // 调用数据下载接口（替换为实际下载接口）
+    await proxy?.$download.oss(form.value.id + '_project_data');
+    proxy?.$modal.closeLoading();
+    proxy?.$modal.msgSuccess('数据下载成功');
+  } catch (err) {
+    proxy?.$modal.closeLoading();
+    proxy?.$modal.msgError('数据下载失败：' + (err as Error).message || '未知错误');
+  }
+};
+
+// 2. 确认数据共享方法
+const confirmShare = async () => {
+  try {
+    await proxy?.$modal.confirm('确定要公开此项目数据吗？共享后不可撤销');
+    buttonLoading.value = true;
+    // 调用数据共享接口（替换为实际共享接口）
+    // await shareInfo(form.value.id);
+    proxy?.$modal.msgSuccess('数据共享成功');
+    dialog.visible = false;
+    getList(); // 刷新列表
+  } catch (err) {
+    if (err !== 'cancel') {
+      proxy?.$modal.msgError('数据共享失败：' + (err as Error).message || '未知错误');
+    }
+  } finally {
+    buttonLoading.value = false;
+  }
+};
+
+// 3. 完善handleShare方法（标记为非查看模式，避免冲突）
+const handleShare = async (row: InfoVO) => {
+  await reset();
+  const res = await getInfo(row.id);
+  const projectData = res.data;
+  Object.assign(form.value, res.data);
+  if (!form.value.approveRecord) {
+    form.value.approveRecord = {
+      gwhApprovalAttachment: undefined,
+      gwhApprovalReason: undefined,
+      gwhApproveResult: undefined,
+      gwhApproveTime: undefined,
+      lyjApprovalAttachment: undefined,
+      lyjApprovalReason: undefined,
+      lyjApproveResult: undefined,
+      lyjApproveTime: undefined,
+    };
+  }
+  await loadAllFileLists(projectData);
+  dialog.visible = true;
+  dialog.title = "数据共享";
+  disabled.value = true; // 保持只读
+  isViewMode.value = false; // 关键：避免触发查看模式的审批按钮
+};
 onMounted(async () => { // 保留async关键字
   try {
     const res = await getUserInfo();
@@ -2257,6 +2382,9 @@ h3 {
   margin-left: 1500px;
   margin-top: -50px;
 
+  .imgModel {
+    margin-right: 10px;
+  }
 }
 
 // 审批状态样式
@@ -2335,5 +2463,10 @@ h3 {
 // 操作栏按钮间距调整（可选，避免按钮过于拥挤）
 :deep(.el-table-column__content .el-button) {
   margin: 0 4px;
+}
+
+.dialog-footer .el-button[style*="background: #faad14"]:hover {
+  background: #f7ba1e !important;
+  color: white !important;
 }
 </style>

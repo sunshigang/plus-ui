@@ -41,6 +41,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 const visible = ref(false);
 const { modelValue, width } = toRefs(props);
+console.log("🚀 ~ modelValue:", modelValue)
 const iconNames = ref<string[]>(icons);
 
 const filterValue = ref('');
@@ -49,6 +50,7 @@ const filterValue = ref('');
  * 筛选图标
  */
 const filterIcons = () => {
+  console.log("🚀 ~ filterIcons ~ iconNames.value:", iconNames.value)
   if (filterValue.value) {
     iconNames.value = icons.filter((iconName) => iconName.includes(filterValue.value));
   } else {
