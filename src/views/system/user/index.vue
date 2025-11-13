@@ -163,11 +163,17 @@
             :max-collapse-tags="1" popper-class="custom-header">
             <template #header>
               <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll">
-                All
+                全部
               </el-checkbox>
             </template>
-            <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName"
-              :value="String(item.id)"></el-option>
+            <el-option 
+            v-for="item in projectOptions" 
+            :key="item.id" 
+            :label="item.projectName"
+            :value="String(item.id)"
+            :style="{ display: item.id === '0' ? 'none' : '' }">
+          </el-option>
+            
           </el-select>
         </el-form-item>
         <el-form-item label="归属部门" prop="deptId">
@@ -297,7 +303,7 @@ const handleCheckAll = (val: boolean) => {
   if (val) {
     // 全选时，将所有项目的id（字符串类型）赋值给form.projectIds
     // form.value.projectIds = projectOptions.value.map(item => String(item.id));
-    form.value.projectIds=['0']
+    form.value.projectIds=['0'];
 
   } else {
     // 取消全选时，清空数组
@@ -442,14 +448,14 @@ watchEffect(
 // 判断是否选中了“全部”项目
 const isAllProjects = (row: UserVO) => {
   if (!row.projects || row.projects.length === 0) return false;
-  // 若项目权限的ID数量等于所有项目的ID数量，则视为“全部”
-  return row.projectIds?.length === projectOptions.value.length;
+  //若项目ID数组包含'0'，则表示选择了“全部”
+  return row.projectIds?.includes('0');
 };
 
 // 生成 tooltip 提示文本（选中“全部”时显示所有项目名）
 const getProjectTooltip = (row: UserVO) => {
   if (isAllProjects(row)) {
-    return projectOptions.value.map(item => item.projectName).join('、');
+    return "全部" ;
   }
   return row.projects?.map(item => item.projectName).join('、') || '无';
 };
@@ -460,7 +466,9 @@ const getList = async () => {
   console.log("🚀 ~ getList ~ queryParams.value:", queryParams.value)
   const projectRes = await listInfo();
   console.log("🚀 ~ getList ~ projectRes.rows:", projectRes.rows)
-  projectOptions.value = projectRes.rows
+  projectOptions.value.push( {id:'0',projectName:'全部'});
+  projectOptions.value.push(...projectRes.rows);
+  // projectOptions.value = projectRes.rows
   loading.value = false;
   userList.value = res.rows;
   console.log("🚀 ~ getList ~ userList.value:", userList.value)
@@ -691,6 +699,7 @@ const handleUpdate = async (row?: UserForm) => {
   form.value.projectIds = []; // 强制初始化为空数组，避免 null/undefined
   if (Array.isArray(data.projects)) { // 只在 data.projects 是有效数组时处理
     form.value.projectIds = data.projects.map(item => String(item.id)); // 直接赋值，比 push 更高效
+    console.log( projectOptions)
   }
 };
 
