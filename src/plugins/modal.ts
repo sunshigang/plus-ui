@@ -58,6 +58,13 @@ export default {
       type: 'warning'
     });
   },
+  confirm1(content: any): Promise<MessageBoxData> {
+    return ElMessageBox.confirm(content, '请确认是否将将项目数据共享', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+  },
   // 提交内容
   prompt(content: any) {
     return ElMessageBox.prompt(content, '系统提示', {

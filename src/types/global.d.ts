@@ -27,6 +27,7 @@ declare global {
      * 是否显示
      */
     visible: boolean;
+    isView?: boolean;
   }
 
   declare interface UploadOption {

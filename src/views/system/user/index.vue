@@ -1,234 +1,176 @@
 <template>
   <div class="p-2">
-    <el-row :gutter="20">
-      <!-- 部门树 -->
-      <el-col :lg="4" :xs="24" style="">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
+      <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
-          <el-input v-model="deptName" placeholder="请输入部门名称" prefix-icon="Search" clearable />
-          <el-tree ref="deptTreeRef" class="mt-2" node-key="id" :data="deptOptions"
-            :props="{ label: 'label', children: 'children' } as any" :expand-on-click-node="false"
-            :filter-node-method="filterNode" highlight-current default-expand-all @node-click="handleNodeClick" />
+          <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="100px">
+            <el-form-item label="账号名称" prop="userName">
+              <el-input v-model="queryParams.userName" placeholder="请输入账号名称" clearable @keyup.enter="handleQuery" />
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+              <el-select v-model="queryParams.status" placeholder="用户状态" clearable>
+                <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label"
+                  :value="dict.value" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="创建时间" style="width: 308px">
+              <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
+                range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
+                :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"></el-date-picker>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+              <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+            </el-form-item>
+          </el-form>
         </el-card>
-      </el-col>
-      <el-col :lg="20" :xs="24">
-        <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
-          :leave-active-class="proxy?.animate.searchAnimate.leave">
-          <div v-show="showSearch" class="mb-[10px]">
-            <el-card shadow="hover">
-              <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-                <el-form-item label="账号名称" prop="userName">
-                  <el-input v-model="queryParams.userName" placeholder="请输入账号名称" clearable @keyup.enter="handleQuery" />
-                </el-form-item>
-                <el-form-item label="状态" prop="status">
-                  <el-select v-model="queryParams.status" placeholder="用户状态" clearable>
-                    <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label"
-                      :value="dict.value" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="创建时间" style="width: 308px">
-                  <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
-                    range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
-                    :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"></el-date-picker>
-                </el-form-item>
-                <el-form-item>
-                  <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-                  <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-                </el-form-item>
-              </el-form>
-            </el-card>
-          </div>
-        </transition>
+      </div>
+    </transition>
+    <el-card shadow="hover">
+      <template #header>
+        <el-row :gutter="10">
+          <el-col :span="1.5">
+            <el-button v-has-permi="['system:user:add']" type="primary" plain icon="Plus"
+              @click="handleAdd()">新增</el-button>
+          </el-col>
+          <el-col :span="1.5">
 
-        <el-card shadow="hover">
-          <template #header>
-            <el-row :gutter="10">
-              <el-col :span="1.5">
-                <el-button v-has-permi="['system:user:add']" type="primary" plain icon="Plus"
-                  @click="handleAdd()">新增</el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button v-has-permi="['system:user:edit']" type="success" plain :disabled="single" icon="Edit"
-                  @click="handleUpdate()">
-                  修改
-                </el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-button v-has-permi="['system:user:remove']" type="danger" plain :disabled="multiple" icon="Delete"
-                  @click="handleDelete()">
-                  删除
-                </el-button>
-              </el-col>
-              <el-col :span="1.5">
-                <el-dropdown class="mt-[1px]">
-                  <el-button plain type="info">
-                    更多
-                    <el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item icon="Download" @click="importTemplate">下载模板</el-dropdown-item>
-                      <!-- 注意 由于el-dropdown-item标签是延迟加载的 所以v-has-permi自定义标签不生效 需要使用v-if调用方法执行 -->
-                      <el-dropdown-item v-if="checkPermi(['system:user:import'])" icon="Top"
-                        @click="handleImport">导入数据</el-dropdown-item>
-                      <el-dropdown-item v-if="checkPermi(['system:user:export'])" icon="Download"
-                        @click="handleExport">导出数据</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </el-col>
-              <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true"
-                @query-table="getList"></right-toolbar>
-            </el-row>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button v-has-permi="['system:user:import']" type="primary" plain icon="Top"
+              @click="handleImport">导入</el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button v-has-permi="['system:user:export']" type="primary" plain icon="Download"
+              @click="handleExport">导出</el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-dropdown class="mt-[1px]">
+              <el-button plain type="info">
+                更多
+                <el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item icon="Download" @click="importTemplate">下载模板</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </el-col>
+          <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true"
+            @query-table="getList"></right-toolbar>
+        </el-row>
+      </template>
+
+      <el-table v-loading="loading" border :data="userList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column v-if="columns[0].visible" key="userId" label="序号" align="center" prop="userId" />
+        <el-table-column v-if="columns[1].visible" key="userName" label="账号" align="center" prop="userName"
+          :show-overflow-tooltip="true" />
+        <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName"
+          :show-overflow-tooltip="true" />
+        <el-table-column v-if="columns[3].visible" key="roles" label="所属角色" align="center"
+          :show-overflow-tooltip="true">
+          <template #default="scope">
+            <!-- 遍历 roles 数组，拼接所有 roleName，用顿号分隔 -->
+            {{scope.row.roles?.map(role => role.roleName).join('、') || '无角色'}}
           </template>
+        </el-table-column>
+        <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center">
+          <template #default="scope">
+            <el-tooltip placement="top" :content="getProjectTooltip(scope.row)">
+              <div class="project-name-wrapper">
+                {{isAllProjects(scope.row) ? '全部' : scope.row.projects?.map(item => item.projectName).join('、') || '无'}}
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center" width="200">
+          <template #default="scope">
+            <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
+              @change="handleStatusChange(scope.row)"></el-switch>
+          </template>
+        </el-table-column>
+        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="200">
+          <template #default="scope">
+            <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column key="remark" label="备注" align="center" prop="remark" width="220" />
+        <el-table-column label="操作" fixed="right" width="330" class-name="small-padding fixed-width">
+          <template #default="scope">
+            <el-button v-hasPermi="['system:user:view']" link type="primary"
+              @click="handleView(scope.row)">查看</el-button>
+            <el-button v-hasPermi="['system:user:edit']" link type="primary"
+              @click="handleUpdate(scope.row)">编辑</el-button>
+            <el-button v-hasPermi="['system:user:resetPwd']" link type="primary"
+              @click="handleResetPwd(scope.row)">重置密码</el-button>
+            <!-- <el-button v-hasPermi="['system:user:edit']" link type="primary"
+                  @click="handleAuthRole(scope.row)">分配角色</el-button> -->
+            <el-button v-hasPermi="['system:user:remove']" link type="danger"
+              @click="handleDelete(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
 
-          <el-table v-loading="loading" border :data="userList" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="50" align="center" />
-            <el-table-column v-if="columns[0].visible" key="userId" label="用户编号" align="center" prop="userId" />
-            <el-table-column v-if="columns[1].visible" key="userName" label="账号" align="center" prop="userName"
-              :show-overflow-tooltip="true" />
-            <el-table-column v-if="columns[2].visible" key="nickName" label="用户昵称" align="center" prop="nickName"
-              :show-overflow-tooltip="true" />
-            <el-table-column v-if="columns[3].visible" key="deptName" label="所属角色" align="center" prop="deptName"
-              :show-overflow-tooltip="true" />
-            <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" width="260">
-              <template #default="scope">
-                <el-tooltip placement="top" :content="getProjectTooltip(scope.row)">
-                  <div class="project-name-wrapper">
-                    {{isAllProjects(scope.row) ? '全部' : scope.row.projects?.map(item => item.projectName).join('、') || '无'}}
-                  </div>
-                </el-tooltip>
-              </template>
-            </el-table-column>
-            <!-- <el-table-column v-if="columns[7].visible" key="projectName" label="项目权限" align="center" width="260">
-              <template #default="scope">
-                <el-tooltip placement="top"
-                  :content="scope.row.projects?.map(item => item.projectName).join('、') || '无'">
-                  <div class="project-name-wrapper">
-                    {{scope.row.projects?.map(item => item.projectName).join('、') || '无'}}
-                  </div>
-                </el-tooltip>
-              </template>
-            </el-table-column> -->
-            <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center">
-              <template #default="scope">
-                <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
-                  @change="handleStatusChange(scope.row)"></el-switch>
-              </template>
-            </el-table-column>
-            <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="160">
-              <template #default="scope">
-                <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column key="remark" label="备注" align="center" prop="remark" width="120" />
-            <el-table-column label="操作" fixed="right" width="330" class-name="small-padding fixed-width">
-              <template #default="scope">
-                <el-button v-hasPermi="['system:user:view']" link type="primary"
-                  @click="handleView(scope.row)">查看</el-button>
-                <el-button v-hasPermi="['system:user:edit']" link type="primary"
-                  @click="handleUpdate(scope.row)">编辑</el-button>
-                <el-button v-hasPermi="['system:user:resetPwd']" link type="primary"
-                  @click="handleResetPwd(scope.row)">重置密码</el-button>
-                <el-button v-hasPermi="['system:user:edit']" link type="primary"
-                  @click="handleAuthRole(scope.row)">分配角色</el-button>
-                <el-button v-hasPermi="['system:user:remove']" link type="danger"
-                  @click="handleDelete(scope.row)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
-            :total="total" @pagination="getList" />
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 添加或修改账号配置对话框 -->
-    <el-dialog ref="formDialogRef" v-model="dialog.visible" :title="dialog.title" width="500px" append-to-body
+      <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
+        :total="total" @pagination="getList" />
+    </el-card>
+    <!-- 添加或修改账号配置对话框（融合查看功能） -->
+    <el-dialog ref="formDialogRef" v-model="dialog.visible" :title="dialog.title" width="600px" append-to-body
       @close="closeDialog">
-      <el-form ref="userFormRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item v-if="form.userId == undefined" label="账号名称" prop="userName">
-          <el-input v-model="form.userName" placeholder="请输入账号名称" maxlength="30" />
+      <el-form ref="userFormRef" :model="form" :rules="dialog.isView ? {} : rules" label-width="120px">
+        <el-form-item label="账号名称" prop="userName">
+          <el-input v-model="form.userName" placeholder="请输入账号名称" maxlength="30" :disabled="dialog.isView" />
         </el-form-item>
-        <el-form-item v-if="form.userId == undefined" label="账号密码" prop="password">
-          <el-input v-model="form.password" placeholder="请输入账号密码" type="password" maxlength="20" show-password />
+        <el-form-item label="账号密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入账号密码" type="password" maxlength="20" show-password
+            :disabled="dialog.isView" />
         </el-form-item>
-        <el-form-item label="所属角色" prop="roleIds">
-          <el-select v-model="form.roleIds" filterable multiple placeholder="请选择">
-            <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId"
-              :disabled="item.status == '1'"></el-option>
+
+        <el-form-item label="所属角色" prop="roleIds" v-if="dialog.isView == false">
+          <el-select v-model="form.roleIds" filterable multiple placeholder="请选择" :disabled="dialog.isView">
+            <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName"
+              :value="String(item.roleId)" :disabled="item.status == '1'"></el-option>
           </el-select>
+        </el-form-item>
+        <el-form-item label="所属角色" prop="roleIds" v-else>
+          <el-input v-model="joinedRoleNames" placeholder="无角色" :disabled="true" />
         </el-form-item>
         <el-form-item label="项目权限" prop="projectIds">
           <el-select v-model="form.projectIds" filterable multiple clearable collapse-tags placeholder="请选择项目"
-            :max-collapse-tags="1" popper-class="custom-header">
+            :max-collapse-tags="1" popper-class="custom-header" :disabled="dialog.isView">
             <template #header>
-              <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll">
+              <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll"
+                :disabled="dialog.isView">
                 全部
               </el-checkbox>
             </template>
-            <el-option 
-            v-for="item in projectOptions" 
-            :key="item.id" 
-            :label="item.projectName"
-            :value="String(item.id)"
-            :style="{ display: item.id === '0' ? 'none' : '' }">
-          </el-option>
-            
+            <el-option key="all-option" label="全部" value="0" @click.prevent="handleCheckAll(true)" />
+            <el-option v-for="item in projectOptions.filter(i => i.id !== '0')" :key="item.id" :label="item.projectName"
+              :value="String(item.id)" />
+            <!-- <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName" :value="String(item.id)"
+              :style="{ display: item.id === '0' ? 'none' : '' }">
+            </el-option> -->
           </el-select>
         </el-form-item>
-        <el-form-item label="归属部门" prop="deptId">
-          <el-tree-select v-model="form.deptId" :data="enabledDeptOptions"
-            :props="{ value: 'id', label: 'label', children: 'children' } as any" value-key="id" placeholder="请选择归属部门"
-            check-strictly @change="handleDeptChange" />
-        </el-form-item>
         <el-form-item label="状态">
-          <el-radio-group v-model="form.status">
+          <el-radio-group v-model="form.status" :disabled="dialog.isView">
             <el-radio v-for="dict in sys_normal_disable" :key="dict.value"
               :value="dict.value">{{ dict.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
+
         <el-form-item label="备注">
-          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
+          <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" :disabled="dialog.isView"></el-input>
         </el-form-item>
       </el-form>
+
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <!-- 查看模式不显示确定按钮 -->
+          <el-button v-if="!dialog.isView" type="primary" @click="submitForm">确 定</el-button>
           <el-button @click="cancel()">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
-    <!-- 查看账号对话框（不可编辑） -->
-    <el-dialog ref="viewDialogRef" v-model="viewDialog.visible" :title="viewDialog.title" width="500px" append-to-body>
-      <el-form :model="viewForm" label-width="80px">
-        <!-- 密码查看栏（新增） -->
-        <el-form-item label="账号名称">
-          <el-input v-model="viewForm.userName" disabled />
-        </el-form-item>
-        <el-form-item label="所属角色">
-          <el-select v-model="viewForm.roleIds" multiple disabled>
-            <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目权限">
-          <el-select v-model="viewForm.projectIds" multiple disabled>
-            <el-option v-for="item in projectOptions" :key="item.id" :label="item.projectName"
-              :value="String(item.id)" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="归属部门">
-          <el-input v-model="viewForm.deptName" placeholder="无" disabled />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-input v-model="viewForm.statusLabel" disabled />
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="viewForm.remark" type="textarea" disabled />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="viewDialog.visible = false">关 闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -261,7 +203,7 @@
 </template>
 
 <script setup name="User" lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import api from '@/api/system/user';
 import { UserForm, UserQuery, UserVO } from '@/api/system/user/types';
 import { DeptTreeVO, DeptVO } from '@/api/system/dept/types';
@@ -288,34 +230,53 @@ const multiple = ref(true);
 const total = ref(0);
 const dateRange = ref<[DateModelType, DateModelType]>(['', '']);
 const deptName = ref('');
+const roles = ref([]);// 当前用户的角色列表
 const deptOptions = ref<DeptTreeVO[]>([]);
 const enabledDeptOptions = ref<DeptTreeVO[]>([]);
 const initPassword = ref<string>('');
 const postOptions = ref<PostVO[]>([]);
 const roleOptions = ref<RoleVO[]>([]);
-const projectOptions = ref<InfoVO[]>([]);
+interface AllProjectOption {
+  id: string;
+  projectName: string;
+}
+
+type ProjectOption = InfoVO | AllProjectOption;
+
+const projectOptions = ref<ProjectOption[]>([]);
 const checkAll = ref(false)
 const indeterminate = ref(false)
-const value = ref<CheckboxValueType[]>([])
+
+// const handleCheckAll = (val: boolean) => {
+//   indeterminate.value = false;
+//   if (val) {
+//     form.value.projectIds = ['0'];
+//   } else {
+//     // 取消全选时，清空数组
+//     form.value.projectIds = [];
+//   }
+// };
 const handleCheckAll = (val: boolean) => {
   indeterminate.value = false;
-  console.log("🚀 ~ handleCheckAll ~ form.value.projectIds:", form.value.projectIds)
   if (val) {
-    // 全选时，将所有项目的id（字符串类型）赋值给form.projectIds
-    // form.value.projectIds = projectOptions.value.map(item => String(item.id));
-    form.value.projectIds=['0'];
-
+    form.value.projectIds = ['0']; // 保持后端要求的赋值逻辑
+    // 关键：让“全部”选项显示为选中状态（通过设置选中项实现）
+    nextTick(() => {
+      const allOption = document.querySelector('.el-select-dropdown__item[title="全部"]');
+      if (allOption) {
+        allOption.classList.add('selected'); // 手动添加选中样式
+      }
+    });
   } else {
-    // 取消全选时，清空数组
-    form.value.projectIds = [];
+    form.value.projectIds = []; // 取消全选清空
+    nextTick(() => {
+      const allOption = document.querySelector('.el-select-dropdown__item[title="全部"]');
+      if (allOption) {
+        allOption.classList.remove('selected'); // 移除选中样式
+      }
+    });
   }
 };
-// 查看对话框相关
-const viewDialog = reactive<DialogOption>({
-  visible: false,
-  title: '查看账号'
-});
-const viewDialogRef = ref<ElDialogInstance>();
 
 /*** 用户导入参数 */
 const upload = reactive<ImportOption>({
@@ -334,9 +295,9 @@ const upload = reactive<ImportOption>({
 });
 // 列显隐信息
 const columns = ref<FieldOption[]>([
-  { key: 0, label: `账号编号`, visible: false, children: [] },
+  { key: 0, label: `序号`, visible: true, children: [] },
   { key: 1, label: `账号名称`, visible: true, children: [] },
-  { key: 2, label: `账号昵称`, visible: true, children: [] },
+  { key: 2, label: `账号昵称`, visible: false, children: [] },
   { key: 3, label: `部门`, visible: true, children: [] },
   { key: 4, label: `手机号码`, visible: false, children: [] },
   { key: 5, label: `状态`, visible: true, children: [] },
@@ -352,7 +313,8 @@ const formDialogRef = ref<ElDialogInstance>();
 
 const dialog = reactive<DialogOption>({
   visible: false,
-  title: ''
+  title: '',
+  isView: false // 新增：是否为查看模式
 });
 
 const initFormData: UserForm = {
@@ -360,7 +322,7 @@ const initFormData: UserForm = {
   deptId: undefined,
   userName: '',
   nickName: undefined,
-  password: '',
+  password: '123456',
   phonenumber: undefined,
   email: undefined,
   sex: undefined,
@@ -372,11 +334,12 @@ const initFormData: UserForm = {
   projectIds: [],
 };
 // 查看表单（存储不可编辑数据）
-const viewForm = reactive<UserForm & { statusLabel: string; deptName: string }>({
-  ...initFormData,
-  statusLabel: '',
-  deptName: ''
-});
+// const viewForm = reactive<UserForm & { statusLabel: string; deptName: string }>({
+//   ...initFormData,
+//   statusLabel: '',
+//   deptName: '',
+//   roleNames: ''
+// });
 
 const initData: PageData<UserForm, UserQuery> = {
   form: { ...initFormData },
@@ -387,7 +350,8 @@ const initData: PageData<UserForm, UserQuery> = {
     phonenumber: '',
     status: '',
     deptId: '',
-    roleId: ''
+    roleId: '',
+    userIds: ''
   },
   rules: {
     userName: [
@@ -442,7 +406,7 @@ watchEffect(
     deptTreeRef.value?.filter(deptName.value);
   },
   {
-    flush: 'post' // watchEffect会在DOM挂载或者更新之前就会触发，此属性控制在DOM元素更新后运行
+    flush: 'post'
   }
 );
 // 判断是否选中了“全部”项目
@@ -455,7 +419,7 @@ const isAllProjects = (row: UserVO) => {
 // 生成 tooltip 提示文本（选中“全部”时显示所有项目名）
 const getProjectTooltip = (row: UserVO) => {
   if (isAllProjects(row)) {
-    return "全部" ;
+    return "全部";
   }
   return row.projects?.map(item => item.projectName).join('、') || '无';
 };
@@ -466,9 +430,9 @@ const getList = async () => {
   console.log("🚀 ~ getList ~ queryParams.value:", queryParams.value)
   const projectRes = await listInfo();
   console.log("🚀 ~ getList ~ projectRes.rows:", projectRes.rows)
-  projectOptions.value.push( {id:'0',projectName:'全部'});
+  projectOptions.value = [];
+  projectOptions.value.push({ id: '0', projectName: '全部' });
   projectOptions.value.push(...projectRes.rows);
-  // projectOptions.value = projectRes.rows
   loading.value = false;
   userList.value = res.rows;
   console.log("🚀 ~ getList ~ userList.value:", userList.value)
@@ -499,28 +463,7 @@ const handleNodeClick = (data: DeptVO) => {
   queryParams.value.deptId = data.id;
   handleQuery();
 };
-/** 查看按钮操作 */
-const handleView = async (row: UserVO) => {
-  // 重置查看表单
-  Object.assign(viewForm, { ...initFormData, statusLabel: '', deptName: '' });
-  // 获取用户完整信息
-  const { data } = await api.getUser(row.userId);
-  console.log("🚀 ~ handleView ~ data:", data)
-  // 赋值基础信息
-  Object.assign(viewForm, data.user);
-  // 处理角色回显（保持与编辑框一致）
-  viewForm.roleIds = Array.isArray(data.roleIds) ? data.roleIds : [];
-  // 处理项目权限回显
-  viewForm.projectIds = Array.isArray(data.projects)
-    ? data.projects.map(item => String(item.id))
-    : [];
-  // 处理状态文本显示（将 0/1 转为 启用/停用）
-  viewForm.statusLabel = data.user.status === '0' ? '启用' : '停用';
-  // 处理部门名称显示（从部门树中匹配）
-  viewForm.deptName = getDeptNameById(data.user.deptId, deptOptions.value) || '无';
-  // 打开查看对话框
-  viewDialog.visible = true;
-};
+
 
 /** 辅助函数：根据部门ID获取部门名称 */
 const getDeptNameById = (deptId: number | string | undefined, deptList: DeptTreeVO[]): string => {
@@ -585,12 +528,6 @@ const handleStatusChange = async (row: UserVO) => {
     row.status = row.status === '0' ? '1' : '0';
   }
 };
-/** 跳转角色分配 */
-const handleAuthRole = (row: UserVO) => {
-  const userId = row.userId;
-  router.push('/system/user-auth/role/' + userId);
-};
-
 /** 重置密码按钮操作 */
 const handleResetPwd = async (row: UserVO) => {
   const [err, res] = await to(
@@ -618,6 +555,7 @@ const handleSelectionChange = (selection: UserVO[]) => {
   ids.value = selection.map((item) => item.userId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
+  queryParams.value.userIds = String(ids.value)
 };
 
 /** 导入按钮操作 */
@@ -649,6 +587,7 @@ const handleFileSuccess = (response: any, file: UploadFile) => {
   upload.open = false;
   upload.isUploading = false;
   uploadRef.value?.handleRemove(file);
+  console.log("🚀 ~ handleFileSuccess ~ uploadRef.value:", uploadRef.value)
   ElMessageBox.alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + '</div>', '导入结果', {
     dangerouslyUseHTMLString: true
   });
@@ -658,6 +597,7 @@ const handleFileSuccess = (response: any, file: UploadFile) => {
 /** 提交上传文件 */
 function submitFileForm() {
   uploadRef.value?.submit();
+  console.log("🚀 ~ submitFileForm ~ uploadRef.value:", uploadRef.value)
 }
 
 /** 重置操作表单 */
@@ -677,9 +617,51 @@ const handleAdd = async () => {
   const { data } = await api.getUser();
   dialog.visible = true;
   dialog.title = '新增账号';
+  dialog.isView = false; // 明确设置为编辑模式
   postOptions.value = data.posts;
   roleOptions.value = data.roles;
   form.value.password = initPassword.value.toString();
+};
+const joinedRoleNames = computed(() => {
+  // 类型守卫：判断是否为角色对象数组（查看模式）
+  const isRoleVOArray = (arr: any[]): arr is RoleVO[] => {
+    return arr.length > 0 && 'roleName' in arr[0];
+  };
+
+  if (Array.isArray(form.value.roleIds)) {
+    // 若是角色对象数组，则提取roleName拼接
+    if (isRoleVOArray(form.value.roleIds)) {
+      return form.value.roleIds
+        .map(role => role.roleName || '')
+        .filter(name => name)
+        .join('、') || '无角色';
+    }
+    // 若是ID数组（编辑模式查看时，理论上不会进入此分支）
+    return '无角色';
+  }
+  return '无角色';
+});
+console.log("🚀 ~ joinedRoleNames:", joinedRoleNames)
+/** 查看按钮操作 */
+const handleView = async (row: UserVO) => {
+  reset();
+  // 获取用户完整信息
+  const { data } = await api.getUser(row.userId);
+  console.log("🚀 ~ handleView ~ data:", data)
+  const { roles, ...userBaseInfo } = data.user;
+  // 赋值基础信息
+  Object.assign(form.value, data.user);
+  // 处理角色数据
+  form.value.roleIds = Array.isArray(roles) ? roles : [];
+  console.log("🚀 ~ handleView ~  form.value.roleIds:", form.value.roleIds)
+  // 处理项目权限
+  form.value.projectIds = Array.isArray(data.projects)
+    ? data.projects.map(item => String(item.id))
+    : [];
+  // 设置查看模式
+  dialog.isView = true;
+  dialog.title = '查看账号';
+  dialog.visible = true;
 };
 
 /** 修改按钮操作 */
@@ -687,25 +669,28 @@ const handleUpdate = async (row?: UserForm) => {
   reset();
   const userId = row?.userId || ids.value[0];
   const { data } = await api.getUser(userId);
-  console.log("🚀 ~ handleUpdate ~ data:", data)
   dialog.visible = true;
   dialog.title = '修改账号';
-  Object.assign(form.value, data.user);
-  postOptions.value = data.posts || [];
+  dialog.isView = false;
   roleOptions.value = data.roles || [];
+  console.log("🚀 ~ handleUpdate ~ roleOptions.value:", roleOptions.value)
+  postOptions.value = data.posts || [];
+  Object.assign(form.value, data.user);
+  form.value.roleIds = Array.isArray(data.roleIds) ? data.roleIds.map(id => String(id)) : [];
   form.value.postIds = Array.isArray(data.postIds) ? data.postIds : [];
-  form.value.roleIds = Array.isArray(data.roleIds) ? data.roleIds : [];
-  form.value.password = '';
+  form.value.password = initPassword.value;
   form.value.projectIds = []; // 强制初始化为空数组，避免 null/undefined
   if (Array.isArray(data.projects)) { // 只在 data.projects 是有效数组时处理
     form.value.projectIds = data.projects.map(item => String(item.id)); // 直接赋值，比 push 更高效
-    console.log( projectOptions)
+    console.log(projectOptions)
   }
+  console.log("🚀 ~ form.value.password :", form.value.password)
 };
 
 /** 提交按钮 */
 const submitForm = () => {
   userFormRef.value?.validate(async (valid: boolean) => {
+    console.log("🚀 ~ submitForm ~ form.value:", form.value)
     if (valid) {
       form.value.userId ? await api.updateUser(form.value) : await api.addUser(form.value);
       proxy?.$modal.msgSuccess('操作成功');
@@ -733,15 +718,47 @@ const resetForm = () => {
   form.value.id = undefined;
   form.value.status = '1';
 };
+// watch(() => form.value.projectIds, (val) => {
+//   if (val.length === 0) {
+//     checkAll.value = false;
+//     indeterminate.value = false;
+//   } else if (val.length === projectOptions.value.length) {
+//     checkAll.value = true;
+//     indeterminate.value = false;
+//   } else {
+//     indeterminate.value = true;
+//   }
+// }, { immediate: true, deep: true });
+// 监听 projectIds 变化，同步全选框和“全部”选项状态
 watch(() => form.value.projectIds, (val) => {
-  if (val.length === 0) {
-    checkAll.value = false;
-    indeterminate.value = false;
-  } else if (val.length === projectOptions.value.length) {
+  const hasAll = val.includes('0'); // 判断是否选中“全部”
+  const realProjectCount = projectOptions.value.filter(i => i.id !== '0').length; // 真实项目数量
+
+  // 同步全选框状态
+  if (hasAll) {
     checkAll.value = true;
     indeterminate.value = false;
+    // 让“全部”选项显示选中
+    nextTick(() => {
+      const allOption = document.querySelector('.el-select-dropdown__item[title="全部"]');
+      if (allOption) allOption.classList.add('selected');
+    });
+  } else if (val.length === 0) {
+    checkAll.value = false;
+    indeterminate.value = false;
+    // 移除“全部”选项选中样式
+    nextTick(() => {
+      const allOption = document.querySelector('.el-select-dropdown__item[title="全部"]');
+      if (allOption) allOption.classList.remove('selected');
+    });
   } else {
+    checkAll.value = false;
     indeterminate.value = true;
+    // 移除“全部”选项选中样式
+    nextTick(() => {
+      const allOption = document.querySelector('.el-select-dropdown__item[title="全部"]');
+      if (allOption) allOption.classList.remove('selected');
+    });
   }
 }, { immediate: true, deep: true });
 onMounted(() => {
@@ -749,14 +766,11 @@ onMounted(() => {
   getList(); // 初始化列表数据
   proxy?.getConfigKey('sys.user.initPassword').then((response) => {
     initPassword.value = response.data;
+    console.log("🚀 ~ initPassword.value:", initPassword.value)
   });
 });
 
-async function handleDeptChange(value: number | string) {
-  const response = await optionselect(value);
-  postOptions.value = response.data;
-  form.value.postIds = [];
-}
+
 </script>
 <style scoped>
 /* 关键样式：控制文本只显示一行，超出隐藏并显示省略号 */
@@ -776,5 +790,17 @@ async function handleDeptChange(value: number | string) {
     display: flex;
     height: unset;
   }
+}
+
+:deep(.el-form-item--large .el-form-item__label) {
+  height: 40px;
+  line-height: 40px;
+  width: 120px !important;
+}
+
+:deep(.el-select-dropdown__item.selected) {
+  background-color: var(--el-select-dropdown-item-hover-bg-color);
+  color: var(--el-color-primary);
+  font-weight: 500;
 }
 </style>

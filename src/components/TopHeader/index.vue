@@ -140,130 +140,87 @@ const loginOut = () => {
 <style lang="scss">
 #top-header {
     width: 100%;
-    height: 10rem;
+    height: 100px;
     position: absolute;
     top: 0;
     left: 0;
     z-index: 3;
-    // background-color: red;
-
-    .loginOutPanel {
-        pointer-events: auto;
-        cursor: pointer;
-        position: absolute;
-        right: 2%;
-        top: 19%;
-        width: 7rem;
-        height: 6.4rem;
-
-        .loginOutLabel {
-            position: relative;
-            left: 2.4rem;
-            top: 0rem;
-            width: 2.2rem;
-            height: 2.2rem;
-            background: url(../../static/image/home/用户.png) no-repeat;
-            background-size: 100% 100%;
-        }
-
-        .loginOut {
-            width: 7rem;
-            height: 4.8rem;
-            background: url(../../static/image/home/三角形.png) no-repeat;
-            background-size: 100% 100%;
-            font-family: 'PingFang SC';
-            font-weight: 400;
-            font-size: 1.4rem;
-            color: #ffffff;
-            line-height: 6.2rem;
-            display: flex;
-            justify-content: center;
-            align-content: center;
-        }
-    }
 
     .time {
         position: absolute;
-        left: 12%;
-        top: 13%;
-        width: 22rem;
+        left: 273px;
+        top: 35px;
+        // width: 220px;
         font-family: 'ZCOOL QingKe HuangYou';
         font-weight: 400;
-        font-size: 2rem;
+        font-size: 20px;
         color: #FCFCED;
         text-align: left;
         font-style: normal;
         text-transform: none;
         word-spacing: 1em;
-
     }
 
     .top-right {
         position: absolute;
         right: 12%;
-        top: 13%;
-        font-size: 1.8rem;
+        top: 36px;
+        height: 30px;
+        /* 固定高度，与内容高度匹配 */
+        font-size: 20px;
         font-weight: 400;
         font-family: 'ZCOOL QingKe HuangYou';
         color: #ffffff;
-        line-height: 3.2rem;
         display: flex;
+        /* 启用Flex布局 */
+        align-items: center;
+        /* 垂直居中（关键） */
+        justify-content: center;
+        /* 水平居中（子元素整体居中） */
+        gap: 10px;
 
+        /* 子元素之间的间距（替代margin-left） */
         .todayWeatherIcon {
-            width: 3rem;
-            height: 3rem;
-            margin-top: 0.2rem;
+            width: 30px;
+            height: 30px;
         }
 
-        .todayWeatherMain {
-            margin-left: 1rem;
-            margin-top: -0.1rem;
-        }
-
+        /* 移除子元素的margin-left，统一用gap控制间距 */
+        .todayWeatherMain,
         .todayWeatherTemp {
-            margin-left: 1rem;
+            margin: 0;
+            /* 清除默认margin */
         }
     }
 }
 
-:deep(.el-dropdown) {
-    position: absolute;
-    right: 9.6rem;
-    top: 5.4rem;
-    width: 7rem;
-    height: 6.4rem;
-}
 
-.el-dropdown:focus-visible,
-.el-tooltip__trigger:focus-visible {
-    outline: 0px !important;
-}
 
 
 
 .attractionBody {
     pointer-events: auto;
     position: absolute;
-    width: 37rem;
-    height: 3.5rem;
-    left: 78%;
-    top: 9%;
+    width: 400px;
+    height: 35px;
+    left: 76%;
+    top: 10%;
     z-index: 2;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    font-size: 17px;
 
     .mainShot {
         cursor: pointer;
-        width: 7.2rem;
-        height: 3.2rem;
+        width: 72px;
+        height: 32px;
         background: url(../../static/image/home/lens.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.5rem;
-        color: white
+        color: white;
     }
 
     .mainShoted {
@@ -273,14 +230,13 @@ const loginOut = () => {
 
     .wuFengShot {
         cursor: pointer;
-        width: 7.2rem;
-        height: 3.2rem;
+        width: 72px;
+        height: 32px;
         background: url(../../static/image/home/lens.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.5rem;
         color: white
     }
 
@@ -291,14 +247,13 @@ const loginOut = () => {
 
     .filmShot {
         cursor: pointer;
-        width: 10rem;
-        height: 3.2rem;
+        width: 120px;
+        height: 32px;
         background: url(../../static/image/home/lens.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.5rem;
         color: white
     }
 
@@ -309,14 +264,13 @@ const loginOut = () => {
 
     .huGongShot {
         cursor: pointer;
-        width: 7.2rem;
-        height: 3.2rem;
+        width: 72px;
+        height: 32px;
         background: url(../../static/image/home/lens.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.5rem;
         color: white
     }
 

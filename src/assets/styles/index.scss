@@ -144,17 +144,17 @@ aside {
 // search面板样式
 .panel,
 .search {
-  margin-bottom: 0.75rem;
-  border-radius: 0.25rem;
+  margin-bottom: 7.5px;
+  border-radius: 2.5px;
   border: 1px solid var(--el-border-color-light);
   background-color: var(--el-bg-color-overlay);
-  padding: 0.75rem;
+  padding: 7.5px;
   transition: all ease 0.3s;
-
   &:hover {
     box-shadow: 0 2px 12px #0000001a;
     transition: all ease 0.3s;
   }
+
 }
 
 .components-container {
@@ -208,4 +208,36 @@ aside {
     vertical-align: middle;
     margin-bottom: 10px;
   }
+}
+
+:root {
+  // 默认为 16px，根据需要放大（如 17px 或 18px）
+  font-size: 17px !important;
+}
+
+// 针对 Element UI 组件单独调整（避免部分组件不受根字体影响）
+.el-form-item__label,
+.el-table,
+.el-button,
+.el-menu-item,
+.el-submenu__title,
+.el-dialog,
+.el-pagination {
+  font-size: 17px !important; // 继承根字体大小
+}
+
+// 页面标题和内容区域字体调整
+.app-container,
+.panel,
+.search,
+.form-header,
+.el-card__body {
+  font-size: 17px !important;
+}
+
+// 表格内容和表头字体
+.el-table th,
+.el-table td {
+  font-size: 17px !important;
+  line-height: 1.6 !important; // 可选：调整行高配合字体大小
 }

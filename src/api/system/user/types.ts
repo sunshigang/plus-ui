@@ -21,6 +21,7 @@ export interface UserQuery extends PageQuery {
   deptId?: string | number;
   roleId?: string | number;
   userIds?: string;
+  roleIds?: string[];
 }
 
 /**
@@ -69,7 +70,7 @@ export interface UserForm {
   status: string;
   remark?: string;
   postIds: string[];
-  roleIds: string[];
+  roleIds: string[] | RoleVO[];
   projectName: string;
   projectIds: string[];
 }

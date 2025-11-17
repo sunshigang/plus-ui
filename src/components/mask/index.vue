@@ -26,7 +26,7 @@
 
 .top {
     width: 100%;
-    height: 20rem;
+    height: 280px;
     position: absolute;
     top: 0;
     left: 0;
@@ -37,25 +37,26 @@
 
 .titleName {
     width: 29%;
-    height: 5.1rem;
+    height: 51px;
     position: absolute;
-    top: 11%;
+    top: 14%;
     left: 36%;
     font-family: 'PangMenZhenDao';
     font-weight: normal;
-    font-size: 4rem;
+    font-size: 42px;
     color: #FDFFE5;
     text-align: left;
     font-style: normal;
     background: radial-gradient(0deg, #FFFFFF 15%, #F3EFAE 100%);
-    line-height: 5.1rem;
+    line-height: 55px;
     text-align: center;
+    letter-spacing: 6px;
 
 }
 
 .bottom {
     width: 100%;
-    height: 20rem;
+    height: 200px;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -64,7 +65,7 @@
 }
 
 .left {
-    width: 36rem;
+    width: 360px;
     height: 100vh;
     position: absolute;
     left: 0;
@@ -74,7 +75,7 @@
 }
 
 .right {
-    width: 36rem;
+    width: 360px;
     height: 100vh;
     position: absolute;
     top: 0;

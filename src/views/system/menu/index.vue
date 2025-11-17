@@ -4,7 +4,7 @@
       :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
-          <el-form ref="queryFormRef" :model="queryParams" :inline="true">
+          <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="90px">
             <el-form-item label="菜单名称" prop="menuName">
               <el-input v-model="queryParams.menuName" placeholder="请输入菜单名称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
@@ -41,16 +41,16 @@
       <el-table ref="menuTableRef" v-loading="loading" :data="menuList" row-key="menuId" border
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" :default-expand-all="false" lazy
         :load="getChildrenList">
-        <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="160"></el-table-column>
+        <el-table-column prop="menuName" label="菜单名称" :show-overflow-tooltip="true" width="280"></el-table-column>
         <el-table-column prop="icon" label="图标" align="center" width="100">
           <template #default="scope">
             <svg-icon :icon-class="scope.row.icon" />
           </template>
         </el-table-column>
-        <el-table-column prop="orderNum" label="排序" width="60"></el-table-column>
+        <el-table-column prop="orderNum" label="排序" align="center" width="110"></el-table-column>
         <el-table-column prop="perms" label="权限标识" :show-overflow-tooltip="true"></el-table-column>
         <el-table-column prop="component" label="组件路径" :show-overflow-tooltip="true"></el-table-column>
-        <el-table-column prop="status" label="状态" width="80">
+        <el-table-column prop="status" label="状态" align="center" width="110">
           <template #default="scope">
             <dict-tag :options="sys_normal_disable" :value="scope.row.status" />
           </template>
@@ -60,7 +60,7 @@
             <span>{{ scope.row.createTime }}</span>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="280">
+        <el-table-column label="操作" align="center" width="300">
           <template #default="scope">
               <el-button v-hasPermi="['system:menu:edit']" link type="primary" icon="Edit"
                 @click="handleUpdate(scope.row)">编辑</el-button>
@@ -73,8 +73,8 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialog.visible" :title="dialog.title" destroy-on-close append-to-bod width="750px">
-      <el-form ref="menuFormRef" :model="form" :rules="rules" label-width="100px">
+    <el-dialog v-model="dialog.visible" :title="dialog.title" destroy-on-close append-to-bod width="1000px">
+      <el-form ref="menuFormRef" :model="form" :rules="rules" label-width="120px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="上级菜单">
@@ -513,5 +513,10 @@ onMounted(() => {
 .tree-border {
   height: 300px;
   overflow: auto;
+}
+::v-deep .el-form-item--large .el-form-item__label {
+  height: 40px;
+  line-height: 40px;
+  width: 120px !important;
 }
 </style>

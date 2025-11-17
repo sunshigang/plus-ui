@@ -93,7 +93,7 @@ $base-menu-hover: var(--menuHover);
 $base-menu-color-active: var(--menuActiveText);
 $base-menu-background: var(--menuBg);
 $base-logo-title-color: #ffffff;
-
+$base-font-size: 17px; // 基础字体大小
 $base-menu-light-color: rgba(0, 0, 0, 0.7);
 $base-menu-light-background: #ffffff;
 $base-logo-light-title-color: #001529;
@@ -132,4 +132,5 @@ $base-sidebar-width: 256px;
   dangerColor: $--color-danger;
   infoColor: $--color-info;
   warningColor: $--color-warning;
+  baseFontSize: $base-font-size;
 }

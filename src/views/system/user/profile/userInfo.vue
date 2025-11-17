@@ -1,21 +1,18 @@
 <template>
-  <el-form ref="userRef" :model="userForm" :rules="rules" label-width="80px">
-    <el-form-item label="用户昵称" prop="nickName">
-      <el-input v-model="userForm.nickName" maxlength="30" />
+  <el-form ref="userRef" :model="userForm" label-width="80px">
+    <el-form-item label="账号名称" prop="userName" label-width="95px">
+      <el-input v-model="userForm.userName" maxlength="50" />
     </el-form-item>
-    <el-form-item label="手机号码" prop="phonenumber">
-      <el-input v-model="userForm.phonenumber" maxlength="11" />
+    <el-form-item label="备注" prop="remark" label-width="95px">
+      <el-input v-model="userForm.remark" maxlength="50" />
     </el-form-item>
-    <el-form-item label="邮箱" prop="email">
-      <el-input v-model="userForm.email" maxlength="50" />
-    </el-form-item>
-    <el-form-item label="性别">
-      <el-radio-group v-model="userForm.sex">
-        <el-radio value="0">男</el-radio>
-        <el-radio value="1">女</el-radio>
+    <el-form-item label="状态">
+      <el-radio-group v-model="userForm.status">
+        <el-radio value="0">正常</el-radio>
+        <el-radio value="1">关闭</el-radio>
       </el-radio-group>
     </el-form-item>
-    <el-form-item>
+    <el-form-item style="margin-left: 20px;">
       <el-button type="primary" @click="submit">保存</el-button>
       <el-button type="danger" @click="close">关闭</el-button>
     </el-form-item>
@@ -30,6 +27,7 @@ const props = defineProps({
   user: propTypes.any.isRequired
 });
 const userForm = computed(() => props.user);
+console.log("🚀 ~ userForm:", userForm)
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const userRef = ref<ElFormInstance>();
 const rule: ElFormRules = {
@@ -42,19 +40,13 @@ const rule: ElFormRules = {
       trigger: ['blur', 'change']
     }
   ],
-  phonenumber: [
-    {
-      required: true,
-      message: '手机号码不能为空',
-      trigger: 'blur'
-    },
-    { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: '请输入正确的手机号码', trigger: 'blur' }
-  ]
+
 };
 const rules = ref<ElFormRules>(rule);
 
 /** 提交按钮 */
 const submit = () => {
+  console.log("🚀 ~ submit ~ props.user:", props.user)
   userRef.value?.validate(async (valid: boolean) => {
     if (valid) {
       await updateUserProfile(props.user);

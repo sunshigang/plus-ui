@@ -161,16 +161,15 @@ const clickBack = () => {
     z-index: 2;
     pointer-events: auto;
     position: absolute;
-    width: 30rem;
-    height: 15.6rem;
-    left: 22.6rem;
-    top: 86.2rem;
+    width: 300px;
+    height: 156px;
+    left: 11%;
+    bottom: 4%;
     background: url(../../static/image/bottom/legend.png) no-repeat;
     background-size: 100% 100%;
-
     .legendBody {
-        margin-left: 3rem;
-        margin-top: 3.4rem;
+        margin-left: 30px;
+        margin-top: 34px;
         width: 80%;
         height: 61%;
         overflow-y: auto;
@@ -181,12 +180,12 @@ const clickBack = () => {
         justify-content: flex-start;
 
         &::-webkit-scrollbar {
-            width: 0.6rem; // 滚动条宽度
+            width: 6px; // 滚动条宽度
         }
 
         &::-webkit-scrollbar-thumb {
             background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-            border-radius: 0.3rem; // 滚动条圆角
+            border-radius: 3px; // 滚动条圆角
         }
 
         &::-webkit-scrollbar-track {
@@ -197,7 +196,7 @@ const clickBack = () => {
             display: flex;
             align-items: center;
             /* 垂直居中 */
-            margin-bottom: 1.5rem;
+            margin-bottom: 15px;
             /* 每个标题间距 */
 
             .legendRect {
@@ -205,8 +204,8 @@ const clickBack = () => {
                 height: 16px;
                 background: rgba(55, 72, 35, 0.6);
                 border: 2px solid #25a239;
-                margin-right: 1.6rem;
-                margin-left: 0.5rem;
+                margin-right: 16px;
+                margin-left: 5px;
             }
 
             .legendText {
@@ -230,10 +229,10 @@ const clickBack = () => {
     pointer-events: auto;
     position: absolute;
     left: 50%; // 先让元素左边缘对齐屏幕50%处
-    transform: translateX(-49rem); // 向左移动自身宽度的一半（98rem / 2 = 49rem），实现居中
-    bottom: 19rem;
-    width: 98rem;
-    height: 10.8rem;
+    transform: translateX(-490px); // 再向左移动半个宽度490px，实现水平居中
+    bottom: 190px;
+    width: 980px;
+    height: 108px;
     background: url(../../static/image/bottom/timeLine.png) no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -242,10 +241,10 @@ const clickBack = () => {
 
     .leftArrow {
         position: absolute;
-        left: 21.6rem;
-        top: 2.8rem;
-        width: 1.6rem;
-        height: 1.8rem;
+        left: 216px;
+        top: 28px;
+        width: 16px;
+        height: 18px;
         background: url(../../static/image/bottom/arrow-left.png) no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -253,10 +252,10 @@ const clickBack = () => {
 
     .rightArrow {
         position: absolute;
-        right: 21.6rem;
-        top: 2.8rem;
-        width: 1.6rem;
-        height: 1.8rem;
+        right: 216px;
+        top: 28px;
+        width: 16px;
+        height: 18px;
         background: url(../../static/image/bottom/arrow-right.png) no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -264,40 +263,40 @@ const clickBack = () => {
 
     .circle {
         position: absolute;
-        width: 0.4rem;
-        height: 0.4rem;
-        top: 3.5rem;
-        left: 23.6rem;
+        width: 4px;
+        height: 4px;
+        top: 35px;
+        left: 236px;
         background: #fff8c7;
         border-radius: 50%;
     }
 
     .circle1 {
         position: absolute;
-        width: 0.4rem;
-        height: 0.4rem;
-        top: 3.5rem;
-        left: 74rem;
+        width: 4px;
+        height: 4px;
+        top: 35px;
+        left: 740px;
         background: #fff8c7;
         border-radius: 50%;
     }
 
     .base-line {
         position: absolute;
-        width: 49.2rem;
-        height: 1.2rem;
-        top: 3.6rem;
-        left: 24.4rem;
+        width: 492px;
+        height: 12px;
+        top: 36px;
+        left: 244px;
         background: #847650;
         opacity: 0.4;
     }
 
     .top-line {
         position: absolute;
-        width: 49.2rem;
-        height: 0.2rem;
-        top: 3.6rem;
-        left: 24.4rem;
+        width: 492px;
+        height: 2px;
+        top: 36px;
+        left: 244px;
         background: #847650;
     }
 
@@ -311,7 +310,7 @@ const clickBack = () => {
         /* 垂直居中 */
 
         position: relative;
-        width: 8.2rem;
+        width: 82px;
         height: 100%;
         /* 占满父容器高度，确保垂直居中 */
         /* 移除旧的 margin，避免干扰 */
@@ -319,17 +318,17 @@ const clickBack = () => {
         margin-top: 0;
 
         .star-icon-container {
-            width: 3.8rem;
+            width: 38px;
             /* 与选中星星的最大宽度一致 */
-            height: 3.8rem;
+            height: 38px;
             display: flex;
             justify-content: center;
             align-items: center;
 
             .star-icon {
                 margin: 0;
-                width: 1.4rem;
-                height: 1.4rem;
+                width: 14px;
+                height: 14px;
                 background: url(../../static/image/bottom/star-select.png) no-repeat;
                 background-size: 100% 100%;
                 transition: all 0.3s ease;
@@ -337,8 +336,8 @@ const clickBack = () => {
             }
 
             .star-icon.selected {
-                width: 3.8rem;
-                height: 3.8rem;
+                width: 38px;
+                height: 38px;
                 background: url(../../static/image/bottom/star-selected.png) no-repeat;
                 background-size: 100% 100%;
                 cursor: pointer;
@@ -346,12 +345,12 @@ const clickBack = () => {
         }
 
         .year-text {
-            margin: 0.5rem 0 0 0;
+            margin: 5px 0 0 0;
             /* 仅保留与星星的垂直间距 */
             color: #fff;
             font-family: 'DINPro';
             font-weight: 400;
-            font-size: 2rem;
+            font-size: 20px;
         }
 
         .year-text.active {
@@ -365,10 +364,10 @@ const clickBack = () => {
     pointer-events: auto;
     position: absolute;
     left: 50%; // 与time-column一致，左边缘先对齐屏幕50%处
-    transform: translateX(-18rem);
-    bottom: 4rem;
-    width: 36rem;
-    height: 9.9rem;
+    transform: translateX(-180px); // 再向左移动半个宽度180px，实现水平居中
+    bottom: 40px;
+    width: 360px;
+    height: 99px;
     display: flex;
     justify-content: center;
     align-content: center;
@@ -383,99 +382,97 @@ const clickBack = () => {
     /* 左侧线条：从右向左排列 */
     .left-line {
         flex-direction: row-reverse;
-        margin-right: 6rem;
+        margin-right: 60px;
         /* 与按钮间距 */
 
         /* 虚线通用样式 */
         .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 0.2rem, transparent 0.2rem, transparent 0.3rem);
-            height: 0.1rem;
-            /* 调整为0.1rem */
+            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
+            height: 1px;
         }
 
         /* 实心圆 */
         .solid-circle {
-            width: 0.6rem;
-            height: 0.6rem;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background-color: #ffd700;
-            margin: 0 0.3rem;
+            margin: 0 3px;
         }
 
         /* 空心圆 */
         .hollow-circle {
-            width: 1.3rem;
-            height: 1.3rem;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
-            border: 0.2rem solid #ffd700;
+            border: 2px solid #ffd700;
             background-color: transparent;
-            margin: 0 0.3rem;
+            margin: 0 3px;
         }
 
         /* 左侧各段虚线长度 */
         .dash1 {
-            width: 2.2rem;
+            width: 22px;
         }
 
         .dash2 {
-            width: 2.9rem;
+            width: 29px;
         }
 
         .dash3 {
-            width: 5.2rem;
+            width: 52px;
         }
     }
 
     /* 右侧线条：从左向右排列 */
     .right-line {
         flex-direction: row;
-        margin-left: 1rem;
+        margin-left: 10px;
         /* 与按钮间距 */
 
         /* 虚线通用样式（与左侧一致） */
         .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 0.2rem, transparent 0.2rem, transparent 0.3rem);
-            height: 0.1rem;
-            /* 调整为0.1rem */
+            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
+            height: 1px;
         }
 
         /* 实心圆（与左侧一致） */
         .solid-circle {
-            width: 0.6rem;
-            height: 0.6rem;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background-color: #ffd700;
-            margin: 0 0.3rem;
+            margin: 0 3px;
         }
 
         /* 空心圆（与左侧一致） */
         .hollow-circle {
-            width: 1.3rem;
-            height: 1.3rem;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
-            border: 0.2rem solid #ffd700;
+            border: 2px solid #ffd700;
             background-color: transparent;
-            margin: 0 0.3rem;
+            margin: 0 3px;
         }
 
         /* 右侧各段虚线长度（与左侧对称） */
         .dash1 {
-            width: 2.2rem;
+            width: 22px;
         }
 
         .dash2 {
-            width: 2.9rem;
+            width: 29px;
         }
 
         .dash3 {
-            width: 5.2rem;
+            width: 52px;
         }
     }
 
     .backImg {
         position: absolute;
-        width: 10.1rem;
-        height: 9.9rem;
+        width: 101px;
+        height: 99px;
         background: url(../../static/image/bottom/back1.png) no-repeat;
         background-size: 100% 100%;
         cursor: pointer;

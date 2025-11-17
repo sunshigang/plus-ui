@@ -4,7 +4,7 @@
       :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
-          <el-form ref="queryFormRef" :model="queryParams" :inline="true">
+          <el-form ref="queryFormRef" :model="queryParams" :inline="true" label-width="90px">
             <el-form-item label="角色名称" prop="roleName">
               <el-input v-model="queryParams.roleName" placeholder="请输入角色名称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
@@ -58,11 +58,11 @@
       <el-table ref="roleTableRef" border v-loading="loading" :data="roleList"
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column  label="序号" prop="roleId"  />
+        <el-table-column label="序号" prop="roleId" />
         <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" />
-        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true"  />
-        <el-table-column label="显示顺序" prop="roleSort"/>
-        <el-table-column label="状态" align="center" >
+        <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" />
+        <el-table-column label="显示顺序" prop="roleSort" />
+        <el-table-column label="状态" align="center">
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
               @change="handleStatusChange(scope.row)"></el-switch>
@@ -70,7 +70,7 @@
         </el-table-column>
         <el-table-column label="创建时间" align="center" prop="createTime" width="230">
           <template #default="scope">
-            <span>{{ scope.row.createTime  }}</span>
+            <span>{{ scope.row.createTime }}</span>
           </template>
         </el-table-column>
         <el-table-column label="备注" prop="remark" width="200" />
@@ -236,7 +236,8 @@ const data = reactive<PageData<RoleForm, RoleQuery>>({
     pageSize: 10,
     roleName: '',
     roleKey: '',
-    status: ''
+    status: '',
+    roleIds: ''
   },
   rules: {
     roleName: [{ required: true, message: '角色名称不能为空', trigger: 'blur' }],
@@ -289,6 +290,7 @@ const handleDelete = async (row?: RoleVO) => {
 
 /** 导出按钮操作 */
 const handleExport = () => {
+  console.log("🚀 ~ handleExport ~ queryParams.value:", queryParams.value)
   proxy?.download(
     'system/role/export',
     {
@@ -302,6 +304,7 @@ const handleSelectionChange = (selection: RoleVO[]) => {
   ids.value = selection.map((item: RoleVO) => item.roleId);
   single.value = selection.length != 1;
   multiple.value = !selection.length;
+  queryParams.value.roleIds = String(ids.value);
 };
 
 /** 角色状态修改 */
@@ -385,7 +388,7 @@ const getRoleDeptTreeSelect = async (roleId: string | number) => {
   return res.data;
 };
 /** 树权限（展开/折叠）*/
-const handleCheckedTreeExpand = (value: boolean, type: string) => {
+const handleCheckedTreeExpand = (value: any, type: string) => {
   if (type == 'menu') {
     const treeList = menuOptions.value;
     for (let i = 0;i < treeList.length;i++) {
@@ -485,3 +488,10 @@ onMounted(() => {
   getList();
 });
 </script>
+<style scoped>
+::v-deep .el-form-item--large .el-form-item__label {
+  height: 40px;
+  line-height: 40px;
+  width: 120px !important;
+}
+</style>

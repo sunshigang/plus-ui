@@ -12,19 +12,19 @@
       /** 大屏按照16:9设计[1920:1080]
       默认大屏状态下： 1rem = 10px【注意开发设置】
      */
-      const screenRatioByDesign = 16 / 9
-      let docEle = document.documentElement
-      function setHtmlFontSize () {
-        var screenRatio = docEle.clientWidth / docEle.clientHeight;
-        var fontSize = (
-          screenRatio > screenRatioByDesign ?
-            (screenRatioByDesign / screenRatio) : 1
-        ) * docEle.clientWidth / 192;
-        docEle.style.fontSize = fontSize.toFixed(3) + "px";
-        const style = getComputedStyle(docEle)
-      }
-      setHtmlFontSize()
-      window.addEventListener('resize', setHtmlFontSize)
+      // const screenRatioByDesign = 16 / 9
+      // let docEle = document.documentElement
+      // function setHtmlFontSize () {
+      //   var screenRatio = docEle.clientWidth / docEle.clientHeight;
+      //   var fontSize = (
+      //     screenRatio > screenRatioByDesign ?
+      //       (screenRatioByDesign / screenRatio) : 1
+      //   ) * docEle.clientWidth / 192;
+      //   docEle.style.fontSize = fontSize.toFixed(3) + "px";
+      //   const style = getComputedStyle(docEle)
+      // }
+      // setHtmlFontSize()
+      // window.addEventListener('resize', setHtmlFontSize)
     </script>
     <!--[if lt IE 11
       ]><script>

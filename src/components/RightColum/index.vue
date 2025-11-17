@@ -632,9 +632,9 @@ const selectItem = (index) => {
 const arrowStyle = computed(() => {
     // 定义每个按钮对应的箭头 top 值（与原逻辑一致）
     const topValues = [
-        '0.2rem',  // 0: 红线叠加对比
-        '4.3rem',  // 1: 分屏比对
-        '8.3rem'   // 2: 时空分析
+        '2px',  // 0: 红线叠加对比
+        '43px',  // 1: 分屏比对
+        '83px'   // 2: 时空分析
     ]
 
     // 找到最后一个被选中的按钮索引（优先级：2 → 1 → 0）
@@ -647,7 +647,7 @@ const arrowStyle = computed(() => {
     }
     return {
         // 有选中按钮：箭头指向最后一个选中的；无选中：箭头隐藏（或设为默认位置）
-        top: lastSelectedIndex > -1 ? topValues[lastSelectedIndex] : '0.2rem',
+        top: lastSelectedIndex > -1 ? topValues[lastSelectedIndex] : '2px',
         display: lastSelectedIndex > -1 ? 'block' : 'none', // 无选中时隐藏箭头
         transition: 'top 0.3s ease, display 0.3s ease'
     }
@@ -813,8 +813,8 @@ onMounted(() => {
 .rightSidebar {
     pointer-events: auto;
     position: absolute;
-    width: 31.2rem;
-    height: 48.8rem;
+    width: 312px;
+    height: 488px;
     top: 14.26%;
     right: 6%;
     z-index: 2;
@@ -822,10 +822,10 @@ onMounted(() => {
     background-size: 100% 100%;
 
     .layerTitle {
-        margin-left: 3.4rem;
-        margin-top: 3.1rem;
-        width: 24.6rem;
-        height: 3.6rem;
+        margin-left: 34px;
+        margin-top: 31px;
+        width: 246px;
+        height: 36px;
         background: url(../../static/image/right/layer-title.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -833,34 +833,34 @@ onMounted(() => {
         align-content: center;
 
         .layerTitleFont {
-            width: 9.2rem;
-            height: 3.2rem;
+            width: 92px;
+            height: 32px;
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
+            font-size: 24px;
             color: #ffffff;
-            line-height: 3.6rem;
-            text-shadow: 0.2rem 0rem 0.6rem #0e0f19;
+            line-height: 36px;
+            text-shadow: 2px 0px 6px #0e0f19;
             text-align: center;
-            letter-spacing: 0.3rem;
+            letter-spacing: 3px;
         }
     }
 
     .layerContentBody {
         width: 95%;
-        height: 41rem;
+        height: 410px;
         display: flex;
         flex-direction: column;
         overflow-y: auto; // 核心：超出高度时显示垂直滚动条
-        padding: 0 0.5rem; // 可选：左右留小间距，避免滚动条与内容贴边
+        padding: 0 5px; // 可选：左右留小间距，避免滚动条与内容贴边
 
         &::-webkit-scrollbar {
-            width: 0.6rem; // 滚动条宽度
+            width: 6px; // 滚动条宽度
         }
 
         &::-webkit-scrollbar-thumb {
             background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-            border-radius: 0.3rem; // 滚动条圆角
+            border-radius: 3px; // 滚动条圆角
         }
 
         &::-webkit-scrollbar-track {
@@ -868,7 +868,7 @@ onMounted(() => {
         }
 
         .layerContentA {
-            margin-top: 1rem;
+            margin-top: 10px;
 
             .layerContentTitle {
                 position: relative;
@@ -877,41 +877,41 @@ onMounted(() => {
                 justify-content: space-between; // 保留左右布局，用于图标定位
                 align-items: center; // 确保内部元素垂直居中
                 width: 85%;
-                height: 3.4rem;
-                margin-left: 1.8rem;
+                height: 34px;
+                margin-left: 18px;
 
                 .scroll-custom-checkbox {
                     position: absolute;
-                    right: 3.5rem; // 关键：固定到右侧4rem处，所有分类统一此值
+                    right: 35px; 
                     top: 50%; // 垂直居中第一步：顶部对齐50%
                     transform: translateY(-50%); // 垂直居中第二步：向上偏移自身50%，实现完全居中
                     margin: 0; // 清除原有margin，避免干扰
                     z-index: 1; // 确保在文字上方，不被遮挡
 
                     :deep(.el-checkbox__inner) {
-                        width: 1.7rem;
-                        height: 1.7rem;
+                        width: 17px;
+                        height: 17px;
                         background-color: transparent;
-                        border: 0.2rem solid #76602f;
+                        border: 2px solid #76602f;
                     }
 
                     :deep(.el-checkbox__inner::after) {
-                        width: 0.6rem;
-                        height: 0.8rem;
-                        border: 0.3rem solid #89df4a;
+                        width: 6px;
+                        height: 8px;
+                        border: 3px solid #89df4a;
                         border-left: 0;
                         border-top: 0;
                     }
                 }
 
                 .layerContentLabel {
-                    margin-left: 1.5rem;
+                    margin-left: 15px;
                     font-family: 'SourceHanSansCN-Medium';
                     font-weight: 500;
-                    font-size: 1.8rem;
+                    font-size: 18px;
                     color: #ece1b9;
-                    line-height: 3.6rem;
-                    text-shadow: 0.2rem 0.1rem 0.8rem #ffed59;
+                    line-height: 36px;
+                    text-shadow: 2px 1px 8px #ffed59;
                     text-align: left;
                     font-style: normal;
                     text-transform: none;
@@ -923,16 +923,16 @@ onMounted(() => {
 
                 .layerContentShow {
                     cursor: pointer;
-                    width: 2.2rem;
-                    height: 2.8rem;
+                    width: 22px;
+                    height: 28px;
                     background: url(../../static/image/right/down.png) no-repeat;
                     background-size: 100% 100%;
                 }
 
                 .layerContentHide {
                     cursor: pointer;
-                    width: 2.81rem;
-                    height: 2.2rem;
+                    width: 28.1px;
+                    height: 22px;
                     background: url(../../static/image/right/left.png) no-repeat;
                     background-size: 100% 100%;
                 }
@@ -945,17 +945,17 @@ onMounted(() => {
 
             .scrollContentA {
                 width: 77%;
-                max-height: 11rem;
+                max-height: 110px;
                 /* 设置最大高度 */
                 overflow-y: auto;
 
                 &::-webkit-scrollbar {
-                    width: 0.6rem; // 滚动条宽度
+                    width: 6px; // 滚动条宽度
                 }
 
                 &::-webkit-scrollbar-thumb {
                     background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-                    border-radius: 0.3rem; // 滚动条圆角
+                    border-radius: 3px; // 滚动条圆角
                 }
 
                 &::-webkit-scrollbar-track {
@@ -965,39 +965,39 @@ onMounted(() => {
                 /* 允许上下滚动 */
                 font-family: 'SourceHanSansCN-Medium';
                 font-weight: 400;
-                font-size: 1.5rem;
+                font-size: 15px;
                 color: #ffffff;
-                line-height: 3.6rem;
+                line-height: 36px;
                 display: flex;
                 flex-direction: column;
-                margin-left: 4rem;
+                margin-left: 40px;
 
                 // background-color: red;
                 .scrollDetailA {
                     width: 100%;
-                    height: 3rem;
+                    height: 30px;
                     display: flex;
                     flex-direction: row;
                     justify-content: space-between;
 
                     .scrollDetailFontA {
-                        margin-left: 0.5rem;
+                        margin-left: 5px;
                     }
 
                     .scroll-custom-checkbox {
-                        margin-top: 0.5rem;
+                        margin-top: 5px;
 
                         :deep(.el-checkbox__inner) {
-                            width: 1.7rem;
-                            height: 1.7rem;
+                            width: 17px;
+                            height: 17px;
                             background-color: transparent;
-                            border: 0.2rem solid #76602f;
+                            border: 2px solid #76602f;
                         }
 
                         :deep(.el-checkbox__inner::after) {
-                            width: 0.6rem;
-                            height: 0.8rem;
-                            border: 0.3rem solid #89df4a;
+                            width: 6px;
+                            height: 8px;
+                            border: 3px solid #89df4a;
                             border-left: 0;
                             border-top: 0;
                         }
@@ -1011,8 +1011,8 @@ onMounted(() => {
 .functionPanel {
     pointer-events: auto;
     position: absolute;
-    width: 22rem;
-    height: 11.3rem;
+    width: 220px;
+    height: 113px;
     top: 82.04%;
     right: 6.25%;
     z-index: 2;
@@ -1024,11 +1024,10 @@ onMounted(() => {
 
     /* 第一部分：箭头 */
     .arrow {
-        width: 4.2rem;
-        height: 4.4rem;
+        width: 42px;
+        height: 44px;
         background: url(../../static/image/right/arrow.png) no-repeat;
         background-size: 100% 100%;
-        // margin-right: 1rem;
         position: absolute;
         /* 绝对定位以便动态调整位置 */
         left: 0;
@@ -1042,30 +1041,28 @@ onMounted(() => {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        margin-right: 2rem;
-        margin-left: 4rem;
+        margin-right: 20px;
+        margin-left: 40px;
         /* 给箭头留出位置 */
 
         .text-item {
-            width: 14.7rem;
-            height: 2.8rem;
+            width: 147px;
+            height: 28px;
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
+            font-size: 24px;
             /* 默认字体大小 */
             color: #f5e4c4;
             text-align: right;
             font-style: italic;
             text-decoration-line: underline;
             text-transform: none;
-            line-height: 2.8rem;
-            margin-bottom: 1.5rem;
+            line-height: 28px;
+            margin-bottom: 15px;
             cursor: pointer;
             transition: font-size 0.3s ease;
-
-            /* 选中项样式：字体变大为 3rem */
             &.active {
-                font-size: 3rem;
+                font-size: 30px;
                 color: #ffa621;
                 /* 可选：选中时变色 */
             }
@@ -1082,22 +1079,22 @@ onMounted(() => {
         justify-content: center;
 
         .circle {
-            width: 0.9rem;
-            height: 0.9rem;
-            border: 0.1rem solid #ffa621;
+            width: 9px;
+            height: 9px;
+            border: 1px solid #ffa621;
             border-radius: 50%;
-            margin-bottom: 1.2rem;
+            margin-bottom: 12px;
             background-color: transparent;
             transition: background-color 0.3s ease, border 0.3s ease;
-            margin-top: 2rem;
+            margin-top: 20px;
         }
 
         /* 仅当按钮选中时，圆圈变为实心（与文字按钮的 active 状态同步） */
         .circle.solid {
             background-color: #ffa621;
             border: none; // 实心时移除边框
-            width: 1rem;
-            height: 1rem;
+            width: 10px;
+            height: 10px;
         }
 
         /* 移除原有的固定 .solid 类圆圈 */
@@ -1107,12 +1104,11 @@ onMounted(() => {
 .drawFunctionBody {
     pointer-events: auto;
     position: absolute;
-    width: 7.1rem;
-    height: 29.5rem;
+    width: 71px;
+    height: 295px;
     top: 62.28%;
     right: 5.25%;
     z-index: 2;
-    // background-color: red;
     display: flex;
     flex-direction: column;
 
@@ -1127,20 +1123,20 @@ onMounted(() => {
         align-items: center;
 
         .drawPointImg {
-            width: 5.6rem;
-            height: 5.6rem;
+            width: 56px;
+            height: 56px;
             background-size: 100% 100%;
         }
 
         .drawPointFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
-            margin-top: 0.5rem;
+            font-size: 24px;
+            margin-top: 5px;
             /* 统一：图标到文字的间距 */
-            width: 7.1rem;
+            width: 71px;
             /* 统一：文字容器宽度（与选中状态背景图一致） */
-            height: 2rem;
+            height: 20px;
             /* 关键统一：文字容器高度（与选中状态背景图高度一致） */
             display: flex;
             justify-content: center;
@@ -1181,20 +1177,20 @@ onMounted(() => {
         align-items: center;
 
         .drawPolylineImg {
-            width: 5.6rem;
-            height: 5.6rem;
+            width: 56px;
+            height: 56px;
             background-size: 100% 100%;
         }
 
         .drawPolylineFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
-            margin-top: 0.5rem;
+            font-size: 24px;
+            margin-top: 5px;
             /* 统一：图标到文字的间距 */
-            width: 7.1rem;
+            width: 71px;
             /* 统一：文字容器宽度 */
-            height: 2rem;
+            height: 20px;
             /* 统一：文字容器高度 */
             display: flex;
             justify-content: center;
@@ -1235,20 +1231,20 @@ onMounted(() => {
         align-items: center;
 
         .drawPloygonImg {
-            width: 5.6rem;
-            height: 5.6rem;
+            width: 56px;
+            height: 56px;
             background-size: 100% 100%;
         }
 
         .drawPloygonFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
-            margin-top: 0.5rem;
+            font-size: 24px;
+            margin-top: 5px;
             /* 统一：图标到文字的间距 */
-            width: 7.1rem;
+            width: 71px;
             /* 统一：文字容器宽度 */
-            height: 2rem;
+            height: 20px;
             /* 统一：文字容器高度 */
             display: flex;
             justify-content: center;

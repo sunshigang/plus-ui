@@ -41,9 +41,9 @@
           <screenfull id="screenfull" class="right-menu-item hover-effect" />
         </el-tooltip>
 
-        <el-tooltip :content="proxy.$t('navbar.language')" effect="dark" placement="bottom">
+        <!-- <el-tooltip :content="proxy.$t('navbar.language')" effect="dark" placement="bottom">
           <lang-select id="lang-select" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </el-tooltip> -->
 
         <el-tooltip :content="proxy.$t('navbar.layoutSize')" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
@@ -172,14 +172,22 @@ const logout = async () => {
     type: 'warning'
   } as ElMessageBoxOptions);
   userStore.logout().then(() => {
-    router.replace({
-      path: '/login',
-      query: {
-        redirect: encodeURIComponent(router.currentRoute.value.fullPath || '/')
-      }
-    });
-    proxy?.$tab.closeAllPage();
+    // 关键修改：直接跳转登录页，不携带 redirect 参数，且 replace 清除历史
+    router.replace({ path: '/login' });
+    proxy?.$tab.closeAllPage(); // 关闭所有打开的标签页（若依标签页组件）
+    // 额外新增：清除可能缓存的路由相关数据
+    sessionStorage.removeItem('redirect');
+    localStorage.removeItem('lastVisitedRoute'); // 若有其他缓存键也一并清除
   });
+  // userStore.logout().then(() => {
+  //   router.replace({
+  //     path: '/login',
+  //     query: {
+  //       redirect: encodeURIComponent(router.currentRoute.value.fullPath || '/')
+  //     }
+  //   });
+  //   proxy?.$tab.closeAllPage();
+  // });
 };
 
 const emits = defineEmits(['setLayout']);
@@ -311,7 +319,7 @@ onMounted(() => {
           position: absolute;
           right: -20px;
           top: 25px;
-          font-size: 12px;
+          font-size: 17px;
         }
       }
     }
