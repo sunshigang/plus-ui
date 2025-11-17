@@ -148,35 +148,35 @@ onMounted(() => {
     position: absolute;
     left: 60%;
     top: 40%;
-    width: 49.4rem;
-    height: 25.8rem;
+    width: 494px;
+    height: 258px;
     background: url(../../static/image/popup/notesPopup.png) no-repeat;
     background-size: 100% 100%;
 
     .popupBody {
         width: 100%;
         height: 91%;
-        margin-top: 1rem;
+        margin-top: 10px;
 
         .popupHeaderLabel {
             position: absolute;
-            left: 20rem;
-            top: 2rem;
-            width: 7.8rem;
-            height: 2.6rem;
+            left: 200px;
+            top: 20px;
+            width: 78px;
+            height: 26px;
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 2.4rem;
+            font-size: 24px;
             color: #fff8c7;
         }
 
         .closeButtonImg {
             position: absolute;
             cursor: pointer;
-            width: 1rem;
-            height: 1rem;
-            top: 2rem;
-            left: 46rem;
+            width: 10px;
+            height: 10px;
+            top: 20px;
+            left: 460px;
         }
 
         .popupContent {
@@ -185,19 +185,19 @@ onMounted(() => {
             display: flex;
             flex-direction: column;
             position: absolute;
-            top: 5rem;
-            left: 1rem;
+            top: 50px;
+            left: 10px;
 
             .memoField {
-                margin-top: 1rem;
+                margin-top: 10px;
                 width: 100%;
                 height: 13%;
 
                 .memoFieldLabel {
-                    margin-left: 5rem;
+                    margin-left: 50px;
                     font-family: 'SourceHanSansCN-Medium';
                     font-weight: 500;
-                    font-size: 1.6rem;
+                    font-size: 16px;
                     color: #e9cc2f;
 
                     .memoFieldValue {
@@ -206,17 +206,17 @@ onMounted(() => {
                     }
 
                     .memoFieldValueType {
-                        margin-left: 1rem;
+                        margin-left: 10px;
                     }
 
                     .memoFieldValueArea {
-                        margin-left: 0.4rem;
+                        margin-left: 4px;
                     }
 
                     .input-border-style {
-                        width: 30rem;
-                        height: 2.5rem;
-                        margin-left: 1rem;
+                        width: 300px;
+                        height: 25px;
+                        margin-left: 10px;
                     }
 
                     :deep(.el-input) {
@@ -225,14 +225,14 @@ onMounted(() => {
 
                     :deep(.el-input__wrapper.is-focus) {
                         border-color: #FFDD54 !important;
-                        box-shadow: 0 0 0 0.1rem rgba(255, 221, 84, 0.5);
+                        box-shadow: 0 0 0 1px rgba(255, 221, 84, 0.5);
                     }
 
                     :deep(.el-input__wrapper) {
                         font-weight: 400;
-                        font-size: 1.4rem;
+                        font-size: 14px;
                         background: rgba(255, 229, 84, 0.18);
-                        border-radius: 0.4rem;
+                        border-radius: 4px;
                     }
 
                     :deep(.el-input__inner) {
@@ -241,7 +241,7 @@ onMounted(() => {
 
                     .polygonSAreaStyle {
                         cursor: pointer;
-                        margin-left: 4.4rem;
+                        margin-left: 44px;
                     }
                 }
             }
@@ -255,7 +255,7 @@ onMounted(() => {
                 align-items: center;
                 font-family: 'SourceHanSansCN-Regular';
                 font-weight: 500;
-                font-size: 1.6rem;
+                font-size: 16px;
                 color: #FFFFFF;
 
                 .cancelButton {
@@ -263,8 +263,8 @@ onMounted(() => {
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
-                    width: 7.2rem;
-                    height: 3.2rem;
+                    width: 72px;
+                    height: 32px;
                     background: url(../../static/image/popup/cancelButton.png) no-repeat;
                     background-size: 100% 100%;
                     cursor: pointer;
@@ -275,11 +275,11 @@ onMounted(() => {
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
-                    width: 7.2rem;
-                    height: 3.2rem;
+                    width: 72px;
+                    height: 32px;
                     background: url(../../static/image/popup/confirmButton.png) no-repeat;
                     background-size: 100% 100%;
-                    margin-left: 7rem;
+                    margin-left: 70px;
                     cursor: pointer;
                 }
             }

@@ -87,7 +87,7 @@
 
       <el-table v-loading="loading" border :data="infoList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="" align="center" prop="id" v-if="false" />
+        <el-table-column label="序号" align="center" prop="id" width="180" />
         <el-table-column label="建设项目名称" align="center" prop="projectName" width="150" />
         <el-table-column label="项目代码" align="center" prop="projectCode" width="150" />
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
@@ -238,7 +238,7 @@
         <!-- 上部分：项目基础信息 -->
         <div class="section project-basic-info">
           <h3 class="section-title">项目基础信息</h3>
-          <el-form ref="infoFormRef" :model="form" label-width="190px" :rules="rules">
+          <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="建设活动（建设项目）名称" prop="projectName">
@@ -273,11 +273,10 @@
         </div>
         <div class="section project-documents">
           <h3 class="section-title">建设信息</h3>
-          <el-button type="primary" :icon="isViewMode ? 'View' : 'Edit'" :disabled="!form.id"
-            @click="handleModelPreview" class="modelPreview">
-            三维场景效果预览
+          <el-button type="primary" :disabled="!form.id" @click="handleModelPreview" class="modelPreview">
+            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
           </el-button>
-          <el-form :model="form" label-width="180px">
+          <el-form :model="form" label-width="230px">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="建设单位名称" prop="constructionUnit">
@@ -590,7 +589,7 @@
         <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))"
           class="section approval-info">
           <h3 class="section-title"> 审批信息</h3>
-          <el-form label-width="178px" disabled>
+          <el-form label-width="230px" disabled>
             <!-- 1. 管委会审批信息：状态为“管委会审批中”或“管委会通过”时显示 -->
             <template v-if="['管委会通过', '管委会驳回', '林业局通过', '林业局驳回', '已通过'].includes(form.status)">
               <el-form-item label="管委会审批状态">
@@ -755,7 +754,7 @@
           <h3 class="section-title">建设信息</h3>
           <el-button type="primary" link icon="Plus" @click="handleAuditSceneReview"
             v-hasPermi="['project:project:3dAudit']" class="modelPreview">
-            三维场景方案审查
+            <img class="imgModel" src="../../../assets/images/model.png" />三维场景方案审查
           </el-button>
           <el-form :model="form" label-width="180px">
             <el-row :gutter="20">
@@ -1050,7 +1049,7 @@ const infoList = ref<InfoVO[]>([]);
 const buttonLoading = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
-const ids = ref<Array<string | number>>([]);
+const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
@@ -1815,7 +1814,8 @@ const resetQuery = () => {
 
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: InfoVO[]) => {
-  ids.value = selection.map(item => item.id);
+  const selectedIds = selection.map(item => item.id);
+  ids.value = selectedIds.join(',');
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -2217,9 +2217,12 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
 };
 /** 导出按钮操作 */
 const handleExport = () => {
-  proxy?.download('system/info/export', {
-    ...queryParams.value
-  }, `info_${new Date().getTime()}.xlsx`)
+  const exportUrl = `project/download/${ids.value}`;
+  proxy?.download(
+    exportUrl,
+    {},
+    `info_${new Date().getTime()}.zip`
+  );
 }
 onMounted(async () => { // 保留async关键字
   try {
@@ -2228,15 +2231,15 @@ onMounted(async () => { // 保留async关键字
     currentUserRole.value = userRoles[0] || '';
     console.log("🚀 ~ canEdit ~ currentUserRole.value:", currentUserRole.value)
     getList();
-    const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
-    // 若需要显示弹窗，恢复所有数据
-    if (isEditDialogVisible) {
-      form.value = { ...form.value, ...formData }; // 恢复表单字段
-      threeDModelFileList.value = [...storeThreeDModelFileList];
-      disabled.value = storeDisabled; // 恢复禁用状态
-      isViewMode.value = storeIsViewMode; // 恢复查看模式状态
-      dialog.visible = true; // 自动弹出弹窗
-    }
+    // const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
+    // // 若需要显示弹窗，恢复所有数据
+    // if (isEditDialogVisible) {
+    //   form.value = { ...form.value, ...formData }; // 恢复表单字段
+    //   threeDModelFileList.value = [...storeThreeDModelFileList];
+    //   disabled.value = storeDisabled; // 恢复禁用状态
+    //   isViewMode.value = storeIsViewMode; // 恢复查看模式状态
+    //   dialog.visible = true; // 自动弹出弹窗
+    // }
   } catch (err) {
     console.error('获取用户信息失败：', err);
     // 即使获取失败，仍尝试加载列表（可选）
@@ -2335,6 +2338,11 @@ h3 {
   margin-left: 1500px;
   margin-top: -50px;
 
+  .imgModel {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
 }
 
 // 审批状态样式

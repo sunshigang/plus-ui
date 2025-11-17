@@ -309,3 +309,10 @@ onMounted(() => {
   getList();
 });
 </script>
+<style scoped>
+::v-deep .el-form-item--large .el-form-item__label {
+  height: 40px;
+  line-height: 40px;
+  width: 100px !important;
+}
+</style>

@@ -111,7 +111,7 @@ const authUrl = (source: string) => {
 }
 
 .user-bind {
-  font-size: 1rem;
+  font-size: 10px;
   text-align: start;
   height: 50px;
   margin-top: 10px;
@@ -132,7 +132,7 @@ a {
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Liberation Sans',
     'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, SimSun,
     'WenQuanYi Zen Hei Sharp', sans-serif;
-  font-size: 1.071rem;
+  font-size: 10.71px;
 }
 
 td > img {

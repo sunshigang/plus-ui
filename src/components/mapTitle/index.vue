@@ -75,8 +75,8 @@ onUnmounted(() => {
 .beforeConstruction {
     pointer-events: auto;
     position: absolute;
-    width: 37.5rem;
-    height: 5.9rem;
+    width: 375px;
+    height: 59px;
     z-index: 2;
     background-size: 100% 100%;
     top: 20%;
@@ -88,8 +88,8 @@ onUnmounted(() => {
 .AfterConstruction {
     pointer-events: auto;
     position: absolute;
-    width: 37.5rem;
-    height: 5.9rem;
+    width: 375px;
+    height: 59px;
     z-index: 2;
     background-size: 100% 100%;
     top: 20%;
@@ -101,7 +101,7 @@ onUnmounted(() => {
 .drag {
     pointer-events: auto;
     position: absolute;
-    width: 0.2rem;
+    width: 2px;
     height: 90%;
     background: #ffffff;
     top: 0%;
@@ -110,8 +110,8 @@ onUnmounted(() => {
 .dragIcon {
     pointer-events: auto;
     position: absolute;
-    width: 3.8rem;
-    height: 3.8rem;
+    width: 38px;
+    height: 38px;
     background: url(../../static/image/map/drag-icon.png) no-repeat;
     background-size: cover;
     top: 50%;

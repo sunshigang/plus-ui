@@ -1,5 +1,5 @@
 <template>
-    <div id="home">
+    <div class="screen-page">
         <iframe v-if="mapSwitch" id="iframe" ref="iframeRef" frameborder="0" :src="iframeUrl"
             style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"
             @error="handleIframeError"></iframe>
@@ -360,7 +360,7 @@ const handleFunctionPanel = (data) => {
     const x = coords[0] || '120.187601';
     const y = coords[1] || '28.923468';
     const z = coords[2] || '0';
-    const z1 = '15500'; // 镜头高度（可根据需求调整）
+    const z1 = '15000'; // 镜头高度（可根据需求调整）
 
     if (data.index === 0) {
         sendMsgUE({
@@ -495,7 +495,7 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-#home {
+.screen-page {
     width: 100%;
     height: 99.8vh;
     background: url(../../../static/image/map/map.png) no-repeat;

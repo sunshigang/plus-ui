@@ -258,7 +258,7 @@ onMounted(() => {
       border: 1px solid var(--el-border-color-light);
       color: #495060;
       padding: 0 8px;
-      font-size: 12px;
+      font-size: 17px;
       margin-left: 5px;
       margin-top: 4px;
       &:hover {
@@ -298,7 +298,7 @@ onMounted(() => {
     list-style-type: none;
     padding: 5px 0;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 17px;
     font-weight: 400;
     box-shadow: 2px 2px 3px 0 rgba(0, 0, 0, 0.3);
     li {

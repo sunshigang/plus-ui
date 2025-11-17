@@ -78,7 +78,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .app-breadcrumb.el-breadcrumb {
   display: inline-block;
-  font-size: 14px;
+  font-size: 17px;
   line-height: 50px;
   margin-left: 8px;
 

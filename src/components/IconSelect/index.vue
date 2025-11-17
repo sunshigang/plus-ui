@@ -6,7 +6,7 @@
       </template>
     </el-input>
 
-    <el-popover shadow="none" :visible="visible" placement="bottom-end" trigger="click" :width="450">
+    <el-popover shadow="none" :visible="visible" placement="bottom-end" trigger="click" :width="337">
       <template #reference>
         <div class="cursor-pointer text-[#999] absolute right-[10px] top-0 height-[32px] leading-[32px]" @click="visible = !visible">
           <i-ep-caret-top v-show="visible"></i-ep-caret-top>
@@ -35,7 +35,7 @@ import { propTypes } from '@/utils/propTypes';
 
 const props = defineProps({
   modelValue: propTypes.string.isRequired,
-  width: propTypes.string.def('400px')
+  width: propTypes.string.def('348px')
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -102,5 +102,8 @@ const selectedIcon = (iconName: string) => {
     border-color: var(--el-color-primary);
     color: var(--el-color-primary);
   }
+}
+.leading-\[32px\] {
+    line-height: 47px;
 }
 </style>

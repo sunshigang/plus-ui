@@ -16,9 +16,9 @@
             <div class="planningAchievementsFont">矢量图层</div>
         </div>
         <div class="lanternEar"></div>
-        <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
-            v-hasPermi="['screen:function:roam']"></div>
     </div>
+    <div v-show="sceneRoamingShow" class="sceneRoaming" @click="clickSceneRoaming"
+        v-hasPermi="['screen:function:roam']"></div>
     <div class="searchBox" v-hasPermi="['screen:function:achievement']" v-if="planningAchievementStyle">
         <input v-model="searchInput" class="search-input" placeholder="请输入搜索内容" />
         <!-- 新增：右侧搜索按钮 -->
@@ -88,19 +88,18 @@ onMounted(() => {
 #leftSidebar {
     pointer-events: auto;
     position: absolute;
-    width: 7.3rem;
+    width: 73px;
     height: 89.5vh;
     top: 6.5%;
     left: 6.875%;
     z-index: 2;
     display: flex;
     flex-direction: column;
-    // background-color: red;
 
     .leftLine {
-        width: 0.1rem;
-        height: 7rem;
-        background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.4rem, #fad126 0.4rem, #fad126 0.5rem);
+        width: 1px;
+        height: 70px;
+        background: repeating-linear-gradient(to bottom, transparent 0, transparent 4px, #fad126 4px, #fad126 5px);
         margin: 0 auto;
         /* 相对定位，给伪元素做参考 */
         position: relative;
@@ -110,25 +109,24 @@ onMounted(() => {
     .leftLine::after {
         content: '';
         position: absolute;
-        /* 四分之三高度 = 8.5rem * 0.75 = 6.375rem（根据实际高度调整） */
-        top: calc(7rem * 0.5);
+        top: calc(70px * 0.5);
         left: 50%;
         transform: translateX(-50%);
-        width: 0.6rem;
+        width: 6px;
         /* 亮点宽度，可调整 */
-        height: 0.6rem;
+        height: 6px;
         /* 亮点高度，可调整 */
         border-radius: 50%;
         /* 圆形 */
         /* 渐变亮点，模拟发光效果 */
         background: radial-gradient(circle, #fff99d 0%, #fad126 100%);
         /* 可选：加光晕增强视觉 */
-        box-shadow: 0 0 0.4rem rgba(250, 209, 38, 0.8);
+        box-shadow: 0 0 4px rgba(250, 209, 38, 0.8);
     }
 
     .schemeReviewSelected {
-        width: 7.3rem;
-        height: 19rem;
+        width: 73px;
+        height: 190px;
         background: url(../../static/image/left/scheme-selected.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -137,12 +135,12 @@ onMounted(() => {
         color: #ffffff;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 2.4rem;
+        font-size: 24px;
         cursor: pointer;
 
         .schemeReviewFont {
-            width: 3.2rem;
-            height: 12.3rem;
+            width: 32px;
+            height: 123px;
             display: flex;
             justify-content: center;
             /* 水平居中（竖排时为左右居中） */
@@ -152,16 +150,14 @@ onMounted(() => {
             writing-mode: vertical-lr;
             /* 文字竖直排列，从左到右方向 */
             text-orientation: upright;
-            /* 确保文字正向显示（不旋转） */
-            /* 控制两字之间的间距为0.2rem */
-            letter-spacing: 0.4rem;
+            letter-spacing: 4px;
         }
     }
 
     .schemeReviewSelect {
         cursor: pointer;
-        width: 7.3rem;
-        height: 19rem;
+        width: 73px;
+        height: 190px;
         background: url(../../static/image/left/scheme-select.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -170,11 +166,11 @@ onMounted(() => {
         color: #7a4a28;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 2.4rem;
+        font-size: 24px;
 
         .schemeReviewFont {
-            width: 3.2rem;
-            height: 12.3rem;
+            width: 32px;
+            height: 123px;
             display: flex;
             justify-content: center;
             /* 水平居中（竖排时为左右居中） */
@@ -184,16 +180,14 @@ onMounted(() => {
             writing-mode: vertical-lr;
             /* 文字竖直排列，从左到右方向 */
             text-orientation: upright;
-            /* 确保文字正向显示（不旋转） */
-            /* 控制两字之间的间距为0.2rem */
-            letter-spacing: 0.4rem;
+            letter-spacing: 4px;
         }
     }
 
     .leftLine1 {
-        width: 0.1rem;
-        height: 6rem;
-        background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.4rem, #fad126 0.4rem, #fad126 0.5rem);
+        width: 1px;
+        height: 60px;
+        background: repeating-linear-gradient(to bottom, transparent 0, transparent 4px, #fad126 4px, #fad126 5px);
         margin: 0 auto;
         /* 相对定位，给伪元素做参考 */
         position: relative;
@@ -203,25 +197,24 @@ onMounted(() => {
     .leftLine1::after {
         content: '';
         position: absolute;
-        /* 四分之三高度 = 8.5rem * 0.75 = 6.375rem（根据实际高度调整） */
-        top: calc(6rem * 0.5);
+        top: calc(60px * 0.5);
         left: 50%;
         transform: translateX(-50%);
-        width: 0.6rem;
+        width: 6px;
         /* 亮点宽度，可调整 */
-        height: 0.6rem;
+        height: 6px;
         /* 亮点高度，可调整 */
         border-radius: 50%;
         /* 圆形 */
         /* 渐变亮点，模拟发光效果 */
         background: radial-gradient(circle, #fff99d 0%, #fad126 100%);
         /* 可选：加光晕增强视觉 */
-        box-shadow: 0 0 0.4rem rgba(250, 209, 38, 0.8);
+        box-shadow: 0 0 4px rgba(250, 209, 38, 0.8);
     }
 
     .planningAchievementSelect {
-        width: 7.3rem;
-        height: 19rem;
+        width: 73px;
+        height: 190px;
         background: url(../../static/image/left/scheme-select.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -230,12 +223,12 @@ onMounted(() => {
         color: #7a4a28;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 2.4rem;
+        font-size: 24px;
         cursor: pointer;
 
         .planningAchievementsFont {
-            width: 3.2rem;
-            height: 12.3rem;
+            width: 32px;
+            height: 123px;
             display: flex;
             justify-content: center;
             /* 水平居中（竖排时为左右居中） */
@@ -245,15 +238,13 @@ onMounted(() => {
             writing-mode: vertical-lr;
             /* 文字竖直排列，从左到右方向 */
             text-orientation: upright;
-            /* 确保文字正向显示（不旋转） */
-            /* 控制两字之间的间距为0.2rem */
-            letter-spacing: 0.4rem;
+            letter-spacing: 4px;
         }
     }
 
     .planningAchievementSelected {
-        width: 7.3rem;
-        height: 19rem;
+        width: 73px;
+        height: 190px;
         background: url(../../static/image/left/scheme-selected.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -262,12 +253,12 @@ onMounted(() => {
         color: #ffffff;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 2.4rem;
+        font-size: 24px;
         cursor: pointer;
 
         .planningAchievementsFont {
-            width: 3.2rem;
-            height: 12.3rem;
+            width: 32px;
+            height: 123px;
             display: flex;
             justify-content: center;
             /* 水平居中（竖排时为左右居中） */
@@ -277,15 +268,13 @@ onMounted(() => {
             writing-mode: vertical-lr;
             /* 文字竖直排列，从左到右方向 */
             text-orientation: upright;
-            /* 确保文字正向显示（不旋转） */
-            /* 控制两字之间的间距为0.2rem */
-            letter-spacing: 0.4rem;
+            letter-spacing: 4px;
         }
     }
 
     .lanternEar {
-        width: 2.8rem;
-        height: 12.1rem;
+        width: 28px;
+        height: 121px;
         background: url(../../static/image/left/lantern-ear.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -299,23 +288,27 @@ onMounted(() => {
         margin-right: auto;
     }
 
-    .sceneRoaming {
-        position: absolute;
-        pointer-events: auto;
-        width: 8.6rem;
-        height: 8.7rem;
-        top: 89rem;
-        background: url(../../static/image/left/sceneRoaming.png) no-repeat;
-        background-size: cover;
-        cursor: pointer;
-    }
+
+}
+
+.sceneRoaming {
+    left: 6.7%;
+    position: absolute;
+    pointer-events: auto;
+    width: 86px;
+    height: 87px;
+    bottom: 4%;
+    background: url(../../static/image/left/sceneRoaming.png) no-repeat;
+    background-size: cover;
+    cursor: pointer;
+    z-index: 3;
 }
 
 .searchBox {
     pointer-events: auto;
     position: absolute;
-    width: 25.7rem;
-    height: 6.8rem;
+    width: 257px;
+    height: 68px;
     top: 17.78%;
     left: 12.08%;
     background: url(../../static/image/left/search.png) no-repeat;
@@ -331,33 +324,33 @@ onMounted(() => {
         flex: 1;
         /* 占满剩余空间 */
         height: 60%;
-        margin-left: 3rem;
+        margin-left: 30px;
         /* 与左侧背景图间距 */
-        padding: 0 0.5rem;
+        padding: 0 5px;
         border: none;
         outline: none;
         background: transparent;
         /* 透明背景，贴合搜索框底图 */
         color: #584424;
         /* 文字白色，适配背景 */
-        font-size: 1.6rem;
+        font-size: 16px;
         font-family: 'SourceHanSansCN-Regular';
-        width: 10rem;
+        width: 100px;
         // background-color: red;
     }
 
     /* 搜索按钮样式 */
     .search-btn {
-        width: 6rem;
+        width: 60px;
         height: 60%;
-        margin-right: 0.3rem;
+        margin-right: 3px;
         /* 与右侧间距 */
-        border-radius: 0.3rem;
+        border-radius: 3px;
         display: flex;
         justify-content: center;
         align-items: center;
         color: #a57223;
-        font-size: 2rem;
+        font-size: 20px;
         font-weight: 400;
         font-family: 'xianglifang';
         cursor: pointer;

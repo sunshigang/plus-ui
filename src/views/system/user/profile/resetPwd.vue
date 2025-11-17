@@ -1,5 +1,5 @@
 <template>
-  <el-form ref="pwdRef" :model="user" :rules="rules" label-width="80px">
+  <el-form ref="pwdRef" :model="user" :rules="rules" label-width="95px">
     <el-form-item label="旧密码" prop="oldPassword">
       <el-input v-model="user.oldPassword" placeholder="请输入旧密码" type="password" show-password />
     </el-form-item>
@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { updateUserPwd } from '@/api/system/user';
 import type { ResetPwdForm } from '@/api/system/user/types';
-
+import type { FormItemRule } from 'element-plus'; // 新增导入
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const pwdRef = ref<ElFormInstance>();
 const user = ref<ResetPwdForm>({
@@ -35,7 +35,7 @@ const equalToPassword = (rule: any, value: string, callback: any) => {
     callback();
   }
 };
-const rules = ref({
+const rules = ref<Record<string, FormItemRule[]>>({
   oldPassword: [{ required: true, message: '旧密码不能为空', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '新密码不能为空', trigger: 'blur' },

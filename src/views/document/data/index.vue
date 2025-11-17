@@ -50,26 +50,22 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="文件名" align="center" prop="name" :show-overflow-tooltip="true" />
         <el-table-column label="文件类型" align="center" prop="fileSuffix" :show-overflow-tooltip="true" />
-        <el-table-column label="更新时间" align="center" prop="updateTime" width="180">
+        <el-table-column label="更新时间" align="center" prop="updateTime" width="220">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
-            <el-button v-hasPermi="['document:planningFile:history']" link type="primary"
-              @click="handleHistory(scope.row)">历史版本</el-button>
-            <el-button v-hasPermi="['document:planningFile:update']" link type="primary"
-              @click="handleUpdate(scope.row)">更新</el-button>
-            <el-button v-hasPermi="['document:planningFile:download']" link type="primary"
-              @click="handleDownload(scope.row)">下载</el-button>
-            <el-button v-hasPermi="['document:planningFile:disable']" link
-              :type="scope.row.disabledFlag ? '' : 'danger'" :class="{
-                'disable-btn-active': !scope.row.disabledFlag,
-                'disable-btn-disabled': scope.row.disabledFlag
-              }" :disabled="scope.row.disabledFlag" @click="handleDisable(scope.row)">
-              {{ scope.row.disabledFlag ? '已停用' : '停用' }} <!-- 动态显示按钮文字 -->
-            </el-button>
+            <el-button link type="primary" @click="handleHistory(scope.row)">历史版本</el-button>
+            <el-button link type="primary" @click="handleUpdate(scope.row)">更新</el-button>
+            <el-button link type="primary" @click="handleDownload(scope.row)">下载</el-button>
+            <!-- <el-button link :type="scope.row.disabledFlag ? '' : 'danger'" :class="{
+              'disable-btn-active': !scope.row.disabledFlag,
+              'disable-btn-disabled': scope.row.disabledFlag
+            }" :disabled="scope.row.disabledFlag" @click="handleDisable(scope.row)">
+              {{ scope.row.disabledFlag ? '停用' : '停用' }}
+            </el-button> -->
             <!-- <el-tooltip content="删除" placement="top">
               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)"></el-button>
             </el-tooltip> -->
@@ -144,17 +140,17 @@
                 {{ scope.row.versionSuffix }}
               </template>
             </el-table-column>
-            <el-table-column label="更新时间" align="center" width="180">
+            <el-table-column label="更新时间" align="center" width="280">
               <template #default="scope">
                 {{ proxy.parseTime(scope.row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="220">
+            <el-table-column label="操作" align="center" width="320">
               <template #default="scope">
                 <el-button link type="primary" icon="Download" size="small"
-                  @click="handleDownload(scope.row)">下载该版本</el-button>
-                <el-button link type="danger" icon="Stop" size="small"
-                  @click="handleHistoryDisable(scope.row.versionId)">停用该版本</el-button>
+                  @click="handleDownload(scope.row)">下载</el-button>
+                <!-- <el-button link type="danger" icon="Stop" size="small"
+                  @click="handleHistoryDisable(scope.row.versionId)">停用</el-button> -->
               </template>
             </el-table-column>
           </el-table>
@@ -228,11 +224,11 @@ interface HistoryVO { // 匹配接口返回的历史版本结构
   versionSuffix: string;
   updateTime: string;
   name?: string;
-  ossIds?: string[];
+  ossIds?: string | string[];
 }
 const historyList = ref<HistoryVO[]>([]); // 历史版本列表
 const historyLoading = ref(false);        // 表格加载状态
-const selectedHistoryIds = ref<Array<{ versionId: string; ossIds: string[] }>>([]);
+const selectedHistoryIds = ref<Array<{ versionId: string; ossIds: string | string[] }>>([]);
 
 // 替换ossList为documentList，类型改为DocumentVO
 const planningFileList = ref<DocumentVO[]>([]);
@@ -564,7 +560,6 @@ const handleHistory = async (row: DocumentVO) => {
 };
 // 新增：历史版本表格选中事件（记录选中的版本ID）
 const handleHistorySelectionChange = (selection: HistoryVO[]) => {
-  console.log("🚀 ~ handleHistorySelectionChange ~ selection:", selection)
   // 遍历选中的历史版本，提取 versionId 和 ossIds 存储
   selectedHistoryIds.value = selection.map(item => ({
     versionId: item.versionId,
@@ -572,19 +567,26 @@ const handleHistorySelectionChange = (selection: HistoryVO[]) => {
   }));
 };
 const handleHistoryBatchDownload = async () => {
-  console.log("🚀 ~ handleHistoryBatchDownload ~ selectedHistoryIds.value:", selectedHistoryIds.value)
   if (selectedHistoryIds.value.length === 0) {
     proxy?.$modal.msgError('请选择需要下载的历史版本');
     return;
   }
   await proxy?.$modal.confirm(`是否确认下载选中的${selectedHistoryIds.value.length}个历史版本？`);
-  selectedHistoryIds.value.forEach(id => {
-    console.log("🚀 ~ handleHistoryBatchDownload ~ id:", id.ossIds)
-    if (id.ossIds && id.ossIds.length > 0) {
-      id.ossIds.forEach(ossId => {
-        proxy?.$download.oss(ossId); // 复用单个下载逻辑
-      });
+
+  // 遍历选中的历史版本，兼容 ossIds 可能的类型
+  selectedHistoryIds.value.forEach(item => {
+    let ossIdsArray: string[] = [];
+    if (item.ossIds) {
+      if (typeof item.ossIds === 'string') {
+        ossIdsArray = item.ossIds.split(',').filter(id => id.trim() && /^\d+$/.test(id.trim()));
+      } else if (Array.isArray(item.ossIds)) {
+        ossIdsArray = item.ossIds.filter(id => typeof id === 'string' && id.trim() && /^\d+$/.test(id.trim()));
+      }
     }
+    // 下载有效文件
+    ossIdsArray.forEach(ossId => {
+      proxy?.$download.oss(ossId);
+    });
   });
 
   proxy?.$modal.msgSuccess('历史版本下载请求已提交');
@@ -592,19 +594,36 @@ const handleHistoryBatchDownload = async () => {
 
 // 新增：单个历史版本停用（复用原有逻辑）
 const handleHistoryDisable = async (historyId: string) => {
+  console.log("🚀 ~ handleHistoryDisable ~ historyId:", historyId)
   await proxy?.$modal.confirm('是否确认停用该历史版本？');
   await documentDisable([historyId]);
   proxy?.$modal.msgSuccess('历史版本停用成功');
   getHistoryList(); // 停用后刷新列表
 };
 
-/** 下载文件 */
-/** 下载文件（修复批量下载报错） */
-const handleDownload = async (row: DocumentVO) => {
-  // 1. 校验并转换 ossIds 为数组（过滤空值和无效项）
-  const ossIdsArray = row.ossIds
-    ? row.ossIds.split(',').filter(ossId => ossId.trim() && /^\d+$/.test(ossId.trim()))
-    : [];
+/** 下载文件（修复类型错误） */
+const handleDownload = async (row: DocumentVO | HistoryVO) => {
+  // 1. 兼容处理 ossIds 可能的类型（字符串、数组、null/undefined）
+  let ossIdsArray: string[] = [];
+
+  if (row.ossIds) {
+    if (typeof row.ossIds === 'string') {
+      // 字符串类型：按逗号拆分并过滤无效值
+      ossIdsArray = row.ossIds.split(',').filter(ossId =>
+        ossId.trim() && /^\d+$/.test(ossId.trim())
+      );
+    } else if (Array.isArray(row.ossIds)) {
+      // 数组类型：直接过滤无效值
+      ossIdsArray = row.ossIds.filter(ossId =>
+        typeof ossId === 'string' && ossId.trim() && /^\d+$/.test(ossId.trim())
+      );
+    } else {
+      // 其他类型：转换为字符串再处理
+      ossIdsArray = String(row.ossIds).split(',').filter(ossId =>
+        ossId.trim() && /^\d+$/.test(ossId.trim())
+      );
+    }
+  }
 
   if (ossIdsArray.length === 0) {
     proxy?.$modal.msgError('无有效文件可下载');
@@ -614,26 +633,23 @@ const handleDownload = async (row: DocumentVO) => {
   // 2. 提示用户开始下载
   proxy?.$modal.msg(`开始下载${ossIdsArray.length}个文件，请耐心等待...`);
 
-  // 3. 串行下载（逐个下载，避免并发压力）
+  // 3. 串行下载文件
   let successCount = 0;
   let failCount = 0;
   const failOssIds: string[] = [];
 
   for (const [index, ossId] of ossIdsArray.entries()) {
     try {
-      console.log(`正在下载第${index + 1}个文件，ossId:`, ossId);
-      // 逐个下载，等待前一个完成再执行下一个
       await proxy?.$download.oss(ossId.trim());
       successCount++;
     } catch (err) {
       failCount++;
       failOssIds.push(ossId);
       console.error(`第${index + 1}个文件下载失败，ossId:${ossId}，错误：`, err);
-      // 单个文件失败仅日志提示，不中断整体下载
     }
   }
 
-  // 4. 下载完成后汇总结果
+  // 4. 显示下载结果
   const resultMsg = `下载完成！成功：${successCount}个，失败：${failCount}个${failCount > 0 ? `（失败ossId：${failOssIds.join(',')}）` : ''
     }`;
 
@@ -754,5 +770,11 @@ onMounted(() => {
   color: #c0c4cc !important;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+::v-deep .el-form-item--large .el-form-item__label {
+  height: 40px;
+  line-height: 40px;
+  width: 100px !important;
 }
 </style>

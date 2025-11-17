@@ -78,10 +78,8 @@
               v-hasPermi="['project:project:remove']">删除</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Download" @click="handleExports"
+            <el-button type="primary" plain icon="Download" @click="handleExport"
               v-hasPermi="['project:project:export']">批量数据下载</el-button>
-            <!-- <el-button type="warning" plain icon="Download" @click="handleExport"
-              v-hasPermi="['project:project:export']">导出</el-button> -->
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
@@ -89,8 +87,8 @@
 
       <el-table v-loading="loading" border :data="infoList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="序号" align="center" prop="id" />
-        <el-table-column label="建设项目名称" align="center" prop="projectName" width="150" />
+        <el-table-column label="序号" align="center" prop="id" width="180" />
+        <el-table-column label="建设项目名称" align="center" prop="projectName" width="180" />
         <el-table-column label="项目代码" align="center" prop="projectCode" width="150" />
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
         <el-table-column label="涉及风景名胜区名称" align="center" prop="scenicArea" width="150" />
@@ -240,7 +238,7 @@
         <!-- 上部分：项目基础信息 -->
         <div class="section project-basic-info">
           <h3 class="section-title">项目基础信息</h3>
-          <el-form ref="infoFormRef" :model="form" label-width="190px" :rules="rules">
+          <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="建设活动（建设项目）名称" prop="projectName">
@@ -278,7 +276,7 @@
           <el-button type="primary" :disabled="!form.id" @click="handleModelPreview" class="modelPreview">
             <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
           </el-button>
-          <el-form :model="form" label-width="180px">
+          <el-form :model="form" label-width="230px">
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="建设单位名称" prop="constructionUnit">
@@ -588,10 +586,10 @@
           </el-form>
         </div>
         <!-- 修改审批信息部分 - 不仅在查看模式且在二次填报修改也可查看审批信息 -->
-        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status))|| dialog.title === '数据共享'"
+        <div v-if="isViewMode || (!isViewMode && ['管委会驳回', '林业局驳回'].includes(form.status)) || dialog.title === '数据共享'"
           class="section approval-info">
           <h3 class="section-title"> 审批信息</h3>
-          <el-form label-width="178px" disabled>
+          <el-form label-width="230px" disabled>
             <!-- 1. 管委会审批信息：状态为“管委会审批中”或“管委会通过”时显示 -->
             <template v-if="['管委会通过', '管委会驳回', '林业局通过', '林业局驳回', '已通过'].includes(form.status)">
               <el-form-item label="管委会审批状态">
@@ -1061,7 +1059,7 @@ const infoList = ref<InfoVO[]>([]);
 const buttonLoading = ref(false);
 const loading = ref(true);
 const showSearch = ref(true);
-const ids = ref<Array<string | number>>([]);
+const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
@@ -1419,26 +1417,27 @@ watch(
 
     let list: any[] = [];
     // 1. 若val是数组，先过滤无效值（避免空数组、非对象元素）
-    if (Array.isArray(val)) {
-      list = val.filter(item => item && typeof item === 'object'); // 只保留有效对象元素
-    }
-    // 2. 若val是单个ossId（字符串），调用接口获取列表
-    else if (typeof val === 'string') {
-      try {
-        const res = await listByIds(val);
-        // 确保res.data是数组，再处理
-        list = Array.isArray(res.data)
-          ? res.data.map((oss) => ({
-            name: oss.originalName,
-            url: oss.url,
-            ossId: oss.ossId
-          }))
-          : [];
-      } catch (err) {
-        proxy?.$modal.msgError('获取文件列表失败');
-        list = [];
-      }
-    }
+    // if (Array.isArray(val)) {
+    //   list = val.filter(item => item && typeof item === 'object'); // 只保留有效对象元素
+    // }
+    // // 2. 若val是单个ossId（字符串），调用接口获取列表
+    // else if (typeof val === 'string') {
+    //   try {
+    //     const res = await listByIds(val);
+    //     console.log("🚀 ~ res:", res)
+    //     // 确保res.data是数组，再处理
+    //     list = Array.isArray(res.data)
+    //       ? res.data.map((oss) => ({
+    //         name: oss.originalName,
+    //         url: oss.url,
+    //         ossId: oss.ossId
+    //       }))
+    //       : [];
+    //   } catch (err) {
+    //     proxy?.$modal.msgError('获取文件列表失败');
+    //     list = [];
+    //   }
+    // }
 
     // 3. 处理文件列表，生成唯一uid
     let temp = 1;
@@ -1827,7 +1826,8 @@ const resetQuery = () => {
 
 /** 多选框选中数据 */
 const handleSelectionChange = (selection: InfoVO[]) => {
-  ids.value = selection.map(item => item.id);
+  const selectedIds = selection.map(item => item.id);
+  ids.value = selectedIds.join(',');
   single.value = selection.length != 1;
   multiple.value = !selection.length;
 }
@@ -2206,17 +2206,20 @@ const handleDeleteUploadFile = async (index: number, field: FileFieldType) => {
   }
 };
 /** 导出按钮操作 */
-const handleExports = () => {
-  // proxy?.download('document/planningFile/export', {
-  //   ...queryParams.value
-  // }, `info_${new Date().getTime()}.xlsx`)
+const handleExport = async() => {
+  const exportUrl = `project/download/${ids.value}`;
+  await proxy?.download(
+    exportUrl,
+    {},
+    `info_${new Date().getTime()}.zip`
+  );
 }
-// 1. 数据下载方法（下载项目所有相关文件/信息）
 const handleDataDownload = async () => {
   try {
     proxy?.$modal.loading('正在打包下载数据，请稍候...');
-    // 调用数据下载接口（替换为实际下载接口）
-    await proxy?.$download.oss(form.value.id + '_project_data');
+    console.log("🚀 ~ handleDataDownload ~ form.value.id:", form.value.id)
+    const exportUrl = `project/download/${form.value.id}`;
+    await proxy?.download(exportUrl, {...queryParams.value}, `info_${new Date().getTime()}.zip`);
     proxy?.$modal.closeLoading();
     proxy?.$modal.msgSuccess('数据下载成功');
   } catch (err) {
@@ -2227,8 +2230,9 @@ const handleDataDownload = async () => {
 
 // 2. 确认数据共享方法
 const confirmShare = async () => {
+
   try {
-    await proxy?.$modal.confirm('确定要公开此项目数据吗？共享后不可撤销');
+    await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
     buttonLoading.value = true;
     // 调用数据共享接口（替换为实际共享接口）
     // await shareInfo(form.value.id);
@@ -2243,8 +2247,6 @@ const confirmShare = async () => {
     buttonLoading.value = false;
   }
 };
-
-// 3. 完善handleShare方法（标记为非查看模式，避免冲突）
 const handleShare = async (row: InfoVO) => {
   await reset();
   const res = await getInfo(row.id);
@@ -2275,15 +2277,15 @@ onMounted(async () => { // 保留async关键字
     currentUserRole.value = userRoles[0] || '';
     console.log("🚀 ~ canEdit ~ currentUserRole.value:", currentUserRole.value)
     getList();
-    const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
-    // 若需要显示弹窗，恢复所有数据
-    if (isEditDialogVisible) {
-      form.value = { ...form.value, ...formData }; // 恢复表单字段
-      threeDModelFileList.value = [...storeThreeDModelFileList];
-      disabled.value = storeDisabled; // 恢复禁用状态
-      isViewMode.value = storeIsViewMode; // 恢复查看模式状态
-      dialog.visible = true; // 自动弹出弹窗
-    }
+    // const { isEditDialogVisible, formData, threeDModelFileList: storeThreeDModelFileList, disabled: storeDisabled, isViewMode: storeIsViewMode } = majorProjectStore;
+    // // 若需要显示弹窗，恢复所有数据
+    // if (isEditDialogVisible) {
+    //   form.value = { ...form.value, ...formData }; // 恢复表单字段
+    //   threeDModelFileList.value = [...storeThreeDModelFileList];
+    //   disabled.value = storeDisabled; // 恢复禁用状态
+    //   isViewMode.value = storeIsViewMode; // 恢复查看模式状态
+    //   dialog.visible = true; // 自动弹出弹窗
+    // }
   } catch (err) {
     console.error('获取用户信息失败：', err);
     // 即使获取失败，仍尝试加载列表（可选）
@@ -2379,10 +2381,12 @@ h3 {
 }
 
 .modelPreview {
-  margin-left: 1500px;
+  margin-left: 1480px;
   margin-top: -50px;
 
   .imgModel {
+    width: 20px;
+    height: 20px;
     margin-right: 10px;
   }
 }

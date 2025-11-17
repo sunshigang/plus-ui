@@ -24,7 +24,7 @@
 
       <el-col :sm="24" :lg="12" style="padding-left: 20px">
         <h3>国土空间规划</h3>
-        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+        <p style="margin-top: 10px; font-size: 17px; color: #666;">
           数据说明：表格展示了各类用地的现状与规划面积及占比，总面积保持147.08km²不变
         </p>
         <div ref="landUseBar" class="chart-container"></div>
