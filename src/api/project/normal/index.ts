@@ -39,17 +39,6 @@ export const addInfo = (data: InfoForm) => {
   });
 };
 
-/**
- * 修改【请填写功能名称】
- * @param data
- */
-export const updateInfo = (data: InfoForm) => {
-  return request({
-    url: '/project',
-    method: 'put',
-    data: data
-  });
-};
 export const submitInfo = (data: InfoForm) => {
   return request({
     url: '/project/submit',

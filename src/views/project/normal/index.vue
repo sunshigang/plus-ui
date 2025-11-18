@@ -66,20 +66,20 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Plus" @click="handleAdd"
-              v-hasPermi="['project:project:add']">新增</el-button>
+            <el-button type="primary" plain icon="Plus" @click="handleAdd('add')"
+              v-hasPermi="['project:project:add']">创建项目</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdate()"
-              v-hasPermi="['sproject:project:edit']">修改</el-button>
+              v-hasPermi="['sproject:project:edit']">修改项目</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleDelete()"
-              v-hasPermi="['project:project:remove']">删除</el-button>
+              v-hasPermi="['project:project:remove']">删除项目</el-button>
           </el-col>
           <el-col :span="1.5">
             <el-button type="warning" plain icon="Download" @click="handleExport"
-              v-hasPermi="['project:project:export']">导出</el-button>
+              v-hasPermi="['project:project:export']">导出项目</el-button>
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
@@ -1223,64 +1223,67 @@ const canAudit = async (row: InfoForm) => {
 };
 
 // 修改审核相关方法，区分一次审批和二次审批
-const handleAudit = async (row: InfoForm) => {
-  if (!row.id || (typeof row.id !== 'string' && typeof row.id !== 'number')) {
-    proxy?.$modal.msgError('项目ID无效，无法进行审核操作');
-    return;
-  }
-  auditDialog.projectId = row.id;
-  auditForm.projectId = row.id;
-  try {
-    // 获取项目详情
-    const res = await getInfo(row.id);
-    let projectData = res.data;
-    console.log('getInfo 接口完整返回（projectId=' + row.id + '）：', res);
-    if (Array.isArray(projectData)) {
-      console.warn('接口返回数组（预期单条），已自动取第一条数据', projectData);
-      projectData = projectData.length > 0 ? projectData[0] : null;
-    }
-    // 若处理后仍无数据，提示并终止
-    if (!projectData) {
-      proxy?.$modal.msgError('未查询到项目详情，请刷新后重试');
-      return;
-    }
-    form.value.status = projectData.status;
-    // 填充项目基本信息
-    Object.assign(auditForm, {
-      projectName: projectData.projectName,
-      projectCode: projectData.projectCode,
-      administrativeRegion: projectData.administrativeRegion,
-      scenicArea: projectData.scenicArea,
-      applicantType: projectData.applicantType, // 已匹配补充的属性
-      constructionUnit: projectData.constructionUnit,
-      organizationCode: projectData.organizationCode, // 已匹配补充的属性
-      contactPerson: projectData.contactPerson, // 已匹配补充的属性
-      contactPhone: projectData.contactPhone, // 已匹配补充的属性
-      protectionLevel: projectData.protectionLevel,
-      status: projectData.status, // 已匹配补充的属性
-      projectType: projectData.projectType, // 已匹配补充的属性
-      projectUsage: projectData.projectUsage,
-      projectPurpose: projectData.projectPurpose,
-      projectInvestment: projectData.projectInvestment,
-      planningBasis: projectData.planningBasis, // 已匹配补充的属性
-      constructionContent: projectData.constructionContent, // 已匹配补充的属性
-      otherExplanations: projectData.otherExplanations, // 已匹配补充的属性
-      modelCoordinate: projectData.modelCoordinate,
-      feedback: '',
-    });
-    await loadAllFileLists(projectData);
-    // 清空之前的审核信息
-    auditForm.feedback = '';
-    feedbackFileList.value = [];
+// const handleAudit = async (row: InfoForm) => {
+//   if (!row.id || (typeof row.id !== 'string' && typeof row.id !== 'number')) {
+//     proxy?.$modal.msgError('项目ID无效，无法进行审核操作');
+//     return;
+//   }
+//   auditDialog.projectId = row.id;
+//   auditForm.projectId = row.id;
+//   try {
+//     // 获取项目详情
+//     const res = await getInfo(row.id);
+//     let projectData = res.data;
+//     console.log('getInfo 接口完整返回（projectId=' + row.id + '）：', res);
+//     if (Array.isArray(projectData)) {
+//       console.warn('接口返回数组（预期单条），已自动取第一条数据', projectData);
+//       projectData = projectData.length > 0 ? projectData[0] : null;
+//     }
+//     // 若处理后仍无数据，提示并终止
+//     if (!projectData) {
+//       proxy?.$modal.msgError('未查询到项目详情，请刷新后重试');
+//       return;
+//     }
+//     form.value.status = projectData.status;
+//     // 填充项目基本信息
+//     Object.assign(auditForm, {
+//       projectName: projectData.projectName,
+//       projectCode: projectData.projectCode,
+//       administrativeRegion: projectData.administrativeRegion,
+//       scenicArea: projectData.scenicArea,
+//       applicantType: projectData.applicantType, // 已匹配补充的属性
+//       constructionUnit: projectData.constructionUnit,
+//       organizationCode: projectData.organizationCode, // 已匹配补充的属性
+//       contactPerson: projectData.contactPerson, // 已匹配补充的属性
+//       contactPhone: projectData.contactPhone, // 已匹配补充的属性
+//       protectionLevel: projectData.protectionLevel,
+//       status: projectData.status, // 已匹配补充的属性
+//       projectType: projectData.projectType, // 已匹配补充的属性
+//       projectUsage: projectData.projectUsage,
+//       projectPurpose: projectData.projectPurpose,
+//       projectInvestment: projectData.projectInvestment,
+//       planningBasis: projectData.planningBasis, // 已匹配补充的属性
+//       constructionContent: projectData.constructionContent, // 已匹配补充的属性
+//       otherExplanations: projectData.otherExplanations, // 已匹配补充的属性
+//       modelCoordinate: projectData.modelCoordinate,
+//       feedback: '',
+//     });
+//     await loadAllFileLists(projectData);
+//     // 清空之前的审核信息
+//     auditForm.feedback = '';
+//     feedbackFileList.value = [];
 
-    // 显示审核对话框
-    auditDialog.visible = true;
-  } catch (err) {
-    // 5. 捕获所有异常并提示
-    const errorMsg = (err as Error).message || '审核弹窗加载失败';
-    proxy?.$modal.msgError(`获取项目信息异常：${errorMsg}`);
-    console.error('handleAudit 方法报错：', err); // 打印日志给后端排查
-  }
+//     // 显示审核对话框
+//     auditDialog.visible = true;
+//   } catch (err) {
+//     // 5. 捕获所有异常并提示
+//     const errorMsg = (err as Error).message || '审核弹窗加载失败';
+//     proxy?.$modal.msgError(`获取项目信息异常：${errorMsg}`);
+//     console.error('handleAudit 方法报错：', err); // 打印日志给后端排查
+//   }
+// };
+const handleAudit = (row: InfoVO) => {
+  router.push(`/project/normal/review/${row.id}`); // 携带项目ID跳转审核页面
 };
 // 新增下载模板方法
 const handleDownloadTemplate = (type: string) => {
@@ -1821,12 +1824,16 @@ const handleSelectionChange = (selection: InfoVO[]) => {
 }
 
 /** 新增按钮操作 */
-const handleAdd = async () => {
+// const handleAdd = async () => {
+//   await reset();
+//   dialog.title = "添加一般项目信息";
+//   disabled.value = false; // 启用表单
+//   isViewMode.value = false;
+//   dialog.visible = true;
+// }
+const handleAdd = async (data: string) => {
   await reset();
-  dialog.title = "添加一般项目信息";
-  disabled.value = false; // 启用表单
-  isViewMode.value = false;
-  dialog.visible = true;
+  router.push(`/project/normal/${data}`);
 }
 const loadAllFileLists = async (projectData: InfoForm) => {
   if (!form.value.approveRecord) {
@@ -1997,37 +2004,41 @@ const loadAllFileLists = async (projectData: InfoForm) => {
   }
 };
 // 详情查看
-const handleView = async (row: InfoVO) => {
-  try {
-    await reset();
-    const res = await getInfo(row.id);
-    const projectData = res.data;
-    console.log("🚀 ~ handleView ~ projectData:", projectData)
-    Object.assign(form.value, res.data);
-    if (!form.value.approveRecord) {
-      form.value.approveRecord = {
-        gwhApprovalAttachment: undefined,
-        gwhApprovalReason: undefined,
-        gwhApproveResult: undefined,
-        gwhApproveTime: undefined,
-        lyjApprovalAttachment: undefined,
-        lyjApprovalReason: undefined,
-        lyjApproveResult: undefined,
-        lyjApproveTime: undefined,
-      };
-    }
-    await loadAllFileLists(projectData);
-    dialog.visible = true;
-    dialog.title = "查看一般项目信息";
-    // console.log('form', form.value)
-    // 设置表单为只读状态
-    disabled.value = true;
-    isViewMode.value = true; // 标记为查看模式
-  } catch (err) {
-    console.error('查看项目失败：', err);
-    proxy?.$modal.msgError('加载项目信息失败，请重试');
-  }
+// const handleView = async (row: InfoVO) => {
+//   try {
+//     await reset();
+//     const res = await getInfo(row.id);
+//     const projectData = res.data;
+//     console.log("🚀 ~ handleView ~ projectData:", projectData)
+//     Object.assign(form.value, res.data);
+//     if (!form.value.approveRecord) {
+//       form.value.approveRecord = {
+//         gwhApprovalAttachment: undefined,
+//         gwhApprovalReason: undefined,
+//         gwhApproveResult: undefined,
+//         gwhApproveTime: undefined,
+//         lyjApprovalAttachment: undefined,
+//         lyjApprovalReason: undefined,
+//         lyjApproveResult: undefined,
+//         lyjApproveTime: undefined,
+//       };
+//     }
+//     await loadAllFileLists(projectData);
+//     dialog.visible = true;
+//     dialog.title = "查看一般项目信息";
+//     // console.log('form', form.value)
+//     // 设置表单为只读状态
+//     disabled.value = true;
+//     isViewMode.value = true; // 标记为查看模式
+//   } catch (err) {
+//     console.error('查看项目失败：', err);
+//     proxy?.$modal.msgError('加载项目信息失败，请重试');
+//   }
+// };
+const handleView = (row: InfoVO) => {
+  router.push(`/project/normal/view/${row.id}`); // 携带项目ID跳转查看页面
 };
+
 // 数据共享
 const handleShare = async (row: InfoVO) => {
   try {
@@ -2068,35 +2079,47 @@ const canEdit = async () => {
   }
 };
 /** 修改按钮操作 */
-const handleUpdate = async (row?: InfoVO) => {
-  const hasEditPermi = await canEdit();
-  if (!hasEditPermi) {
-    proxy?.$modal.msgError('当前操作没有权限');
-    return;
+// const handleUpdate = async (row?: InfoVO) => {
+//   const hasEditPermi = await canEdit();
+//   if (!hasEditPermi) {
+//     proxy?.$modal.msgError('当前操作没有权限');
+//     return;
+//   }
+//   reset();
+//   const _id = row?.id || ids.value[0];
+//   const res = await getInfo(_id);
+//   const projectData = res.data;
+//   Object.assign(form.value, res.data);
+//   if (!form.value.approveRecord) {
+//     form.value.approveRecord = {
+//       gwhApprovalAttachment: undefined,
+//       gwhApprovalReason: undefined,
+//       gwhApproveResult: undefined,
+//       gwhApproveTime: undefined,
+//       lyjApprovalAttachment: undefined,
+//       lyjApprovalReason: undefined,
+//       lyjApproveResult: undefined,
+//       lyjApproveTime: undefined,
+//     };
+//   }
+//   await loadAllFileLists(projectData);
+//   dialog.title = "修改一般项目信息";
+//   disabled.value = false; // 启用表单
+//   isViewMode.value = false;
+//   dialog.visible = true;
+// };
+
+const handleUpdate = (row: InfoVO) => {
+  const isRejectStatus = ['管委会驳回', '林业局驳回'].includes(row.status);
+  if (isRejectStatus) {
+    // 二次填报：跳转到repeat-edit页面，携带项目ID
+    router.push(`/project/normal/repeat-edit/${row.id}`);
+  } else {
+    // 信息填报（填报中状态）：跳转到edit页面
+    router.push(`/project/normal/edit/${row.id}`);
   }
-  reset();
-  const _id = row?.id || ids.value[0];
-  const res = await getInfo(_id);
-  const projectData = res.data;
-  Object.assign(form.value, res.data);
-  if (!form.value.approveRecord) {
-    form.value.approveRecord = {
-      gwhApprovalAttachment: undefined,
-      gwhApprovalReason: undefined,
-      gwhApproveResult: undefined,
-      gwhApproveTime: undefined,
-      lyjApprovalAttachment: undefined,
-      lyjApprovalReason: undefined,
-      lyjApproveResult: undefined,
-      lyjApproveTime: undefined,
-    };
-  }
-  await loadAllFileLists(projectData);
-  dialog.title = "修改一般项目信息";
-  disabled.value = false; // 启用表单
-  isViewMode.value = false;
-  dialog.visible = true;
 };
+
 /** 重置按钮 */
 const resetForm = () => {
   console.log("🚀 ~ resetForm ~ form.value.id:", form.value.id)

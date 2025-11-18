@@ -17,6 +17,7 @@ export interface NoticeQuery extends PageQuery {
   status: string;
   noticeType: string;
   read: boolean;
+  isAsc:string
 }
 
 export interface NoticeForm {

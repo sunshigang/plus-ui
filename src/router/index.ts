@@ -103,7 +103,88 @@ export const constantRoutes: RouteRecordRaw[] = [
 
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes: RouteRecordRaw[] = [
-
+  {
+    path: '/project/normal',
+    component: Layout,
+    name: 'ProjectNormal',
+    meta: {
+      title: '一般项目管理',
+      icon: 'project', // 侧边栏菜单图标（需确保对应svg文件存在）
+      permissions: ['project:project:list'] // 菜单访问权限标识
+    },
+    children: [
+      // 项目列表页（默认显示）
+      {
+        path: '',
+        component: () => import('@/views/project/normal/index.vue'),
+        name: 'ProjectNormalList',
+        meta: {
+          title: '一般项目',
+          permissions: ['project:project:list']
+        }
+      },
+      // 新增项目页面
+      {
+        path: 'add',
+        component: () => import('@/views/project/normal/addProject.vue'),
+        name: 'AddProject',
+        hidden: true, // 侧边栏不显示
+        meta: {
+          title: '创建项目',
+          activeMenu: '/project/normal', // 高亮父菜单
+          permissions: ['project:project:add']
+        }
+      },
+      // 信息填报页面（填报中状态）
+      {
+        path: 'edit/:id',
+        component: () => import('@/views/project/normal/editProject.vue'),
+        name: 'EditProject',
+        hidden: true,
+        meta: {
+          title: '信息填报',
+          activeMenu: '/project/normal',
+          permissions: ['project:project:edit']
+        }
+      },
+      // 二次填报页面（驳回状态）
+      {
+        path: 'repeat-edit/:id',
+        component: () => import('@/views/project/normal/repeatEditProject.vue'),
+        name: 'RepeatEditProject',
+        hidden: true,
+        meta: {
+          title: '二次填报',
+          activeMenu: '/project/normal',
+          permissions: ['project:project:edit']
+        }
+      },
+      // 查看项目页面
+      {
+        path: 'view/:id',
+        component: () => import('@/views/project/normal/viewProject.vue'),
+        name: 'ViewProject',
+        hidden: true,
+        meta: {
+          title: '查看项目信息',
+          activeMenu: '/project/normal',
+          permissions: ['project:project:query']
+        }
+      },
+      // 审核项目页面（管委会/市林业局共用）
+      {
+        path: 'review/:id',
+        component: () => import('@/views/project/normal/reviewProject.vue'),
+        name: 'ReviewProject',
+        hidden: true,
+        meta: {
+          title: '项目审核',
+          activeMenu: '/project/normal',
+          permissions: ['project:project:gwhApprove', 'project:project:lyjApprove']
+        }
+      }
+    ]
+  }
 ];
 
 /**
@@ -119,6 +200,9 @@ const router = createRouter({
     }
     return { top: 0 };
   }
+});
+dynamicRoutes.forEach(route => {
+  router.addRoute(route);
 });
 
 export default router;

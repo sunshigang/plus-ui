@@ -80,7 +80,8 @@ const readAll = async () => {
 const getTableData = async () => {
   state.loading = true;
   try {
-    const res = await listNotice({} as NoticeQuery);
+    const res = await listNotice({isAsc:'desc'} as NoticeQuery);
+    console.log("🚀 ~ getTableData ~ res:", res)
     // 筛选未读公告（read: false）
     const unreadNotices = res.rows.filter((item: any) => !item.read);
     newsList.value = unreadNotices.map((item: any) => ({
