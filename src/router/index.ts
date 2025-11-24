@@ -108,8 +108,8 @@ export const dynamicRoutes: RouteRecordRaw[] = [
     component: Layout,
     name: 'ProjectNormal',
     meta: {
-      title: '一般项目管理',
-      icon: 'project', // 侧边栏菜单图标（需确保对应svg文件存在）
+      title: '台账(项目)管理',
+      icon: 'chart', // 侧边栏菜单图标（需确保对应svg文件存在）
       permissions: ['project:project:list'] // 菜单访问权限标识
     },
     children: [
@@ -125,9 +125,9 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       },
       // 新增项目页面
       {
-        path: 'add',
+        path: 'normal-add',
         component: () => import('@/views/project/normal/addProject.vue'),
-        name: 'AddProject',
+        name: 'NormalAddProject',
         hidden: true, // 侧边栏不显示
         meta: {
           title: '创建项目',
@@ -137,9 +137,9 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       },
       // 信息填报页面（填报中状态）
       {
-        path: 'edit/:id',
+        path: 'normal-edit/:id',
         component: () => import('@/views/project/normal/editProject.vue'),
-        name: 'EditProject',
+        name: 'NormalEditProject',
         hidden: true,
         meta: {
           title: '信息填报',
@@ -149,9 +149,9 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       },
       // 二次填报页面（驳回状态）
       {
-        path: 'repeat-edit/:id',
+        path: 'normal-repeat-edit/:id',
         component: () => import('@/views/project/normal/repeatEditProject.vue'),
-        name: 'RepeatEditProject',
+        name: 'NormalRepeatEditProject',
         hidden: true,
         meta: {
           title: '二次填报',
@@ -161,26 +161,157 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       },
       // 查看项目页面
       {
-        path: 'view/:id',
+        path: 'normal-view/:id',
         component: () => import('@/views/project/normal/viewProject.vue'),
-        name: 'ViewProject',
+        name: 'NormalViewProject',
         hidden: true,
         meta: {
-          title: '查看项目信息',
+          title: '一般项目查看',
           activeMenu: '/project/normal',
           permissions: ['project:project:query']
         }
       },
       // 审核项目页面（管委会/市林业局共用）
       {
-        path: 'review/:id',
+        path: 'normal-review/:id',
         component: () => import('@/views/project/normal/reviewProject.vue'),
-        name: 'ReviewProject',
+        name: 'NormalReviewProject',
         hidden: true,
         meta: {
           title: '项目审核',
           activeMenu: '/project/normal',
+          permissions: ['project:project:gwhApprove']
+        }
+      },
+      // 一般项目共享
+      {
+        path: 'normal-share/:id',
+        component: () => import('@/views/project/normal/shareProject.vue'),
+        name: 'NormalShareProject',
+        hidden: true,
+        meta: {
+          title: '数据共享',
+          activeMenu: '/project/normal',
+          permissions: ['project:project:share']
+        }
+      }
+    ]
+  },
+  {
+    path: '/project/major',
+    component: Layout,
+    name: 'ProjectMajor',
+    meta: {
+      title: '台账(项目)管理',
+      icon: 'build', // 侧边栏菜单图标（需确保对应svg文件存在）
+      permissions: ['project:project:list'] // 菜单访问权限标识
+    },
+    children: [
+      // 项目列表页（默认显示）
+      {
+        path: '',
+        component: () => import('@/views/project/major/index.vue'),
+        name: 'ProjectMajorList',
+        meta: {
+          title: '重大项目',
+          permissions: ['project:project:list']
+        }
+      },
+      // 新增项目页面
+      {
+        path: 'major-add',
+        component: () => import('@/views/project/major/addProject.vue'),
+        name: 'MajorAddProject',
+        hidden: true, // 侧边栏不显示
+        meta: {
+          title: '创建项目',
+          activeMenu: '/project/major', // 高亮父菜单
+          permissions: ['project:project:add']
+        }
+      },
+      // 信息填报页面（填报中状态）
+      {
+        path: 'major-edit/:id',
+        component: () => import('@/views/project/major/editProject.vue'),
+        name: 'MajorEditProject',
+        hidden: true,
+        meta: {
+          title: '信息填报',
+          activeMenu: '/project/major',
+          permissions: ['project:project:edit']
+        }
+      },
+      // 二次填报页面（驳回状态）
+      {
+        path: 'major-repeat-edit/:id',
+        component: () => import('@/views/project/major/repeatEditProject.vue'),
+        name: 'MajorRepeatEditProject',
+        hidden: true,
+        meta: {
+          title: '二次填报',
+          activeMenu: '/project/major',
+          permissions: ['project:project:edit']
+        }
+      },
+      // 查看项目页面
+      {
+        path: 'major-view/:id',
+        component: () => import('@/views/project/major/viewProject.vue'),
+        name: 'MajorViewProject',
+        hidden: true,
+        meta: {
+          title: '重大项目查看',
+          activeMenu: '/project/major',
+          permissions: ['project:project:query']
+        }
+      },
+      // 审核项目页面（管委会/市林业局共用）
+      {
+        path: 'major-review/:id',
+        component: () => import('@/views/project/major/reviewProject.vue'),
+        name: 'MajorReviewProject',
+        hidden: true,
+        meta: {
+          title: '项目审核',
+          activeMenu: '/project/major',
           permissions: ['project:project:gwhApprove', 'project:project:lyjApprove']
+        }
+      },
+      // 重大项目共享
+      {
+        path: 'major-share/:id',
+        component: () => import('@/views/project/major/shareProject.vue'),
+        name: 'MajorShareProject',
+        hidden: true,
+        meta: {
+          title: '数据共享',
+          activeMenu: '/project/major',
+          permissions: ['project:project:share']
+        }
+      },
+
+    ]
+  },
+  //消息列表页面
+  {
+    path: '/project/notice', // 路由路径改为 /notice（与 /project 同级）
+    component: Layout, // 继承 Layout 布局（保持侧边栏和顶部导航）
+    name: 'NoticeCenter',
+    hidden: true,
+    meta: {
+      title: '消息中心',
+      icon: 'message', // 侧边栏图标（可选，不想显示侧边栏则设 hidden: true）
+      permissions: ['system:notice:list', 'system:notice:query', 'system:notice:read']
+    },
+    children: [
+      // 消息列表页面（默认显示）
+      {
+        path: '', // 空路径，访问 /notice 直接进入该页面
+        component: () => import('@/views/project/notice/index.vue'),
+        name: 'NoticeList',
+        meta: {
+          title: '消息列表',
+          permissions: ['system:notice:list']
         }
       }
     ]

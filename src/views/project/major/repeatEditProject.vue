@@ -62,7 +62,7 @@
                 <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
-            <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef2" :model="form" label-width="230px" :rules="rules">
               <!-- 建设信息表单内容 -->
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -711,6 +711,34 @@
                 </div>
               </div>
             </div>
+            <!-- 市林业局审批 -->
+            <div class="approval-item" v-if="['林业局通过', '林业局驳回'].includes(form.status)">
+              <div class="approval-header">
+                <span :class="['status-icon', form.approveRecords[0].lyjApproveResult === '通过' ? 'success' : 'error']">
+                  {{ form.approveRecords[0].lyjApproveResult === '通过' ? '✓' : '✗' }}
+                </span>
+                <span class="approval-title">市林业局审核</span>
+                <span class="approval-time">审核时间：{{ form.approveRecords[0].lyjApproveTime || '暂无' }}</span>
+              </div>
+              <div class="approval-content">
+                <div class="feedback-item">
+                  <span class="label">反馈建议：</span>
+                  <span class="value">{{ form.approveRecords[0].lyjApprovalReason || '暂无反馈建议' }}</span>
+                </div>
+                <div class="feedback-item">
+                  <span class="label">反馈文件：</span>
+                  <div class="file-list">
+                    <template v-if="form.approveRecords[0].lyjApprovalAttachment?.length">
+                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId"
+                        :href="file.url" :underline="false" target="_blank">
+                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                      </el-link>
+                    </template>
+                    <span v-else>暂无</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </el-tab-pane>
 
@@ -766,8 +794,10 @@ const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息
 
 // 表单引用
 const infoFormRef = ref(null)
+const infoFormRef2 = ref(null)
 // 按钮加载状态
 const buttonLoading = ref(false)
+
 // 表单数据
 const form = reactive({
   id: undefined,
@@ -816,12 +846,7 @@ const form = reactive({
     lyjApprovalAttachment: '',
   }]
 })
-const handleCancel = () => {
-  router.push('/project/normal')
-}
-const handleViewDetail = () => {
-  router.push(`/project/normal/normal-view/${route.params.id}`);
-}
+
 // 审批反馈折叠状态
 const basicInfoVisible = ref(true)
 const constructionInfoVisible = ref(false)
@@ -958,6 +983,7 @@ const rules = reactive({
     }
   ]
 })
+
 // 文件列表（与editProject一致）
 const locationPlanFileList = ref([])
 const expertOpinionsFileList = ref([])
@@ -1005,7 +1031,7 @@ onMounted(async () => {
   const projectId = route.params.id
   if (!projectId) {
     ElMessage.error('缺少项目ID，无法加载数据')
-    router.push('/project/normal')
+    router.push('/project/major')
     return
   }
 
@@ -1027,7 +1053,7 @@ onMounted(async () => {
     form.approveRecords[0].lyjApprovalAttachment = parseFileList(projectData.approveRecords[0].lyjApprovalAttachment)
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
-    router.push('/project/normal')
+    router.push('/project/major')
   }
 })
 
@@ -1089,6 +1115,9 @@ const handleUploadSuccess = (res, file, type) => {
         break
     }
     ElMessage.success('上传成功')
+    if (type === 'meetingMaterials') {
+      infoFormRef2.value.validateField(type)
+    }
   } else {
     ElMessage.error(res.msg || '上传失败')
   }
@@ -1138,6 +1167,12 @@ const handleDeleteUploadFile = async (index, type) => {
   if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
     form.threeDModel = ''
   }
+  // 同步更新 form 字段（空列表时设为空字符串）
+  if (type === 'meetingMaterials') {
+    form.meetingMaterials = fileList.length > 0 ? JSON.stringify(fileList) : '';
+    // 触发第二个表单的字段校验
+    infoFormRef2.value.validateField(type)
+  }
   // 调用OSS删除接口
   if (fileId) {
     try {
@@ -1147,9 +1182,12 @@ const handleDeleteUploadFile = async (index, type) => {
       ElMessage.warning('文件删除请求失败，可能需要手动清理')
     }
   }
+
+  // 删除后重新校验该字段（触发必填提示）
+  infoFormRef2.value.validateField(type)
 }
 const handleFileRemove = (type) => {
-  infoFormRef.value.validateField(type)
+  infoFormRef2.value.validateField(type)
 }
 const handleDownloadTemplate = (type) => {
   if (type === 'instructions') proxy?.$download.oss('1987829892356124674');
@@ -1157,6 +1195,8 @@ const handleDownloadTemplate = (type) => {
   else if (type === 'polygonTemplate') proxy?.$download.oss('1987829950501761026');
   else if (type === 'threeD') proxy?.$download.oss('1987830717459607554');
 }
+
+// 工具方法：获取文件名
 const getFileName = (name) => {
   // 处理name为null/undefined的情况
   if (!name) return '未知文件名'
@@ -1170,9 +1210,17 @@ const handleModelPreview = () => {
     path: '/screen/preview',
     query: {
       id: form.id,
-      type: 'normal-repeatEdit'
+      type: 'major-repeatEdit'
     }
   })
+}
+
+// 按钮事件（与editProject一致）
+const handleCancel = () => {
+  router.push('/project/major')
+}
+const handleViewDetail = () => {
+  router.push(`/project/major/major-view/${route.params.id}`);
 }
 const resetForm = async () => {
   try {
@@ -1192,6 +1240,7 @@ const resetForm = async () => {
     form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
     // 重置表单校验状态
     infoFormRef.value.clearValidate()
+    infoFormRef2.value.clearValidate()
     ElMessage.success('已重置为原始数据')
   } catch (err) {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
@@ -1224,34 +1273,44 @@ const temporarilyForm = () => {
   })
 }
 const submitForm = () => {
-  infoFormRef.value.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const { approveRecords, ...formWithoutApprove } = form;
-        const submitData = {
-          ...formWithoutApprove,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await submitInfo(submitData)
-        showSuccessPopup.value = false
-      } catch (err) {
-        proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
+  infoFormRef.value.validate(async (valid1) => {
+    if (!valid1) {
       ElMessage.warning('基础信息填写不符合要求，请检查')
+      return
     }
+    infoFormRef2.value.validate(async (valid2) => {
+      if (valid2) {
+        buttonLoading.value = true
+        try {
+          const { approveRecords, ...formWithoutApprove } = form;
+          const submitData = {
+            ...formWithoutApprove,
+            locationPlan: JSON.stringify(locationPlanFileList.value),
+            expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+            meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+            siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+            approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+            projectRedLine: JSON.stringify(projectRedLineFileList.value),
+            redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+            threeDModel: JSON.stringify(threeDModelFileList.value),
+          }
+          console.log("🚀 ~ submitForm ~ submitData:", submitData)
+          await submitInfo(submitData)
+          showSuccessPopup.value = false
+        } catch (err) {
+          proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
+        } finally {
+          buttonLoading.value = false
+        }
+      } else {
+        ElMessage.warning('建设信息填写不符合要求，请检查文件上传')
+      }
+    })
   })
 }
+
+// 暴露接口
+
 </script>
 
 <style scoped>
@@ -1260,58 +1319,18 @@ const submitForm = () => {
   padding: 20px;
   background-color: #f6f6f6;
   box-sizing: border-box;
-  position: relative;
-  min-height: 100vh;
+  position: absolute;
+  height: 100%;
 }
 
 .add-content {
   width: 100%;
-  max-height: calc(100vh - 60px);
+  max-height: calc(100vh - 40px);
   overflow-y: auto;
 }
 
-.popup-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 27px;
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  height: 96%;
-  width: 97%;
-  position: absolute;
-}
-
-.success-icon {
-  width: 80px;
-  height: 80px;
-}
-
-.success-text {
-  font-size: 24px;
-  color: #333;
-  text-align: center;
-}
-
-.button-group {
-  display: flex;
-  gap: 20px;
-  margin-top: 10px;
-}
-
-.btn-back {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 24px;
-}
-
-.btn-view {
-  background-color: white;
-  color: #333;
-  border: 1px solid #ddd;
-  padding: 8px 24px;
+::v-deep .el-tabs__item {
+  font-size: 16px !important;
 }
 
 .back-normal {
@@ -1377,11 +1396,50 @@ const submitForm = () => {
   }
 }
 
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 27px;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: 96%;
+  width: 97%;
+  position: absolute;
+}
 
+.success-icon {
+  width: 80px;
+  height: 80px;
+}
 
+.success-text {
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+}
 
+.button-group {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
 
-/* 审批反馈-项目信息样式 */
+.btn-back {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+}
+
+.btn-view {
+  background-color: white;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 24px;
+}
+
 .info-content {
   padding: 10px 0;
 }
@@ -1410,12 +1468,34 @@ const submitForm = () => {
   flex-wrap: wrap;
 }
 
+.status-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  margin-right: 8px;
+  color: white;
+  font-weight: bold;
+  margin-top:10px;
+  margin-left: 10px;
+}
+
+.status-icon.success {
+  background-color: #52c41a;
+}
+
+.status-icon.error {
+  background-color: #f5222d;
+}
+
 /* 审批反馈-审批信息样式 */
 .approval-info {
   background-color: #ffffff;
   padding: 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* border-radius: 4px; */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
 }
 
 .approval-item {
@@ -1427,30 +1507,8 @@ const submitForm = () => {
   background-color: #fafafa;
 }
 
-.status-icon {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 20px;
-  margin-right: 8px;
-  color: white;
-  font-weight: bold;
-  margin-top: 10px;
-  margin-left: 10px;
-}
-
 .approval-content {
   padding: 25px;
-}
-
-.status-icon.success {
-  background-color: #52c41a;
-}
-
-.status-icon.error {
-  background-color: #f5222d;
 }
 
 .approval-title {
@@ -1459,13 +1517,10 @@ const submitForm = () => {
 }
 
 .approval-time {
-  color: #666;
-  font-size: 14px;
+  /* color: #666; */
+  font-size: 16px;
 }
 
-.approval-content {
-  padding: 15px;
-}
 
 .feedback-item {
   margin-bottom: 10px;
@@ -1474,16 +1529,15 @@ const submitForm = () => {
   padding: 8px 12px;
   border-radius: 4px;
 }
-
 .feedback-item .label {
   min-width: 100px;
   font-weight: 500;
-  color: #666;
+  /* color: #666; */
 }
 
 .feedback-item .value {
   flex: 1;
-  color: #333;
+  /* color: #333; */
 }
 
 /* 其他复用样式（与editProject一致） */
@@ -1516,7 +1570,7 @@ const submitForm = () => {
 
 .operation-group div {
   color: #666;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* 审批信息样式调整 */
@@ -1524,6 +1578,8 @@ const submitForm = () => {
   color: #666;
   font-size: 16px;
 }
+
+
 
 /* 自定义折叠面板样式 */
 .custom-collapse-item {

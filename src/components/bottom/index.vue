@@ -15,26 +15,7 @@
             </div>
         </div>
     </div>
-    <div class="backButton">
-        <!-- 左侧线条区域 -->
-        <div class="back-line left-line">
-            <div class="dash-line dash1"></div>
-            <div class="solid-circle"></div>
-            <div class="dash-line dash2"></div>
-            <div class="hollow-circle"></div>
-            <div class="dash-line dash3"></div>
-        </div>
-        <!-- 返回按钮 -->
-        <div class="backImg" @click="clickBack"></div>
-        <!-- 右侧线条区域 -->
-        <div class="back-line right-line">
-            <div class="dash-line dash1"></div>
-            <div class="solid-circle"></div>
-            <div class="dash-line dash2"></div>
-            <div class="hollow-circle"></div>
-            <div class="dash-line dash3"></div>
-        </div>
-    </div>
+
     <div class="legend" v-if="legendShowHide">
         <div class="legendBody">
             <div class="legendTitle" v-for="item in legendItems" :key="item.id">
@@ -52,8 +33,7 @@ import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, computed }
 import bus from '../../libs/eventbus'
 const route = useRoute()
 const timeIsShow = ref(false)
-const projectType = ref(''); // 初始为空
-const years = ref([2022,2023, 2024, 2025]) // 年份数组
+const years = ref([2022, 2023, 2024, 2025]) // 年份数组
 const currentYear = ref(2025) // 默认选中 2023
 const router = useRouter()
 const legendShowHide = ref(false) // 图例显示隐藏状态
@@ -102,9 +82,6 @@ const clickRightArrow = () => {
     moveSlider(1)
 }
 onMounted(() => {
-    bus.on('previewModel', data => {
-        projectType.value = data.type;
-    });
     bus.on('function-panel-clicked', index => {
         console.log('🚀 ~ index:', index)
         if (index.index === 0) {
@@ -139,21 +116,7 @@ watch(currentYear, newYear => {
     console.log('🚀 ~ newYear:', newYear)
     bus.emit('time-change', newYear)
 })
-const clickBack = () => {
-    if (route.path == '/screen/screen') {
-        router.push('/');
-    } else {
-        // 新增：根据存储的项目类型跳转对应页面
-        if (projectType.value === '重大项目') {
-            router.push('/project/major');
-        } else if (projectType.value === '一般项目') {
-            router.push('/project/normal');
-        } else {
-            // 默认跳转（防止无类型时异常）
-            router.push('/project/major');
-        }
-    }
-};
+
 </script>
 
 <style lang="scss" scoped>
@@ -167,6 +130,7 @@ const clickBack = () => {
     bottom: 4%;
     background: url(../../static/image/bottom/legend.png) no-repeat;
     background-size: 100% 100%;
+
     .legendBody {
         margin-left: 30px;
         margin-top: 34px;
@@ -359,123 +323,5 @@ const clickBack = () => {
     }
 }
 
-.backButton {
-    z-index: 2;
-    pointer-events: auto;
-    position: absolute;
-    left: 50%; // 与time-column一致，左边缘先对齐屏幕50%处
-    transform: translateX(-180px); // 再向左移动半个宽度180px，实现水平居中
-    bottom: 40px;
-    width: 360px;
-    height: 99px;
-    display: flex;
-    justify-content: center;
-    align-content: center;
 
-    /* 通用线条样式 */
-    .back-line {
-        display: flex;
-        align-items: center;
-        height: 100%;
-    }
-
-    /* 左侧线条：从右向左排列 */
-    .left-line {
-        flex-direction: row-reverse;
-        margin-right: 60px;
-        /* 与按钮间距 */
-
-        /* 虚线通用样式 */
-        .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
-            height: 1px;
-        }
-
-        /* 实心圆 */
-        .solid-circle {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ffd700;
-            margin: 0 3px;
-        }
-
-        /* 空心圆 */
-        .hollow-circle {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            border: 2px solid #ffd700;
-            background-color: transparent;
-            margin: 0 3px;
-        }
-
-        /* 左侧各段虚线长度 */
-        .dash1 {
-            width: 22px;
-        }
-
-        .dash2 {
-            width: 29px;
-        }
-
-        .dash3 {
-            width: 52px;
-        }
-    }
-
-    /* 右侧线条：从左向右排列 */
-    .right-line {
-        flex-direction: row;
-        margin-left: 10px;
-        /* 与按钮间距 */
-
-        /* 虚线通用样式（与左侧一致） */
-        .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
-            height: 1px;
-        }
-
-        /* 实心圆（与左侧一致） */
-        .solid-circle {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ffd700;
-            margin: 0 3px;
-        }
-
-        /* 空心圆（与左侧一致） */
-        .hollow-circle {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            border: 2px solid #ffd700;
-            background-color: transparent;
-            margin: 0 3px;
-        }
-
-        /* 右侧各段虚线长度（与左侧对称） */
-        .dash1 {
-            width: 22px;
-        }
-
-        .dash2 {
-            width: 29px;
-        }
-
-        .dash3 {
-            width: 52px;
-        }
-    }
-
-    .backImg {
-        position: absolute;
-        width: 101px;
-        height: 99px;
-        background: url(../../static/image/bottom/back1.png) no-repeat;
-        background-size: 100% 100%;
-        cursor: pointer;
-    }
-}
 </style>

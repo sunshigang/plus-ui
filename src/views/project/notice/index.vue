@@ -11,11 +11,11 @@
             <el-form-item label="操作人员" prop="createByName">
               <el-input v-model="queryParams.createByName" placeholder="请输入操作人员" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="类型" prop="noticeType">
+            <!-- <el-form-item label="类型" prop="noticeType">
               <el-select v-model="queryParams.noticeType" placeholder="公告类型" clearable>
                 <el-option v-for="dict in sys_notice_type" :key="dict.value" :label="dict.label" :value="dict.value" />
               </el-select>
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item>
               <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
               <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -28,7 +28,7 @@
     <el-card shadow="hover">
       <template #header>
         <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
+          <!-- <el-col :span="1.5">
             <el-button v-hasPermi="['system:notice:add']" type="primary" plain icon="Plus"
               @click="handleAdd">新增</el-button>
           </el-col>
@@ -41,7 +41,7 @@
               @click="handleDelete()">
               删除
             </el-button>
-          </el-col>
+          </el-col> -->
           <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
         </el-row>
       </template>
@@ -136,10 +136,11 @@
 <script setup name="Notice" lang="ts">
 import { listNotice, getNotice, delNotice, readNotice, addNotice, updateNotice } from '@/api/system/notice';
 import { NoticeForm, NoticeQuery, NoticeVO } from '@/api/system/notice/types';
-
+import { useRouter, useRoute } from 'vue-router'
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_notice_status, sys_notice_type } = toRefs<any>(proxy?.useDict('sys_notice_status', 'sys_notice_type'));
-
+const router = useRouter()
+const route = useRoute()
 const noticeList = ref<NoticeVO[]>([]);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -175,7 +176,8 @@ const data = reactive<PageData<NoticeForm, NoticeQuery>>({
     createByName: '',
     status: '',
     noticeType: '',
-    read: false
+    read: false,
+    isAsc: 'desc'
   },
   rules: {
     noticeTitle: [{ required: true, message: '公告标题不能为空', trigger: 'blur' }],
@@ -190,7 +192,6 @@ const getList = async () => {
   loading.value = true;
   const res = await listNotice(queryParams.value);
   noticeList.value = res.rows;
-  console.log("🚀 ~ getList ~ noticeList.value:", noticeList.value)
   total.value = res.total;
   loading.value = false;
 };
@@ -239,16 +240,22 @@ const handleUpdate = async (row?: NoticeVO) => {
 };
 /**查看按钮操作 */
 const handleView = async (row?: NoticeVO) => {
+  console.log("🚀 ~ handleView ~ row:", row)
   if (!row) return; // 确保有选中行
   reset();
-  const noticeId = row.noticeId;
-  const { data } = await getNotice(noticeId);
-  Object.assign(form.value, data); // 加载数据
-  isViewMode.value = true; // 标记为查看模式
-  dialog.visible = true;
-  dialog.title = '查看公告';
+  if (row.majorFlag == true) {
+    router.push(`/project/major/major-view/${row.projectId}`);
+  } else {
+    router.push(`/project/normal/normal-view/${row.projectId}`);
+  }
+  // router.push(`/project/major/major-view/${row.projectId}`);
+  // const noticeId = row.noticeId;
+  // const { data } = await getNotice(noticeId);
+  // Object.assign(form.value, data); // 加载数据
+  // isViewMode.value = true; // 标记为查看模式
+  // dialog.visible = true;
+  // dialog.title = '查看公告';
 };
-
 /** 提交按钮 */
 const submitForm = () => {
   noticeFormRef.value?.validate(async (valid: boolean) => {

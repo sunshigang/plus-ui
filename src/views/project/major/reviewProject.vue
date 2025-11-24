@@ -308,7 +308,7 @@
             </el-form>
           </div>
         </div>
-        <!-- 审批信息（按状态显示） -->
+        <!-- 审批信息（按状态显示）-->
         <div class="project-documents" v-if="showApprovalSection">
           <h3 class="section-title">审批信息</h3>
           <el-form label-width="230px" disabled>
@@ -316,26 +316,26 @@
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
-                  form.approveRecord[0].gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecord[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  form.approveRecords[0].gwhApproveResult === '通过' ? 'success' :
+                    form.approveRecords[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
                 ]">
                   {{
-                    form.approveRecord[0].gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecord[0].gwhApproveResult === '驳回' ? '✗' : '-'
+                    form.approveRecords[0].gwhApproveResult === '通过' ? '✓' :
+                      form.approveRecords[0].gwhApproveResult === '驳回' ? '✗' : '-'
                   }}
                 </span>
                 <span class="status-text">
-                  {{ form.approveRecord[0].gwhApproveResult || '待审批' }}
+                  {{ form.approveRecords[0].gwhApproveResult || '待审批' }}
                 </span>
               </div>
             </el-form-item>
 
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecord[0].gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ form.approveRecords[0].gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
 
             <el-form-item label="审批反馈">
-              <el-input type="textarea" :value="form.approveRecord[0].gwhApprovalReason || '暂无反馈'" :rows="2"
+              <el-input type="textarea" :value="form.approveRecords[0].gwhApprovalReason || '暂无反馈'" :rows="2"
                 style="background: #fff;" disabled />
             </el-form-item>
 
@@ -354,7 +354,48 @@
                 </li>
               </transition-group>
             </el-form-item>
+          </el-form>
+          <el-form label-width="230px" v-if="['林业局通过', '林业局驳回'].includes(form.status)" disabled>
+            <el-form-item label="市林业局审批状态">
+              <div class="approval-item">
+                <span :class="['status-icon',
+                  form.approveRecords[0].lyjApproveResult === '通过' ? 'success' :
+                    form.approveRecords[0].lyjApproveResult === '驳回' ? 'error' : 'pending'
+                ]">
+                  {{
+                    form.approveRecords[0].lyjApproveResult === '通过' ? '✓' :
+                      form.approveRecords[0].lyjApproveResult === '驳回' ? '✗' : '-'
+                  }}
+                </span>
+                <span class="status-text">
+                  {{ form.approveRecords[0].lyjApproveResult || '待审批' }}
+                </span>
+              </div>
+            </el-form-item>
 
+            <el-form-item label="审批时间">
+              <span>{{ form.approveRecords[0].lyjApproveTime || '暂无时间' }}</span>
+            </el-form-item>
+
+            <el-form-item label="审批反馈">
+              <el-input type="textarea" :value="form.approveRecords[0].lyjApprovalReason || '暂无反馈'" :rows="2"
+                style="background: #fff;" disabled />
+            </el-form-item>
+            <el-form-item label="反馈文件">
+              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
+                tag="ul">
+                <li v-for="(file, index) in forestryFeedbackFileList" :key="file.ossId"
+                  class="el-upload-list__item ele-upload-list__item-content">
+                  <el-link :href="file.url" :underline="false" target="_blank">
+                    <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                  </el-link>
+                </li>
+                <li v-if="forestryFeedbackFileList.length === 0" class="el-upload-list__item"
+                  key="'empty-managementFeedback'">
+                  <span class="el-icon-info"> 暂无反馈文件 </span>
+                </li>
+              </transition-group>
+            </el-form-item>
           </el-form>
         </div>
         <!-- 审核区域 -->
@@ -415,12 +456,13 @@
       </div>
     </div>
   </div>
+
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getInfo, gwhApprove } from '@/api/project/normal/index'
+import { getInfo, gwhApprove, lyjApprove } from '@/api/project/normal/index'
 import { useUserStore } from '@/store/modules/user'
 import { getCurrentInstance } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -469,7 +511,7 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecord: [{
+  approveRecords: [{
     projectId: '',
     gwhApproveResult: '',
     gwhApproverId: '',
@@ -494,7 +536,7 @@ const projectRedLineFileList = ref([])
 const redLineCoordinateFileList = ref([])
 const threeDModelFileList = ref([])
 const managementFeedbackFileList = ref([])
-
+const forestryFeedbackFileList = ref([]);   //市林业局反馈文件
 // 审核表单数据
 const auditForm = reactive({
   auditResult: '', // 审核结果：通过/驳回
@@ -543,7 +585,7 @@ const handleModelReview = () => {
     path: '/screen/screen',
     query: {
       id: form.id,
-      type: 'normal-review'
+       type: 'major-review'
     }
   })
 }
@@ -613,7 +655,6 @@ const submitAudit = async (result) => {
           '操作确认',
           { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
         )
-
         // 构造审核数据
         const auditData = {
           projectId: form.id,
@@ -621,11 +662,13 @@ const submitAudit = async (result) => {
           approvalReason: auditForm.approvalReason,
           approvalAttachment: JSON.stringify(feedbackFileList.value)
         }
-        // 调用审核接口
-        await gwhApprove(auditData)
-        ElMessage.success(`审核${result}成功`)
+        if (form.status == '管委会审批中') {
+          await gwhApprove(auditData)
+        } else if (form.status == '管委会通过') {
+          await lyjApprove(auditData)
+        }
         showSuccessPopup.value = false
-        // router.push('/project/normal')
+        // router.push('/project/major')
       } catch (err) {
         if (err !== 'cancel') {
           ElMessage.error(`审核失败：${err.message || '未知错误'}`)
@@ -634,12 +677,13 @@ const submitAudit = async (result) => {
     }
   })
 }
+
 const handleViewDetail = () => {
-  router.push(`/project/mormal/mormal-view/${route.params.id}`);
+  router.push(`/project/major/major-view/${route.params.id}`);
 }
 // 取消操作
 const handleCancel = () => {
-  router.push('/project/normal')
+  router.push('/project/major')
 }
 // 新增：解析审批记录（兼容字符串转数组）
 const parseApproveRecord = (approveRecordData) => {
@@ -734,7 +778,7 @@ const loadProjectData = async (projectId) => {
     const response = await getInfo(projectId)
     const projectData = response.data
     Object.assign(form, projectData)
-    form.approveRecord = parseApproveRecord(projectData.approveRecord);
+    form.approveRecords = parseApproveRecord(projectData.approveRecords);
     // 初始化文件列表 - 使用通用解析方法处理JSON字符串
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -747,11 +791,12 @@ const loadProjectData = async (projectId) => {
     // 处理三维模型文件列表
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 处理审批反馈文件
-    const firstRecord = form.approveRecord[0] || {};
+    const firstRecord = form.approveRecords[0] || {};
     managementFeedbackFileList.value = parseFileList(firstRecord.gwhApprovalAttachment)
+    forestryFeedbackFileList.value = parseFileList(firstRecord.lyjApprovalAttachment)
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
-    router.push('/project/normal')
+    router.push('/project/major')
   }
 }
 // 暴露接口供父组件调用
@@ -764,31 +809,11 @@ defineExpose({
 })
 </script>
 <style scoped>
-.add-content-container {
-  width: 100%;
-  padding: 20px;
-  background-color: #f6f6f6;
-  box-sizing: border-box;
-  position: relative;
-  height: 100vh;
-}
-
-.add-content-wrapper {
-  width: 100%;
-  height: 100%;
-}
-
-.add-content {
-  width: 100%;
-  max-height: calc(100vh - 60px);
-  overflow-y: auto;
-}
-
-.popup-content-wrapper {
+/* 新增弹窗样式 */
+.add-content-container.v-else {
   display: flex;
   justify-content: center;
-  width: 100%;
-  height: 100%;
+  align-items: center;
 }
 
 .popup-content {
@@ -821,6 +846,27 @@ defineExpose({
   margin-top: 10px;
 }
 
+.add-content-container {
+  width: 100%;
+  padding: 20px;
+  background-color: #f6f6f6;
+  box-sizing: border-box;
+  position: relative;
+  height: 100vh;
+}
+
+.add-content-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.popup-content-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .btn-back {
   background-color: #4CAF50;
   color: white;
@@ -833,6 +879,12 @@ defineExpose({
   color: #333;
   border: 1px solid #ddd;
   padding: 8px 24px;
+}
+
+.add-content {
+  width: 100%;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
 }
 
 .back-normal {
@@ -921,6 +973,21 @@ defineExpose({
   font-size: 22px;
   /* 可根据需要调整标题大小 */
 }
+
+.audit-title {
+  padding: 10px;
+  margin-left: 30px;
+  font-size: 19px;
+  font-weight: bold;
+  color: #1f2329;
+  line-height: 2;
+}
+
+.modelReview {
+  /* 确保按钮不被挤压 */
+  white-space: nowrap;
+}
+
 .status-icon {
   display: inline-block;
   width: 20px;
@@ -940,21 +1007,6 @@ defineExpose({
 .status-icon.error {
   background-color: #f5222d;
 }
-.audit-title {
-  padding: 10px;
-  margin-left: 30px;
-  font-size: 19px;
-  font-weight: bold;
-  color: #1f2329;
-  line-height: 2;
-}
-
-.modelReview {
-  /* 确保按钮不被挤压 */
-  white-space: nowrap;
-}
-
-
 
 /* 基础信息容器 */
 .basic-info-container {

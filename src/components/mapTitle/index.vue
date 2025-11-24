@@ -1,7 +1,7 @@
 <template>
     <div v-if="draggingStyle" class="beforeConstruction"></div>
-    <div v-if="draggingStyle" class="drag" :style="{ left: dragPosition + '%' }"></div>
-    <div v-if="draggingStyle" class="dragIcon" @mousedown="startDrag" :style="{ left: dragPosition + '%' }"></div>
+    <!-- <div v-if="draggingStyle" class="drag" :style="{ left: dragPosition + '%' }"></div>
+    <div v-if="draggingStyle" class="dragIcon" @mousedown="startDrag" :style="{ left: dragPosition + '%' }"></div> -->
     <div v-if="draggingStyle" class="AfterConstruction"></div>
 </template>
 

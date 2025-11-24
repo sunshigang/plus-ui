@@ -6,15 +6,19 @@
     </div>
     <div v-loading="state.loading" class="content-box">
       <template v-if="newsList.length > 0">
-        <div v-for="(v, k) in newsList" :key="k" class="content-box-item" @click="onNewsClick(k)">
-          <div class="item-conten">
-            <div>{{ v.message }}</div>
+        <!-- 每条公告：内容区域跳转，未读标签弹窗 -->
+        <div v-for="(v, k) in newsList" :key="k" class="content-box-item">
+          <!-- 公告内容区域：点击跳转消息列表 -->
+          <div class="item-conten" @click="goToNoticeList()">
+            <div class="notice-title">{{ v.message }}</div> <!-- 项目名称/公告标题 -->
             <div class="content-box-msg"></div>
             <div class="content-box-time">{{ v.time }}</div>
           </div>
-          <!-- 已读/未读 -->
+          <!-- 已读/未读标签：未读才绑定点击事件（弹窗） -->
           <span v-if="v.read" class="el-tag el-tag--success el-tag--mini read">已读</span>
-          <span v-else class="el-tag el-tag--danger el-tag--mini read">未读</span>
+          <span v-else class="el-tag el-tag--danger el-tag--mini read" @click.stop="onNewsClick(k)">
+            未读
+          </span>
         </div>
       </template>
       <el-empty v-else :description="'消息为空'"></el-empty>
@@ -27,7 +31,8 @@ import { ref, reactive, onMounted, nextTick, getCurrentInstance } from 'vue';
 import { useNoticeStore } from '@/store/modules/notice';
 import { listNotice, readNotice } from '@/api/system/notice';
 import { NoticeQuery, NoticeVO } from '@/api/system/notice/types'; // 导入类型
-
+import { useRouter } from 'vue-router'; // 导入路由
+const router = useRouter(); // 初始化路由
 const noticeStore = useNoticeStore();
 const instance = getCurrentInstance();
 const proxy = (instance?.proxy as unknown) as {
@@ -80,7 +85,7 @@ const readAll = async () => {
 const getTableData = async () => {
   state.loading = true;
   try {
-    const res = await listNotice({isAsc:'desc'} as NoticeQuery);
+    const res = await listNotice({ isAsc: 'desc' } as NoticeQuery);
     console.log("🚀 ~ getTableData ~ res:", res)
     // 筛选未读公告（read: false）
     const unreadNotices = res.rows.filter((item: any) => !item.read);
@@ -132,6 +137,13 @@ const onNewsClick = async (index: number) => {
     console.log('用户取消标记已读操作', error);
   }
 };
+// 新增：点击公告内容（projectName）跳转消息列表页面
+const goToNoticeList = () => {
+  // 替换为你的消息列表页面路由路径
+  router.push('/project/notice').catch(err => {
+    if (!err.message.includes('NavigationDuplicated')) throw err;
+  });
+};
 onMounted(() => {
   nextTick(() => {
     getTableData();
@@ -171,28 +183,49 @@ onMounted(() => {
       padding-top: 12px;
       display: flex;
 
-      &:has(.el-tag--danger) {
-        cursor: pointer;
-      }
+      justify-content: space-between; // 让内容和标签左右分布
+      align-items: flex-start; // 顶部对齐
+      gap: 8px; // 内容和标签间距
 
       &:last-of-type {
         padding-bottom: 12px;
       }
 
+      .item-conten {
+        width: calc(100% - 60px); // 预留标签宽度
+        display: flex;
+        flex-direction: column;
+        cursor: pointer; // 内容区域鼠标指针变为手型（表示可点击）
+
+        &:hover .notice-title {
+          color: var(--el-color-primary); // hover 时标题变色，提升交互体验
+        }
+      }
+
+      .notice-title {
+        color: var(--el-text-color-primary);
+        margin-bottom: 5px;
+        line-height: 1.4;
+      }
+
       .content-box-msg {
         color: var(--el-text-color-secondary);
-        margin-top: 5px;
         margin-bottom: 5px;
       }
 
       .content-box-time {
         color: var(--el-text-color-secondary);
+        font-size: 12px;
       }
 
-      .item-conten {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
+      .el-tag--danger {
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          opacity: 0.9;
+          transform: scale(1.05);
+        }
       }
     }
   }

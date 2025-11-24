@@ -1,6 +1,6 @@
 export interface InfoVO {
   projectUsage?: string; //项目类型
-    approveRecord: {
+  approveRecord?: {
     gwhApprovalAttachment?: string, // 管委会审批反馈文件
     gwhApprovalReason?: string,// 管委会审批反馈
     gwhApproveResult?: string,// 管委会审批状态
@@ -10,6 +10,18 @@ export interface InfoVO {
     lyjApproveResult?: string,// 市林业局审核状态
     lyjApproveTime?: string,// 市林业局审核时间
   },
+  approveRecords?: [{
+    gwhApprovalAttachment?: string, // 管委会审批反馈文件
+    gwhApprovalReason?: string,// 管委会审批反馈
+    gwhApproveResult?: string,// 管委会审批状态
+    gwhApproveTime?: string,// 管委会审批时间
+    gwhApproverId?: string;
+    lyjApprovalAttachment?: string,// 市林业局审核反馈文件
+    lyjApprovalReason?: string,// 市林业局审核反馈
+    lyjApproveResult?: string,// 市林业局审核状态
+    lyjApproveTime?: string,// 市林业局审核时间
+    lyjApproverId?: string;
+  }]
   /**
    *
    */
@@ -115,7 +127,7 @@ export interface InfoVO {
   /**
    * 公示材料URL
    */
-  publicMaterial: string;
+  meetingMaterials: string;
 
   /**
    * 选址方案核准申报表URL
@@ -153,7 +165,7 @@ export interface InfoVO {
 
 export interface InfoForm extends BaseEntity {
   projectUsage?: string;//项目用途
-  approveRecord: {
+  approveRecord?: {
     gwhApprovalAttachment?: string, // 管委会审批反馈文件
     gwhApprovalReason?: string,// 管委会审批反馈
     gwhApproveResult?: string,// 管委会审批状态
@@ -274,7 +286,7 @@ export interface InfoForm extends BaseEntity {
   /**
    * 公示材料URL
    */
-  publicMaterial?: string;
+  meetingMaterials?: string;
 
   /**
    * 选址方案核准申报表URL
@@ -411,7 +423,7 @@ export interface InfoQuery extends PageQuery {
   /**
    * 公示材料URL
    */
-  publicMaterial?: string;
+  meetingMaterials?: string;
 
   /**
    * 选址方案核准申报表URL

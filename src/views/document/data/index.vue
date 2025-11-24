@@ -4,7 +4,7 @@
     <div v-show="showSearch" class="mb-[10px]">
       <el-card shadow="hover">
         <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-          <el-form-item label="文件名称" prop="name">
+          <el-form-item label="文件名称" prop="name" label-width="80px">
             <el-input v-model="queryParams.name" placeholder="请输入" clearable @keyup.enter="handleQuery" />
           </el-form-item>
           <el-form-item>
@@ -79,13 +79,14 @@
 
     <!-- 新增/更新版本对话框 -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="870px" append-to-body>
-      <el-form ref="documentFormRef" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="documentFormRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="文件名称" prop="name" hidden>
           <el-input v-model="form.name" placeholder="自动填充文件名" />
         </el-form-item>
         <!-- 替换原文件路径输入框为FileUpload组件 -->
         <el-form-item label="上传文件" prop="ossIds">
-          <FileUpload v-model="form.ossIds" :disabled="false" @update:modelValue="handleFileUploadChange" />
+          <FileUpload v-model="form.ossIds" :disabled="false" @update:modelValue="handleFileUploadChange"
+            :fileType="getAllowedFileTypes" />
         </el-form-item>
         <el-form-item label="文件类型" prop="fileSuffix" hidden>
           <el-input v-model="form.fileSuffix" />
@@ -104,7 +105,7 @@
         <!-- 1. 时间筛选区域（参考示例的搜索栏格式） -->
         <div class="history-filter mb-6">
           <el-form :model="historyQuery" inline>
-            <el-form-item label="时间范围">
+            <el-form-item label="时间范围" label-width="80px">
               <el-date-picker v-model="historyQuery.startTime" type="datetime" placeholder="开始时间"
                 @update:model-value="getHistoryList" />
               <span class="mx-2">至</span>
@@ -149,8 +150,6 @@
               <template #default="scope">
                 <el-button link type="primary" icon="Download" size="small"
                   @click="handleDownload(scope.row)">下载</el-button>
-                <!-- <el-button link type="danger" icon="Stop" size="small"
-                  @click="handleHistoryDisable(scope.row.versionId)">停用</el-button> -->
               </template>
             </el-table-column>
           </el-table>
@@ -174,7 +173,7 @@
   </div>
 </template>
 <script setup name="DocumentPlanningFile" lang="ts">
-import { ref, onMounted, watch, VNode } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { listByIds } from '@/api/system/oss';
 import FileUpload from '@/components/FileUpload/index.vue';
 import { listOss, delOss } from '@/api/system/oss';
@@ -200,6 +199,7 @@ interface PageData<T, Q> {
   queryParams: Q;
   rules: Record<string, any[]>;
 }
+const originalFile = ref<DocumentVO | null>(null);
 const historyDialog = reactive({
   visible: false, // 弹窗显示状态
   fileName: ''    // 当前查看的主文件名称（用于标题和信息展示）
@@ -307,6 +307,7 @@ const getList = async () => {
 function cancel() {
   dialog.visible = false;
   reset();
+  originalFile.value = null;
 }
 
 /** 表单重置 */
@@ -395,10 +396,41 @@ const handleUpdate = async (row: DocumentVO) => {
   form.value.fileSuffix = '';
   form.value.urls = '';
   formFiles.value = []; // 清空文件列表
-
+  originalFile.value = row;
   dialog.visible = true;
   dialog.title = '更新规划文件';
 };
+const getAllowedFileTypes = computed(() => {
+  // 1. 更新状态：从原文件 fileSuffix 提取后缀
+  if (dialog.title === '更新规划文件' && originalFile.value?.fileSuffix) {
+    const fileSuffix = originalFile.value.fileSuffix;
+    // 处理后缀字符串：去除可能的点号、空格，按逗号分割
+    const suffixes = fileSuffix.split(',')
+      .map(suffix => suffix.trim()) // 去除空格
+      .map(suffix => suffix.startsWith('.') ? suffix.slice(1) : suffix) // 去除前缀点号（如 .cpg → cpg）
+      .filter(suffix => suffix); // 过滤空值
+
+    // 即使没有提取到有效后缀，也返回空数组（避免组件报错）
+    if (suffixes.length === 0) {
+      console.warn('原文件未配置有效文件类型，允许所有默认类型');
+      return [
+        'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
+        'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
+        'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'xml', 'shx', 'FBX', 'fbx', 'obj'
+      ];
+    }
+
+    // 大小写都支持（如 cpg + CPG）
+    return suffixes.flatMap(suffix => [suffix.toLowerCase(), suffix.toUpperCase()]);
+  }
+
+  // 2. 新增状态：使用默认支持的所有规划文件类型
+  return [
+    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
+    'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
+    'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'xml', 'shx', 'FBX', 'fbx', 'obj'
+  ];
+});
 // 新增：文件上传/删除后触发（同步表单并刷新列表）
 const handleFileUploadChange = (newOssIds: string) => {
   console.log("🚀 ~ handleFileUploadChange ~ newOssIds:", newOssIds)
@@ -592,17 +624,10 @@ const handleHistoryBatchDownload = async () => {
   proxy?.$modal.msgSuccess('历史版本下载请求已提交');
 };
 
-// 新增：单个历史版本停用（复用原有逻辑）
-const handleHistoryDisable = async (historyId: string) => {
-  console.log("🚀 ~ handleHistoryDisable ~ historyId:", historyId)
-  await proxy?.$modal.confirm('是否确认停用该历史版本？');
-  await documentDisable([historyId]);
-  proxy?.$modal.msgSuccess('历史版本停用成功');
-  getHistoryList(); // 停用后刷新列表
-};
 
 /** 下载文件（修复类型错误） */
 const handleDownload = async (row: DocumentVO | HistoryVO) => {
+  console.log("🚀 ~ handleDownload ~ row:", row)
   // 1. 兼容处理 ossIds 可能的类型（字符串、数组、null/undefined）
   let ossIdsArray: string[] = [];
 
@@ -770,11 +795,5 @@ onMounted(() => {
   color: #c0c4cc !important;
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-::v-deep .el-form-item--large .el-form-item__label {
-  height: 40px;
-  line-height: 40px;
-  width: 100px !important;
 }
 </style>

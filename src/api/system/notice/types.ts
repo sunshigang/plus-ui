@@ -9,6 +9,8 @@ export interface NoticeVO extends BaseEntity {
   read: boolean;
   id: string;
   message: string;
+  majorFlag:boolean;
+  projectId: string;
 }
 
 export interface NoticeQuery extends PageQuery {

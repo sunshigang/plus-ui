@@ -388,6 +388,7 @@ const { proxy } = getCurrentInstance() || {}
 const router = useRouter()
 // 初始化 Pinia 实例
 const userStore = useUserStore()
+
 // 定义组件属性
 const props = defineProps({
   modelValue: {
@@ -445,8 +446,7 @@ const form = reactive({
   threeDModel: undefined,
   modelCoordinate: undefined,
   modelPreview: undefined,
-  majorFlag: false,
-
+  majorFlag: true,
 })
 
 // 表单验证规则
@@ -488,7 +488,7 @@ const getFileAccept = () => {
 
 // 生命周期：初始化时从 Store 读取数据
 onMounted(() => {
-  // 如果是从预览页返回的编辑状态
+
 })
 
 // 上传前置校验
@@ -604,7 +604,6 @@ const handleDeleteUploadFile = (index, type) => {
 
 // 下载模板
 const handleDownloadTemplate = (type) => {
-  console.log("🚀 ~ handleDownloadTemplate ~ proxy:", proxy)
   if (type === 'instructions') {
     proxy?.$download.oss('1987829892356124674');
   } else if (type === 'polylineTemplate') {
@@ -617,7 +616,7 @@ const handleDownloadTemplate = (type) => {
 }
 /** 取消按钮 */
 const cancel = async () => {
-  router.push('/project/normal')
+  router.push('/project/major')
 }
 /** 重置按钮 */
 const resetForm = () => {
@@ -638,6 +637,7 @@ const resetForm = () => {
     }
   })
 }
+
 /** 暂存按钮 */
 const temporarilyForm = () => {
   infoFormRef.value?.validate(async (valid) => {
@@ -659,7 +659,7 @@ const temporarilyForm = () => {
         }
         await stageInfo(submitData)
         proxy?.$modal.msgSuccess("暂存成功")
-        router.push('/project/normal')
+        router.push('/project/major')
       } catch (err) {
         proxy?.$modal.msgError("暂存失败：" + (err).message || "未知错误")
       } finally {
@@ -691,7 +691,7 @@ const submitForm = () => {
         await addInfo(submitData)
         proxy?.$modal.msgSuccess("提交成功")
         // 提交成功后返回列表页
-        router.push('/project/normal')
+        router.push('/project/major')
       } catch (err) {
         proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
       } finally {
@@ -711,11 +711,27 @@ const handleModelPreview = () => {
     path: '/screen/preview',
     query: {
       id: form.id,
-      type: 'normal-add'
+      type: 'major-add'
     }
   })
 }
 
+// 暴露组件接口
+defineExpose({
+  open: (row) => {
+    if (row) {
+      Object.assign(form, row)
+      if (row.locationPlan) locationPlanFileList.value = [...row.locationPlan]
+      if (row.expertOpinions) expertOpinionsFileList.value = [...row.expertOpinions]
+      if (row.meetingMaterials) meetingMaterialsFileList.value = [...row.meetingMaterials]
+      if (row.siteSelectionReport) siteSelectionReportFileList.value = [...row.siteSelectionReport]
+      if (row.approvalDocuments) approvalDocumentsFileList.value = [...row.approvalDocuments]
+      if (row.projectRedLine) projectRedLineFileList.value = [...row.projectRedLine]
+      if (row.redLineCoordinate) redLineCoordinateFileList.value = [...row.redLineCoordinate]
+      if (row.threeDModel) threeDModelFileList.value = [...row.threeDModel]
+    }
+  }
+})
 </script>
 
 <style scoped>

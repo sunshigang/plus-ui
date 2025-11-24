@@ -14,11 +14,29 @@
                 <mapTitle />
             </template>
         </my-mask>
+        <div class="backButton">
+            <div class="back-line left-line">
+                <div class="dash-line dash1"></div>
+                <div class="solid-circle"></div>
+                <div class="dash-line dash2"></div>
+                <div class="hollow-circle"></div>
+                <div class="dash-line dash3"></div>
+            </div>
+            <div class="backImg" @click="clickBack"></div>
+            <div class="back-line right-line">
+                <div class="dash-line dash1"></div>
+                <div class="solid-circle"></div>
+                <div class="dash-line dash2"></div>
+                <div class="hollow-circle"></div>
+                <div class="dash-line dash3"></div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { useMajorProjectStore } from '@/store/modules/majorProject';
+import { useRouter, useRoute } from 'vue-router'
+
 import { toRefs, reactive, ref, onMounted, computed, onUnmounted } from 'vue'
 import bus from '@/libs/eventbus'
 import TopHeader from '@/components/TopHeader'
@@ -29,12 +47,22 @@ import NotesPopup from '@/components/NotesPopup'
 import bottom from '@/components/bottom'
 import LeafletMap from '@/components/LeafletMap'
 import mapTitle from '@/components/mapTitle'
+import { ElMessage } from 'element-plus'
+import { getInfo } from '@/api/project/normal/index'
+const router = useRouter()
+const route = useRoute()
+// 接收路由参数
+const projectIdCheck = ref('')
+const projectmMdelCoordinate = ref('')
+const projectMajorFlag = ref(false)
+const projectThreeDModel = ref('')
+
 const iframeUrl = "http://127.0.0.1:46150/";
 const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
 const splitScreen = ref(false);
-const majorProjectStore = useMajorProjectStore();
+
 const cultureTypeMap = {
     1: "Culture_YDSM",
     2: "Culture_HG",
@@ -65,20 +93,14 @@ const handleIframeLoad = () => {
 /* 三维协议消息发送 */
 const sendMsgUE = (data) => {
     // 关键修复：iframe隐藏时加入队列（原代码漏了这步）
-    if (!mapSwitch.value) {
-        console.warn('iframe 已隐藏，消息加入队列', data);
+    if (!mapSwitch.value || !iframeRef.value || !isIframeLoaded.value) {
+        console.warn('iframe 未就绪，消息加入队列', data);
         msgQueue.value.push(data);
         return;
     }
-    if (!iframeRef.value) {
-        console.warn('iframe 未挂载，消息加入队列', data);
-        msgQueue.value.push(data);
-        return;
-    }
-    if (!isIframeLoaded.value) {
-        console.warn('iframe未加载完成，消息加入队列', data);
-        msgQueue.value.push(data);
-        return;
+    if (msgQueue.value.length > 100) {
+        console.warn('消息队列过长，清理部分消息');
+        msgQueue.value = msgQueue.value.slice(-50);
     }
     // 发送队列中残留的消息
     while (msgQueue.value.length > 0) {
@@ -297,7 +319,6 @@ const handleVectorLayer = (data) => {
 const handleSchemeReview = (data) => {
     if (data) mapSwitch.value = true
 };
-
 const handleSearchRelic = (data) => {
     const hasParking = data.includes('停车场');
     if (hasParking) {
@@ -326,49 +347,19 @@ const handleSearchRelic = (data) => {
         });
     }
 };
-const handleAuditPreviewModel = (projectInfo) => {
-    console.log('收到审批场景项目信息：', projectInfo);
-    // 后续可执行场景加载逻辑（如分屏比对、模型渲染等）
-    // 示例：加载该项目模型（可根据实际需求调整命令）
-    if (projectInfo) {
-        const coords = projectInfo.modelCoordinate.split(',');
-        const x = coords[0] || '120.187601';
-        const y = coords[1] || '28.923468';
-        const z = coords[2] || '0';
-
-        // 加载项目模型（与原有分屏逻辑一致）
-        sendMsgUE({
-            "Command": "LoadAssets",
-            "Args": {
-                "ID": projectInfo.id,
-                "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''),
-                "State": 0,
-                "Angle": 0,
-                "CoordType": 0,
-                "Location": `${x},${y},${z}`,
-                "Scale": "1,1,1"
-            }
-        });
-    }
-};
-//功能
+const coords = projectmMdelCoordinate.value.split(',').map(coord => parseFloat(coord).toFixed(6));
+const [x, y, z, angle = 0] = coords; // 角度默认0
+let modelData = JSON.parse(projectThreeDModel.value)[0];
+const path = modelData.url.replace(/^https?:\/\/[^\/]+\//, '');
+const resultModel = path.replace(/^fangyan\//, '');
 const handleFunctionPanel = (data) => {
-    const projectInfo = majorProjectStore.previewProjectInfo;
-    console.log("🚀 ~ handleFunctionPanel ~ projectInfo:", projectInfo)
-    // 解析坐标（默认值兜底，避免报错）
-    const coords = projectInfo?.modelCoordinate ? projectInfo.modelCoordinate.split(',') : [];
-    const x = coords[0] || '120.187601';
-    const y = coords[1] || '28.923468';
-    const z = coords[2] || '0';
-    const z1 = '15000'; // 镜头高度（可根据需求调整）
-
     if (data.index === 0) {
         sendMsgUE({
             "Command": "SetCameraMove_Geo",
             "Args": {
                 "CoordType": 0,
                 "TargetLocation": `X=${x} Y=${y} Z=${z}`,
-                "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
+                "CameraLocation": `X=${x} Y=${y} Z=15000.000`, // 固定高度
                 "Duration": 1.0
             }
         });
@@ -389,48 +380,36 @@ const handleFunctionPanel = (data) => {
         // 分屏比对逻辑（核心修改：读取项目预览信息）
         splitScreen.value = true;
         if (data.isSelected) {
-            if (projectInfo) {
-                sendMsgUE({
-                    "Command": "LoadAssets",
-                    "Args": {
-                        "ID": projectInfo.id.toString(), // 使用项目ID
-                        "Name": projectInfo.threeDModel.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, ''), // 提取模型路径
-                        "State": 0,
-                        "Angle": 0,
-                        "CoordType": 0,
-                        "Location": `${x},${y},${z}`, // 使用项目坐标
-                        "Scale": "1,1,1"
-                    }
-                });
-                sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
-                sendMsgUE({
-                    "Command": "SwitchAssetsState",
-                    "Args": {
-                        "IDs": [projectInfo.id.toString()], // 关联项目ID
-                        "State": 1
-                    }
-                });
-                sendMsgUE({
-                    "Command": "GetAllAssets",
-                });
-                // 3. 原有分屏比例监听（保留）
-                bus.on('dragIcon:screenRatio', (ratio) => {
-                    sendMsgUE({ "Command": "SwitchSplitScreenRatio", "Args": { "Ratio": ratio } });
-                });
-            } else {
-                console.warn('未获取到项目预览信息，分屏比对使用默认配置');
-                sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
-                bus.on('dragIcon:screenRatio', (ratio) => {
-                    sendMsgUE({ "Command": "SwitchSplitScreenRatio", "Args": { "Ratio": ratio } });
-                });
-            }
+            sendMsgUE({
+                "Command": "LoadAssets",
+                "Args": {
+                    "ID": modelData.ossId, // 使用解析出的ossId
+                    "Name": resultModel,
+                    "State": 0,
+                    "Angle": angle,
+                    "CoordType": 0,
+                    "Location": `${x},${y},${z}`,
+                    "Scale": "1,1,1"
+                }
+            });
+            sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
+            sendMsgUE({
+                "Command": "SwitchAssetsState",
+                "Args": {
+                    "IDs": modelData.ossId, // 关联项目ID
+                    "State": 1
+                }
+            });
+            sendMsgUE({
+                "Command": "GetAllAssets",
+            });
         } else {
             // 关闭分屏（不变）
             sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
             // sendMsgUE({
             //     "Command": "DeleteAssets",
             //     "Args": {
-            //         "ID": projectInfo.id.toString()
+            //         "ID":  modelData.ossId
             //     }
             // });
         }
@@ -443,7 +422,7 @@ const handleFunctionPanel = (data) => {
                     "Args": {
                         "CoordType": 0,
                         "TargetLocation": `X=${x} Y=${y} Z=${z}`,
-                        "CameraLocation": `X=${x} Y=${y} Z=${z1}`,
+                        "CameraLocation": `X=${x} Y=${y} Z=15000.000`, // 固定高度
                         "Duration": 1.0
                     }
                 });
@@ -464,25 +443,54 @@ const handleFunctionPanel = (data) => {
         }
     }
 };
-
-onMounted(() => {
-    // 2. 仅在onMounted中绑定事件
-    bus.on('vector-layer-clicked', handleVectorLayer);
-    bus.on('scheme-review-clicked', handleSchemeReview);
-    bus.on('search-relic', handleSearchRelic);
-    bus.on('function-panel-clicked', handleFunctionPanel);
-    bus.on('auditPreviewModel', handleAuditPreviewModel);
-    const projectInfo = majorProjectStore.previewProjectInfo;
-    if (projectInfo && projectInfo.type === '重大项目') {
-        bus.emit('scheme-review-clicked', true); // 激活方案审查
+const clickBack = () => {
+    sendMsgUE({
+        "Command": "SwitchCamera",
+        "Args": {
+            "ID": "Main",
+            "Duration": 1.0
+        }
+    });
+    setTimeout(() => {
+        if (projectMajorFlag.value === false) {
+            router.push(`/project/normal/normal-review/${projectIdCheck.value}`)
+        } else if (projectMajorFlag.value === true) {
+            router.push(`/project/major/major-review/${projectIdCheck.value}`)
+        }
+    }, 1000);
+};
+onMounted(async () => {
+    sendMsgUE({
+        "Command": "SwitchCamera",
+        "Args": {
+            "ID": "Main",
+            "Duration": 1.0
+        }
+    });
+    const projectId = route.query.id;
+    if (!projectId) {
+        ElMessage.error('缺少项目ID');
+        return;
+    } try {
+        const response = await getInfo(projectId);
+        const projectData = response.data;
+        projectIdCheck.value = projectData.id;
+        projectmMdelCoordinate.value = projectData.modelCoordinate;
+        projectMajorFlag.value = projectData.majorFlag;
+        projectThreeDModel.value = projectData.threeDModel;
+        // 2. 仅在onMounted中绑定事件
+        bus.on('vector-layer-clicked', handleVectorLayer);
+        bus.on('scheme-review-clicked', handleSchemeReview);
+        bus.on('search-relic', handleSearchRelic);
+        bus.on('function-panel-clicked', handleFunctionPanel);
+    } catch (err) {
+        ElMessage.error('数据获取失败：' + (err.message || '未知错误'));
+    } finally {
     }
-
-
 });
 
 // 3. 单独定义onUnmounted，统一解绑所有事件（符合Vue规范）
 onUnmounted(() => {
-    majorProjectStore.clearPreviewProjectInfo(); // 清空项目预览信息
     bus.off('vector-layer-clicked', handleVectorLayer);
     bus.off('scheme-review-clicked', handleSchemeReview);
     bus.off('search-relic', handleSearchRelic);
@@ -490,7 +498,6 @@ onUnmounted(() => {
     bus.off('attractionTypeMessage');
     bus.off('scene-roaming-clicked');
     bus.off('function-panel-clicked', handleFunctionPanel);
-    bus.off('auditPreviewModel', handleAuditPreviewModel);
 });
 
 </script>
@@ -500,5 +507,125 @@ onUnmounted(() => {
     height: 99.8vh;
     background: url(../../../static/image/map/map.png) no-repeat;
     background-size: 100% 100%;
+}
+
+.backButton {
+    z-index: 2;
+    pointer-events: auto;
+    position: absolute;
+    left: 50%; // 与time-column一致，左边缘先对齐屏幕50%处
+    transform: translateX(-180px); // 再向左移动半个宽度180px，实现水平居中
+    bottom: 40px;
+    width: 360px;
+    height: 99px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+
+    /* 通用线条样式 */
+    .back-line {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* 左侧线条：从右向左排列 */
+    .left-line {
+        flex-direction: row-reverse;
+        margin-right: 60px;
+        /* 与按钮间距 */
+
+        /* 虚线通用样式 */
+        .dash-line {
+            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
+            height: 1px;
+        }
+
+        /* 实心圆 */
+        .solid-circle {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ffd700;
+            margin: 0 3px;
+        }
+
+        /* 空心圆 */
+        .hollow-circle {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid #ffd700;
+            background-color: transparent;
+            margin: 0 3px;
+        }
+
+        /* 左侧各段虚线长度 */
+        .dash1 {
+            width: 22px;
+        }
+
+        .dash2 {
+            width: 29px;
+        }
+
+        .dash3 {
+            width: 52px;
+        }
+    }
+
+    /* 右侧线条：从左向右排列 */
+    .right-line {
+        flex-direction: row;
+        margin-left: 10px;
+        /* 与按钮间距 */
+
+        /* 虚线通用样式（与左侧一致） */
+        .dash-line {
+            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
+            height: 1px;
+        }
+
+        /* 实心圆（与左侧一致） */
+        .solid-circle {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ffd700;
+            margin: 0 3px;
+        }
+
+        /* 空心圆（与左侧一致） */
+        .hollow-circle {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid #ffd700;
+            background-color: transparent;
+            margin: 0 3px;
+        }
+
+        /* 右侧各段虚线长度（与左侧对称） */
+        .dash1 {
+            width: 22px;
+        }
+
+        .dash2 {
+            width: 29px;
+        }
+
+        .dash3 {
+            width: 52px;
+        }
+    }
+
+    .backImg {
+        position: absolute;
+        width: 101px;
+        height: 99px;
+        background: url(../static/image/bottom/back1.png) no-repeat;
+        background-size: 100% 100%;
+        cursor: pointer;
+    }
 }
 </style>

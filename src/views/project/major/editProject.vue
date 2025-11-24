@@ -418,6 +418,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
 import { getInfo as getUserInfo } from '@/api/login';
 import { delOss, listByIds } from '@/api/system/oss';
+import { getUserProfile } from '@/api/system/user/index';
 import { useUserStore } from '@/store/modules/user'
 import { propTypes } from '@/utils/propTypes';
 import { ElMessage, ElForm } from 'element-plus'
@@ -491,8 +492,7 @@ const form = reactive({
   threeDModel: '',
   modelCoordinate: undefined,
   modelPreview: undefined,
-  majorFlag: false,
-
+  majorFlag: true,
 })
 
 // 文件列表（用于校验是否上传）
@@ -655,7 +655,7 @@ onMounted(async () => {
   const projectId = route.params.id
   if (!projectId) {
     ElMessage.error('缺少项目ID，无法加载数据')
-    router.push('/project/normal')
+    router.push('/project/major')
     return
   }
 
@@ -694,7 +694,7 @@ onMounted(async () => {
     }
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
-    router.push('/project/normal')
+    router.push('/project/major')
   }
 })
 
@@ -836,17 +836,17 @@ const handleDownloadTemplate = (type) => {
 
 // 返回列表
 const handleBackToList = () => {
-  router.push('/project/normal')
+  router.push('/project/major')
 }
 
 // 查看详情
 const handleViewDetail = () => {
-  router.push(`/project/normal/normal-view/${form.id}`);
+  router.push(`/project/major/major-view/${form.id}`);
 }
 
 // 取消
 const cancel = () => {
-  router.push('/project/normal')
+  router.push('/project/major')
 }
 
 // 重置
@@ -873,7 +873,6 @@ const resetForm = async () => {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
   }
 }
-
 /** 暂存按钮（核心：先校验，后接口） */
 const temporarilyForm = () => {
   infoFormRef.value.validate(async (valid) => {
@@ -906,7 +905,7 @@ const temporarilyForm = () => {
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
   infoFormRef.value.validate(async (valid) => {
-    if (!valid) {
+    if (valid) {
       buttonLoading.value = true
       try {
         const submitData = {
@@ -930,7 +929,6 @@ const submitForm = () => {
     } else {
       ElMessage.warning('基础信息填写不符合要求，请检查')
     }
-
   })
 }
 // 三维模型预览
@@ -943,11 +941,28 @@ const handleModelPreview = () => {
     path: '/screen/preview',
     query: {
       id: form.id,
-      type: 'normal-edit'
+      type: 'major-edit'
     }
   })
 }
 
+// 暴露组件接口
+defineExpose({
+  open: (row) => {
+    if (row) {
+      Object.assign(form, row)
+      locationPlanFileList.value = row.locationPlan ? JSON.parse(row.locationPlan) : []
+      expertOpinionsFileList.value = row.expertOpinions ? JSON.parse(row.expertOpinions) : []
+      meetingMaterialsFileList.value = row.meetingMaterials ? JSON.parse(row.meetingMaterials) : []
+      siteSelectionReportFileList.value = row.siteSelectionReport ? JSON.parse(row.siteSelectionReport) : []
+      approvalDocumentsFileList.value = row.approvalDocuments ? JSON.parse(row.approvalDocuments) : []
+      projectRedLineFileList.value = row.projectRedLine ? JSON.parse(row.projectRedLine) : []
+      redLineCoordinateFileList.value = row.redLineCoordinate ? JSON.parse(row.redLineCoordinate) : []
+      threeDModelFileList.value = row.threeDModel ? JSON.parse(row.threeDModel) : []
+      form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
+    }
+  }
+})
 </script>
 
 <style scoped>
