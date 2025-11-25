@@ -1246,31 +1246,20 @@ const resetForm = async () => {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
   }
 }
-const temporarilyForm = () => {
-  infoFormRef.value?.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await stageInfo(submitData)
-        proxy?.$modal.msgSuccess("暂存成功")
-      } catch (err) {
-        proxy?.$modal.msgError("暂存失败：" + (err.message || "未知错误"))
-      } finally {
-        buttonLoading.value = false
-      }
-    }
-  })
+const temporarilyForm = async () => {
+  const submitData = {
+    ...form,
+    locationPlan: JSON.stringify(locationPlanFileList.value),
+    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+    projectRedLine: JSON.stringify(projectRedLineFileList.value),
+    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+    threeDModel: JSON.stringify(threeDModelFileList.value),
+  }
+  await stageInfo(submitData)
+  proxy?.$modal.msgSuccess("暂存成功")
 }
 const submitForm = () => {
   infoFormRef.value.validate(async (valid1) => {
@@ -1319,13 +1308,13 @@ const submitForm = () => {
   padding: 20px;
   background-color: #f6f6f6;
   box-sizing: border-box;
-  position: absolute;
-  height: 100%;
+  position: relative;
+  min-height: 91vh;
 }
 
 .add-content {
   width: 100%;
-  max-height: calc(100vh - 40px);
+  max-height: calc(91vh - 60px);
   overflow-y: auto;
 }
 
@@ -1478,7 +1467,7 @@ const submitForm = () => {
   margin-right: 8px;
   color: white;
   font-weight: bold;
-  margin-top:10px;
+  margin-top: 10px;
   margin-left: 10px;
 }
 
@@ -1529,6 +1518,7 @@ const submitForm = () => {
   padding: 8px 12px;
   border-radius: 4px;
 }
+
 .feedback-item .label {
   min-width: 100px;
   font-weight: 500;

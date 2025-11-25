@@ -14,7 +14,8 @@
           </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
         </el-select>
-
+        <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']"
+          class="screen-link-btn">可视化大屏</el-button>
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
@@ -128,7 +129,12 @@ const searchMenuRef = ref<InstanceType<typeof SearchMenu>>();
 const openSearchMenu = () => {
   searchMenuRef.value?.openSearch();
 };
-
+//跳转可视化大屏
+const handle3DScreen = () => {
+  router.push({
+    path: '/screen/screen',
+  })
+}
 // 动态切换
 const dynamicTenantEvent = async (tenantId: string) => {
   if (companyName.value != null && companyName.value !== '') {
@@ -221,6 +227,22 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+:deep(.screen-link-btn) {
+  // 蓝色横线（可替换为你需要的蓝色值，如 #1890ff 是 Element 主色）
+  border-bottom: 2px solid #1890ff !important;
+  padding-bottom: 2px !important; // 文字与横线的间距，避免过于拥挤
+  text-decoration: none !important; // 清除 link 类型默认下划线（若有）
+  margin-right: 10px;
+
+  // hover 状态优化（可选，保持样式一致性）
+  &:hover,
+  &:focus,
+  &:active {
+    border-bottom-color: #40a9ff !important; // hover 时浅化蓝色
+    text-decoration: none !important;
+  }
+}
+
 :deep(.el-select .el-input__wrapper) {
   height: 30px;
 }

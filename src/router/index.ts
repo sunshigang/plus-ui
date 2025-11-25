@@ -315,6 +315,41 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         }
       }
     ]
+  },
+  //规划成果归档
+  {
+    path: '/document/data',
+    component: Layout, // 继承 Layout 布局（保持侧边栏和顶部导航）
+    name: 'digitalRenewal',
+    hidden: true,
+    meta: {
+      title: '规划成果归档',
+      icon: 'message', // 侧边栏图标（可选，不想显示侧边栏则设 hidden: true）
+      // permissions: ['system:notice:list', 'system:notice:query', 'system:notice:read']
+    },
+    children: [
+      // 消息列表页面（默认显示）
+      {
+        path: '', // 空路径，访问 /notice 直接进入该页面
+        component: () => import('@/views/document/data/index.vue'),
+        name: 'digitalList',
+        meta: {
+          title: '数字化更新',
+          permissions: ['document:document:list']
+        }
+      },
+      //历史版本
+      {
+        path: 'history/:fileId',
+        component: () => import('@/views/document/history/index.vue'),
+        name: 'DocumentHistory',
+        meta: {
+          title: '历史版本',
+          activeMenu: '/document/data',
+          permissions: ['document:document:list']
+        }
+      },
+    ]
   }
 ];
 

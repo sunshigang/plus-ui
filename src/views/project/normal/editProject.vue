@@ -397,7 +397,7 @@
       <el-button @click="cancel">取消</el-button>
       <el-button type="warning" @click="resetForm">重置</el-button>
       <el-button type="success" v-hasPermi="['project:project:stage']" @click="temporarilyForm">暂存</el-button>
-      <el-button :loading="buttonLoading" type="primary" @click="submitForm">确定</el-button>
+      <el-button :loading="buttonLoading" type="primary" @click="submitForm">提交</el-button>
     </div>
   </div>
   <div class="add-content-container" v-else>
@@ -457,7 +457,7 @@ const currentUserRole = ref('');
 const infoFormRef = ref(null)
 // 按钮加载状态
 const buttonLoading = ref(false)
-
+const isTemporarilySaved = ref(false)
 // 组件状态
 const form = reactive({
   id: undefined,
@@ -875,38 +875,27 @@ const resetForm = async () => {
 }
 
 /** 暂存按钮（核心：先校验，后接口） */
-const temporarilyForm = () => {
-  infoFormRef.value.validate(async (valid) => {
-    if (valid) { // 两个表单都校验通过
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await stageInfo(submitData)
-        proxy?.$modal.msgSuccess("暂存成功")
-      } catch (err) {
-        proxy?.$modal.msgError("暂存失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
-      ElMessage.warning('建设信息填写不符合要求，请检查文件上传')
-    }
-  })
+const temporarilyForm = async () => {
+  const submitData = {
+    ...form,
+    locationPlan: JSON.stringify(locationPlanFileList.value),
+    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+    projectRedLine: JSON.stringify(projectRedLineFileList.value),
+    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+    threeDModel: JSON.stringify(threeDModelFileList.value),
+  }
+  await stageInfo(submitData)
+  proxy?.$modal.msgSuccess("暂存成功")
+  isTemporarilySaved.value = true
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
   infoFormRef.value.validate(async (valid) => {
-    if (!valid) {
+    console.log("🚀 ~ submitForm ~ valid:", valid)
+    if (valid) {
       buttonLoading.value = true
       try {
         const submitData = {
@@ -935,10 +924,31 @@ const submitForm = () => {
 }
 // 三维模型预览
 const handleModelPreview = () => {
+  // 1. 校验三维模型是否上传
   if (threeDModelFileList.value.length === 0) {
     ElMessage.warning('请先上传三维模型文件')
     return
   }
+
+  // 2. 校验模型坐标是否填写且格式正确
+  if (!form.modelCoordinate) {
+    ElMessage.warning('请输入模型坐标')
+    return
+  }
+  // 复用 rules 中的坐标格式正则（避免重复写正则）
+  const coordinateReg = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/
+  if (!coordinateReg.test(form.modelCoordinate)) {
+    ElMessage.warning('模型坐标格式错误，请输入：经度,纬度,高度,旋转方向（支持正负小数）')
+    return
+  }
+
+  // 3. 校验是否已暂存
+  if (!isTemporarilySaved.value) {
+    ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
+    return
+  }
+
+  // 所有校验通过，跳转预览页面
   router.push({
     path: '/screen/preview',
     query: {

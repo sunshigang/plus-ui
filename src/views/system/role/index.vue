@@ -58,10 +58,11 @@
       <el-table ref="roleTableRef" border v-loading="loading" :data="roleList"
         @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="序号" prop="roleId" />
+        <el-table-column label="显示顺序" prop="roleSort" />
+        <!-- <el-table-column label="序号" prop="roleId" /> -->
         <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" />
         <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" />
-        <el-table-column label="显示顺序" prop="roleSort" />
+
         <el-table-column label="状态" align="center">
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
@@ -80,8 +81,8 @@
               @click="handleUpdate(scope.row)">编辑</el-button>
             <!-- <el-button v-hasPermi="['system:role:edit']" link type="primary"
               @click="handleDataScope(scope.row)">数据权限</el-button> -->
-            <el-button v-hasPermi="['system:role:edit']" link type="primary"
-              @click="handleAuthUser(scope.row)">分配账号</el-button>
+            <!-- <el-button v-hasPermi="['system:role:edit']" link type="primary"
+              @click="handleAuthUser(scope.row)">分配账号</el-button> -->
             <el-button v-hasPermi="['system:role:remove']" link type="danger"
               @click="handleDelete(scope.row)">删除</el-button>
           </template>

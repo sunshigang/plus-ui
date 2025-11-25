@@ -328,8 +328,8 @@
                   <span class="label">反馈文件：</span>
                   <div class="file-list">
                     <template v-if="form.approveRecords[0].gwhApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId" :href="file.url"
-                        :underline="false" target="_blank">
+                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId"
+                        :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -356,8 +356,8 @@
                   <span class="label">反馈文件：</span>
                   <div class="file-list">
                     <template v-if="form.approveRecords[0].lyjApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId" :href="file.url"
-                        :underline="false" target="_blank">
+                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId"
+                        :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -677,23 +677,23 @@
             <!-- 管委会审批 -->
             <div class="approval-item">
               <div class="approval-header">
-                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : '✗' }}
+                <span :class="['status-icon', form.approveRecords[1]?.gwhApproveResult === '通过' ? 'success' : 'error']">
+                  {{ form.approveRecords[1]?.gwhApproveResult === '通过' ? '✓' : '✗' }}
                 </span>
                 <span class="approval-title">管委会审核</span>
-                <span class="approval-time">审核时间：{{ form.approveRecords[0].gwhApproveTime || '暂无' }}</span>
+                <span class="approval-time">审核时间：{{ form.approveRecords[1]?.gwhApproveTime || '暂无' }}</span>
               </div>
               <div class="approval-content">
                 <div class="feedback-item">
                   <span class="label">反馈建议：</span>
-                  <span class="value">{{ form.approveRecords[0].gwhApprovalReason || '暂无反馈建议' }}</span>
+                  <span class="value">{{ form.approveRecords[1]?.gwhApprovalReason || '暂无反馈建议' }}</span>
                 </div>
                 <div class="feedback-item">
                   <span class="label">反馈文件：</span>
                   <div class="file-list">
-                    <template v-if="form.approveRecords[0].gwhApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId" :href="file.url"
-                        :underline="false" target="_blank">
+                    <template v-if="form.approveRecords[1]?.gwhApprovalAttachment?.length">
+                      <el-link v-for="file in form.approveRecords[1]?.gwhApprovalAttachment" :key="file.ossId"
+                        :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -720,8 +720,8 @@
                   <span class="label">反馈文件：</span>
                   <div class="file-list">
                     <template v-if="form.approveRecords[0].lyjApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId" :href="file.url"
-                        :underline="false" target="_blank">
+                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId"
+                        :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -739,8 +739,11 @@
     <!-- 底部按钮区 -->
     <div class="add-footer">
       <el-button @click="cancel">取消</el-button>
-      <el-button type="warning" @click="clickDataDownload">数据下载</el-button>
-      <el-button type="success" v-hasPermi="['project:project:stage']" @click="clickDataShare">数据共享</el-button>
+      <el-button type="warning" v-hasPermi="['project:project:share']" @click="clickDataDownload">数据下载</el-button>
+      <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare" :disabled="shareFlag"
+        :class="{ 'disabled-btn': shareFlag }">
+        {{ shareFlag ? '已共享' : '数据共享' }}
+      </el-button>
     </div>
   </div>
 </template>
@@ -748,7 +751,7 @@
 <script setup>
 import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
+import { getInfo, shareInfo } from '@/api/project/normal/index';
 import { propTypes } from '@/utils/propTypes';
 import { ElMessage } from 'element-plus'
 const { proxy } = getCurrentInstance() || {}
@@ -764,7 +767,7 @@ const props = defineProps({
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
 });
-
+const shareFlag = ref(false)
 // 标签页状态
 const activeTab = ref('feedback') // 默认显示“信息填报”
 const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息”
@@ -820,23 +823,25 @@ const form = reactive({
     lyjApproveTime: '',
     lyjApprovalReason: '',
     lyjApprovalAttachment: '',
+  },
+  {
+    projectId: '',
+    gwhApproveResult: '',
+    gwhApproverId: '',
+    gwhApproveTime: '',
+    gwhApprovalReason: '',
+    gwhApprovalAttachment: '',
+    lyjApproveResult: '',
+    lyjApproverId: '',
+    lyjApproveTime: '',
+    lyjApprovalReason: '',
+    lyjApprovalAttachment: '',
   }]
 })
 const dialog = reactive({
   visible: false,
   title: '',
 });
-// 审批反馈数据
-const approveRecord = reactive({
-  gwhApproveResult: '', // 管委会审批结果（通过/驳回）
-  gwhApproveTime: '',   // 审批时间
-  gwhApprovalReason: '',// 反馈建议
-  gwhApprovalAttachment: [], // 反馈文件
-  lyjApproveResult: '', // 管委会审批结果（通过/驳回）
-  lyjApproveTime: '',   // 审批时间
-  lyjApprovalReason: '',// 反馈建议
-  lyjApprovalAttachment: [] // 反馈文件
-})
 // 审批反馈折叠状态
 const basicInfoVisible = ref(true)
 const constructionInfoVisible = ref(false)
@@ -915,7 +920,6 @@ onMounted(async () => {
   try {
     const response = await getInfo(projectId)
     const projectData = response.data
-    console.log("🚀 ~ projectData:", projectData)
     // 填充表单数据
     Object.assign(form, projectData)
     // 加载文件列表
@@ -929,6 +933,9 @@ onMounted(async () => {
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     form.approveRecords[0].gwhApprovalAttachment = parseFileList(projectData.approveRecords[0].gwhApprovalAttachment)
     form.approveRecords[0].lyjApprovalAttachment = parseFileList(projectData.approveRecords[0].lyjApprovalAttachment)
+    form.approveRecords[1].gwhApprovalAttachment = parseFileList(projectData.approveRecords[1].gwhApprovalAttachment)
+    form.approveRecords[1].lyjApprovalAttachment = parseFileList(projectData.approveRecords[1].lyjApprovalAttachment)
+    shareFlag.value = projectData.shareFlag
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/major')
@@ -957,7 +964,7 @@ const handleModelPreview = () => {
     path: '/screen/preview',
     query: {
       id: form.id,
-      type:'major-share'
+      type: 'major-share'
     }
   })
 }
@@ -983,7 +990,7 @@ const clickDataShare = async () => {
     await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
     buttonLoading.value = true;
     // 调用数据共享接口（替换为实际共享接口）
-    // await shareInfo(form.value.id);
+    await shareInfo(form.id);
     proxy?.$modal.msgSuccess('数据共享成功');
     dialog.visible = false;
   } catch (err) {
@@ -1000,6 +1007,21 @@ const clickDataShare = async () => {
 
 <style scoped>
 /* 复用editProject的基础样式，新增审批反馈相关样式 */
+:deep(.disabled-btn) {
+  background-color: #e6f7ef !important;
+  color: #52c41a !important;
+  border-color: #b7eb8f !important;
+  cursor: not-allowed !important;
+  opacity: 0.8;
+}
+
+/* 移除禁用按钮的hover效果 */
+:deep(.el-button--success.is-disabled:hover) {
+  background-color: #e6f7ef !important;
+  color: #52c41a !important;
+  border-color: #b7eb8f !important;
+}
+
 .add-content-container {
   width: 100%;
   padding: 20px;

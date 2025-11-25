@@ -148,7 +148,7 @@ const loginOut = () => {
 
     .time {
         position: absolute;
-        left: 273px;
+        left: 300px;
         top: 35px;
         // width: 220px;
         font-family: 'ZCOOL QingKe HuangYou';

@@ -657,11 +657,12 @@ const submitAudit = async (result) => {
         )
         // 构造审核数据
         const auditData = {
-          projectId: form.id,
+          // projectId: form.id,
           approveResult: result,
           approvalReason: auditForm.approvalReason,
           approvalAttachment: JSON.stringify(feedbackFileList.value)
         }
+        console.log("🚀 ~ submitAudit ~ auditData:", auditData)
         if (form.status == '管委会审批中') {
           await gwhApprove(auditData)
         } else if (form.status == '管委会通过') {

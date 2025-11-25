@@ -874,33 +874,20 @@ const resetForm = async () => {
   }
 }
 /** 暂存按钮（核心：先校验，后接口） */
-const temporarilyForm = () => {
-  infoFormRef.value.validate(async (valid) => {
-    if (valid) { // 两个表单都校验通过
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await stageInfo(submitData)
-        proxy?.$modal.msgSuccess("暂存成功")
-      } catch (err) {
-        proxy?.$modal.msgError("暂存失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
-      ElMessage.warning('建设信息填写不符合要求，请检查文件上传')
-    }
-  })
+const temporarilyForm = async() => {
+  const submitData = {
+    ...form,
+    locationPlan: JSON.stringify(locationPlanFileList.value),
+    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+    projectRedLine: JSON.stringify(projectRedLineFileList.value),
+    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+    threeDModel: JSON.stringify(threeDModelFileList.value),
+  }
+  await stageInfo(submitData)
+  proxy?.$modal.msgSuccess("暂存成功")
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {

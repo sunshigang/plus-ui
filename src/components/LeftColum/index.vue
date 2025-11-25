@@ -63,6 +63,7 @@ const clickVectorLayer = () => {
     schemeReviewStyle.value = false
     planningAchievementStyle.value = false
     vectorLayerStyle.value = !vectorLayerStyle.value
+    console.log("🚀 ~ clickVectorLayer ~ vectorLayerStyle.value:", vectorLayerStyle.value)
     // 触发事件总线，通知其他组件
     bus.emit('vector-layer-clicked', vectorLayerStyle.value)
     sceneRoamingShow.value = !vectorLayerStyle.value

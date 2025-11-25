@@ -293,7 +293,7 @@
         <h3 class="section-title">审批信息</h3>
         <el-form label-width="230px" disabled>
           <!-- 管委会审批信息 -->
-          <template v-if="['管委会通过', '管委会驳回'].includes(form.status)">
+          <template v-if="['管委会审批中','管委会通过', '管委会驳回'].includes(form.status)">
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
@@ -423,7 +423,7 @@ const managementFeedbackFileList = ref([]) // 管委会反馈文件
 // 计算属性：是否显示审批信息
 const showApprovalInfo = computed(() => {
   // 填报中或管委会审批中时不显示审批信息
-  return !['填报中', '管委会审批中'].includes(form.status)
+  return !['填报中'].includes(form.status)
 })
 
 // 获取文件名（截断长文件名）

@@ -1197,31 +1197,20 @@ const resetForm = async () => {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
   }
 }
-const temporarilyForm = () => {
-  infoFormRef.value?.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await stageInfo(submitData)
-        proxy?.$modal.msgSuccess("暂存成功")
-      } catch (err) {
-        proxy?.$modal.msgError("暂存失败：" + (err.message || "未知错误"))
-      } finally {
-        buttonLoading.value = false
-      }
-    }
-  })
+const temporarilyForm = async () => {
+  const submitData = {
+    ...form,
+    locationPlan: JSON.stringify(locationPlanFileList.value),
+    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+    projectRedLine: JSON.stringify(projectRedLineFileList.value),
+    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+    threeDModel: JSON.stringify(threeDModelFileList.value),
+  }
+  await stageInfo(submitData)
+  proxy?.$modal.msgSuccess("暂存成功")
 }
 const submitForm = () => {
   infoFormRef.value.validate(async (valid) => {
@@ -1261,12 +1250,12 @@ const submitForm = () => {
   background-color: #f6f6f6;
   box-sizing: border-box;
   position: relative;
-  min-height: 100vh;
+  min-height: 91vh;
 }
 
 .add-content {
   width: 100%;
-  max-height: calc(100vh - 60px);
+  max-height: calc(91vh - 60px);
   overflow-y: auto;
 }
 

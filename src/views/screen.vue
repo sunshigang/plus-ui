@@ -55,14 +55,23 @@ const route = useRoute()
 const projectIdCheck = ref('')
 const projectmMdelCoordinate = ref('')
 const projectMajorFlag = ref(false)
-const projectThreeDModel = ref('')
-
+const projectThreeDModelList = ref([])
+const projectIds = ref('')
 const iframeUrl = "http://127.0.0.1:46150/";
 const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
 const splitScreen = ref(false);
-
+const modelData = ref(null); // 存储模型数据
+const coords = ref([]); // 存储解析后的坐标
+const x = ref(0);
+const y = ref(0);
+const z = ref(0);
+const angle = ref(0);
+const resultModel = ref(''); // 存储处理后的模型路径
+const remarkPointId = ref([])
+const remarkPolylineId = ref([])
+const remarkPolygonId = ref([])
 const cultureTypeMap = {
     1: "Culture_YDSM",
     2: "Culture_HG",
@@ -156,10 +165,11 @@ function transformWKT (wktStr) {
 }
 let dataWkt = []
 bus.on('remarkMessage', data => {
-    console.log("🚀 ~ data.wkt:", data.wkt)
+    console.log("🚀 ~ data.id:", data.id)
     dataWkt = transformWKT(data.wkt);
     console.log("🚀 ~ data.dataWkt:", dataWkt)
     if (data.type == 'point') {
+        remarkPointId.value.push(data.id)
         if (data.checked) {
             sendMsgUE({
                 "Command": "CreateVectorLayer_Point",
@@ -189,11 +199,13 @@ bus.on('remarkMessage', data => {
             });
         }
     } else if (data.type == 'polyline') {
+        remarkPolylineId.value.push(data.id)
         if (data.checked) {
             sendMsgUE({
                 "Command": "CreateVectorLayer_Line",
                 "Args": {
                     "ID": data.id,
+                    "Name": data.layerName,
                     "Color": "FF0000FF",
                     "Size": 1.0,
                     "CoordType": 0,
@@ -219,11 +231,13 @@ bus.on('remarkMessage', data => {
             });
         }
     } else {
+        remarkPolygonId.value.push(data.id)
         if (data.checked) {
             sendMsgUE({
                 "Command": "CreateVectorLayer_Area",
                 "Args": {
                     "ID": data.id,
+                    "Name": data.layerName,
                     "Color": "FFB500FF",
                     "CoordType": 0,
                     "Locations": dataWkt
@@ -304,7 +318,6 @@ bus.on('scene-roaming-clicked', data => {
     }
 })
 bus.on('attraction-body-clicked', data => {
-    console.log('attraction-body-clicked', data)
     sendMsgUE({
         "Command": "SwitchCamera",
         "Args": {
@@ -313,13 +326,13 @@ bus.on('attraction-body-clicked', data => {
         }
     });
 });
-const handleVectorLayer = (data) => {
+bus.on('vector-layer-clicked', data => {
     mapSwitch.value = !data
-};
-const handleSchemeReview = (data) => {
+});
+bus.on('scheme-review-clicked', data => {
     if (data) mapSwitch.value = true
-};
-const handleSearchRelic = (data) => {
+});
+bus.on('search-relic', data => {
     const hasParking = data.includes('停车场');
     if (hasParking) {
         sendMsgUE({
@@ -346,20 +359,15 @@ const handleSearchRelic = (data) => {
             }
         });
     }
-};
-const coords = projectmMdelCoordinate.value.split(',').map(coord => parseFloat(coord).toFixed(6));
-const [x, y, z, angle = 0] = coords; // 角度默认0
-let modelData = JSON.parse(projectThreeDModel.value)[0];
-const path = modelData.url.replace(/^https?:\/\/[^\/]+\//, '');
-const resultModel = path.replace(/^fangyan\//, '');
-const handleFunctionPanel = (data) => {
+});
+bus.on('function-panel-clicked', data => {
     if (data.index === 0) {
         sendMsgUE({
             "Command": "SetCameraMove_Geo",
             "Args": {
                 "CoordType": 0,
-                "TargetLocation": `X=${x} Y=${y} Z=${z}`,
-                "CameraLocation": `X=${x} Y=${y} Z=15000.000`, // 固定高度
+                "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
+                "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
                 "Duration": 1.0
             }
         });
@@ -379,53 +387,56 @@ const handleFunctionPanel = (data) => {
     } else if (data.index === 1) {
         // 分屏比对逻辑（核心修改：读取项目预览信息）
         splitScreen.value = true;
-        if (data.isSelected) {
+        if (data.isSelected && modelData.value) {
+            sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
+            sendMsgUE({
+                "Command": "SwitchSplitCamera",
+                "Args": {
+                    "CoordType": 0,
+                    "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
+                    "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
+                    "Duration": 1.0
+                }
+            });
             sendMsgUE({
                 "Command": "LoadAssets",
                 "Args": {
-                    "ID": modelData.ossId, // 使用解析出的ossId
-                    "Name": resultModel,
-                    "State": 0,
-                    "Angle": angle,
+                    "ID": modelData.value.ossId,
+                    "Name": resultModel.value,
+                    "State": 1,
+                    "Angle": angle.value,
                     "CoordType": 0,
-                    "Location": `${x},${y},${z}`,
-                    "Scale": "1,1,1"
+                    "Location": `${x.value},${y.value},0`,
+                    "Scale": "1,1,1",
+                    "OffsetVec": `X=0.0 Y=0.0 Z=${(Number(z.value) * 100).toFixed(3)}`
                 }
-            });
-            sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": true } });
-            sendMsgUE({
-                "Command": "SwitchAssetsState",
-                "Args": {
-                    "IDs": modelData.ossId, // 关联项目ID
-                    "State": 1
-                }
-            });
-            sendMsgUE({
-                "Command": "GetAllAssets",
             });
         } else {
             // 关闭分屏（不变）
+            sendMsgUE({
+                "Command": "DeleteAssets",
+                "Args": {
+                    "ID": modelData.value.ossId
+                }
+            });
             sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
-            // sendMsgUE({
-            //     "Command": "DeleteAssets",
-            //     "Args": {
-            //         "ID":  modelData.ossId
-            //     }
-            // });
+
         }
     } else if (data.index === 2) {
         splitScreen.value = false
         if (data.isSelected) {
             bus.on('time-change', year => {
-                sendMsgUE({
-                    "Command": "SetCameraMove_Geo",
-                    "Args": {
-                        "CoordType": 0,
-                        "TargetLocation": `X=${x} Y=${y} Z=${z}`,
-                        "CameraLocation": `X=${x} Y=${y} Z=15000.000`, // 固定高度
-                        "Duration": 1.0
-                    }
-                });
+                if (coords.value.length >= 3) {
+                    sendMsgUE({
+                        "Command": "SetCameraMove_Geo",
+                        "Args": {
+                            "CoordType": 0,
+                            "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
+                            "CameraLocation": `X=${x.value} Y=${y.value} Z=55000.000`,
+                            "Duration": 1.0
+                        }
+                    });
+                }
                 sendMsgUE({
                     "Command": "SwitchSpaceTime",
                     "Args": {
@@ -442,8 +453,74 @@ const handleFunctionPanel = (data) => {
             });
         }
     }
-};
+});
 const clickBack = () => {
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": {
+            "ID": modelData.value.ossId
+        }
+    });
+    sendMsgUE({
+        "Command": "StartRoaming",
+        "Args": {
+            "ID": "场景漫游",
+            "State": "Stop"
+        }
+    });
+    sendMsgUE({
+        "Command": "ShowVectorLayerWithType",
+        "Args": {
+            "Show": false,
+            "Type": "Line",
+            "Tag": "All"
+        }
+    });
+    sendMsgUE({
+        "Command": "ShowVectorLayerWithType",
+        "Args": {
+            "Show": false,
+            "Type": "Area",
+            "Tag": "All"
+        }
+    });
+    sendMsgUE({
+        "Command": "ShowPOIWithType",
+        "Args": {
+            "Show": false,
+            "Type": ["All"]
+        }
+    });
+    remarkPointId.value.forEach(e => {
+        sendMsgUE({
+            "Command": "ShowVectorLayer",
+            "Args": {
+                "ID": e,
+                "Show": false,
+                "Type": "Point"
+            }
+        });
+    });
+    remarkPolylineId.value.forEach(e => {
+        sendMsgUE({
+            "Command": "ShowVectorLayer",
+            "Args": {
+                "ID": e,
+                "Show": false,
+                "Type": "Line"
+            }
+        });
+    });
+    remarkPolygonId.value.forEach(e => {
+        sendMsgUE({
+            "Command": "ShowVectorLayer",
+            "Args": {
+                "ID": e,
+                "Show": false,
+                "Type": "Area"
+            }
+        });
+    });
     sendMsgUE({
         "Command": "SwitchCamera",
         "Args": {
@@ -451,53 +528,115 @@ const clickBack = () => {
             "Duration": 1.0
         }
     });
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": "1991914379260149762" }
+    });
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": {
+            "ID": modelData.value.ossId
+        }
+    });
+    sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
+    sendMsgUE({
+        "Command": "SwitchSpaceTime",
+        "Args": {
+            "Type": "2025"
+        }
+    });
     setTimeout(() => {
-        if (projectMajorFlag.value === false) {
-            router.push(`/project/normal/normal-review/${projectIdCheck.value}`)
-        } else if (projectMajorFlag.value === true) {
-            router.push(`/project/major/major-review/${projectIdCheck.value}`)
+        if (projectIdCheck.value == '0') {
+            router.push(`/project/major/`)
+        } else {
+            if (projectMajorFlag.value === false) {
+                router.push(`/project/normal/normal-review/${projectIdCheck.value}`)
+            } else if (projectMajorFlag.value === true) {
+                router.push(`/project/major/major-review/${projectIdCheck.value}`)
+            }
         }
     }, 1000);
 };
 onMounted(async () => {
-    sendMsgUE({
-        "Command": "SwitchCamera",
-        "Args": {
-            "ID": "Main",
-            "Duration": 1.0
-        }
+    // sendMsgUE({
+    //     "Command": "SwitchCamera",
+    //     "Args": {
+    //         "ID": "Main",
+    //         "Duration": 1.0
+    //     }
+    // });
+    window.addEventListener('message', e => {
+        console.log(e.data)
     });
     const projectId = route.query.id;
-    if (!projectId) {
-        ElMessage.error('缺少项目ID');
-        return;
-    } try {
+    console.log("🚀 ~ projectId:", projectId)
+    if (projectId) {
         const response = await getInfo(projectId);
         const projectData = response.data;
+        console.log("🚀 ~ projectData:", projectData)
         projectIdCheck.value = projectData.id;
-        projectmMdelCoordinate.value = projectData.modelCoordinate;
+        projectmMdelCoordinate.value = projectData.modelCoordinate || '';
         projectMajorFlag.value = projectData.majorFlag;
-        projectThreeDModel.value = projectData.threeDModel;
-        // 2. 仅在onMounted中绑定事件
-        bus.on('vector-layer-clicked', handleVectorLayer);
-        bus.on('scheme-review-clicked', handleSchemeReview);
-        bus.on('search-relic', handleSearchRelic);
-        bus.on('function-panel-clicked', handleFunctionPanel);
-    } catch (err) {
-        ElMessage.error('数据获取失败：' + (err.message || '未知错误'));
-    } finally {
+        projectThreeDModelList.value = JSON.parse(projectData.threeDModel || '[]');
+        // 修复：数据加载完成后，再初始化依赖数据的变量
+        if (projectmMdelCoordinate.value) {
+            coords.value = projectmMdelCoordinate.value.split(',').map(coord => {
+                const num = parseFloat(coord);
+                return isNaN(num) ? 0 : num.toFixed(6); // 异常值处理
+            });
+            [x.value, y.value, z.value, angle.value = 0] = coords.value;
+        }
+        console.log("🚀 ~ x.value:", x.value)
+        // 模型数据初始化（添加存在性校验）
+        if (projectThreeDModelList.value.length > 0) {
+            modelData.value = projectThreeDModelList.value[0];
+            // 修复：访问url前先校验
+            if (modelData.value?.url) {
+                const path = modelData.value.url.replace(/^https?:\/\/[^\/]+\//, '');
+                resultModel.value = path.replace(/^fangyan\//, '');
+            } else {
+                console.warn('模型数据缺少url字段');
+                resultModel.value = '';
+            }
+        } else {
+            console.warn('暂无三维模型数据');
+            modelData.value = null;
+            resultModel.value = '';
+        }
+        setTimeout(() => {
+            sendMsgUE({
+                "Command": "SetCameraMove_Geo",
+                "Args": {
+                    "CoordType": 0,
+                    "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
+                    "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
+                    "Duration": 1.0
+                }
+            });
+        }, 2000);
+    } else {
+        projectIdCheck.value = '0';
+        projectmMdelCoordinate.value = '120.187622,28.923433,1,0';
+        coords.value = projectmMdelCoordinate.value.split(',').map(coord => {
+            const num = parseFloat(coord);
+            return isNaN(num) ? 0 : num.toFixed(6); // 异常值处理
+        });
+        [x.value, y.value, z.value, angle.value = 0] = coords.value;
+        projectMajorFlag.value = false;
+        projectThreeDModelList.value = JSON.parse('[{"name":"gelou.pak","url":"http://47.96.251.128:9000/fangyan/2025/11/22/f45e982131be4c84a3b0cef8e2eedb67.pak","ossId":"1991914379260149762","uid":1763946397744,"status":"success"}]');
+        modelData.value = projectThreeDModelList.value[0];
+        const path = modelData.value.url.replace(/^https?:\/\/[^\/]+\//, '');
+        resultModel.value = path.replace(/^fangyan\//, '');
     }
+
 });
 
 // 3. 单独定义onUnmounted，统一解绑所有事件（符合Vue规范）
 onUnmounted(() => {
-    bus.off('vector-layer-clicked', handleVectorLayer);
-    bus.off('scheme-review-clicked', handleSchemeReview);
-    bus.off('search-relic', handleSearchRelic);
-    bus.off('cultureTypeMessage'); // 简化事件无需命名函数，直接off
+    bus.off('cultureTypeMessage');
     bus.off('attractionTypeMessage');
     bus.off('scene-roaming-clicked');
-    bus.off('function-panel-clicked', handleFunctionPanel);
+    bus.off('time-change');
 });
 
 </script>

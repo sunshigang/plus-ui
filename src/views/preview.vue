@@ -4,8 +4,7 @@
         <div v-if="isIframeLoading" class="iframe-loading">加载 3D 模型中...</div>
 
         <iframe id="iframe" frameborder="0" :src="iframeUrl" style="width: 100%; height: 100%"
-            allow="xr-spatial-tracking *" @load="handleIframeLoad" @error="handleIframeError"
-            v-show="!isLeaving"></iframe>
+            allow="xr-spatial-tracking *" v-show="!isLeaving"></iframe>
 
         <my-mask>
             <template v-slot:main>
@@ -54,6 +53,7 @@ console.log("🚀 ~ projectType:", projectType)
 const isLeaving = ref(false) // 标记是否正在离开页面（避免 iframe 提前销毁）
 const iframeRef = ref(null) // 用 ref 更可靠地获取 iframe 元素
 
+
 // 响应式状态
 const isIframeLoading = ref(true) // iframe 加载状态
 const projectMajorFlag = ref(false) // 是否为主要项目（用于返回路由）
@@ -71,26 +71,18 @@ const clickBack = () => {
     if (isLeaving.value) return; // 防止重复点击
     isLeaving.value = true; // 标记开始离开
     console.log("🚀 ~ clickBack ~ projectThreeDModelOssId.value:", projectThreeDModelOssId.value)
-    const sendFinalMessages = () => {
-        // 1. 删除资源
-        if (projectThreeDModelOssId.value) {
-            sendMsgUE({
-                "Command": "DeleteAssets",
-                "Args": { "ID": projectThreeDModelOssId.value }
-            });
-        }
-        // 2. 切换相机
-        sendMsgUE({
-            "Command": "SwitchCamera",
-            "Args": { "ID": "Main", "Duration": 1.0 }
-        });
-    };
-    sendFinalMessages();
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": projectThreeDModelOssId.value }
+    });
+    // 2. 切换相机
+    sendMsgUE({
+        "Command": "SwitchCamera",
+        "Args": { "ID": "Main", "Duration": 1.0 }
+    });
     // 延迟跳回对应页面
     setTimeout(() => {
         const targetRoute = projectMajorFlag.value
-        console.log("🚀 ~ clickBack ~ targetRoute:", targetRoute)
-        console.log("🚀 ~ clickBack ~ projectType:", projectType)
         if (targetRoute == true) {
             if (projectType == 'major-add') {
                 router.push(`/project/major/major-add/${projectId}`)
@@ -127,26 +119,6 @@ const handleAttractionClick = (data) => {
     });
 };
 
-// 4. iframe 加载完成
-const handleIframeLoad = () => {
-    isIframeLoading.value = false;
-    // iframe 就绪后，初始化 UE + 加载 3D 模型
-    nextTick(() => {
-        initUE();
-    });
-};
-
-// 5. iframe 加载失败
-const handleIframeError = () => {
-    isIframeLoading.value = false;
-    ElMessage.error('3D 模型页面加载失败，请检查服务是否运行');
-};
-
-// 6. 初始化 UE 场景
-const initUE = () => {
-    setTimeout(() => loadThreeDModel(), 2000);
-};
-
 // 7. 加载 3D 模型（解析接口数据）
 const loadThreeDModel = async () => {
     if (!projectId || isLeaving.value) return;
@@ -171,18 +143,25 @@ const loadThreeDModel = async () => {
         }
 
         const model = threeDModel[0];
+        console.log("🚀 ~ loadThreeDModel ~ model:", model)
         projectThreeDModelOssId.value = model.ossId || '';
+        console.log("🚀 ~ loadThreeDModel ~ projectThreeDModelOssId.value:", projectThreeDModelOssId.value)
         let modelUrl = model.url;
         if (modelUrl) {
             modelUrl = modelUrl.replace(/^https?:\/\/[^\/]+\/fangyan\//, '');
         }
+        console.log("🚀 ~ loadThreeDModel ~ modelUrl:", modelUrl)
         const modelLocation = projectData.modelCoordinate || "120.187549,28.924376,110,0"
+        console.log("🚀 ~ loadThreeDModel ~ modelLocation:", modelLocation)
         const coords = modelLocation.split(',').map(coord => {
             const num = parseFloat(coord.trim());
             return isNaN(num) ? 0 : num.toFixed(6);
         });
         const [x, y, z, angle] = coords;
-
+        sendMsgUE({
+            "Command": "DeleteAssets",
+            "Args": { "ID": model.ossId }
+        });
         sendMsgUE({
             "Command": "SetCameraMove_Geo",
             "Args": {
@@ -192,16 +171,7 @@ const loadThreeDModel = async () => {
                 "Duration": 1.0
             }
         });
-        sendMsgUE({
-            "Command": "PingPongMsg",
-            "Args": {
-                "Type": "Ping"
-            }
-        });
-        // sendMsgUE({
-        //     "Command": "DeleteAssets",
-        //     "Args": { "ID": projectThreeDModelOssId.value }
-        // });
+        console.log("🚀 ~ loadThreeDModel ~ model.ossId:", model.ossId)
         sendMsgUE({
             "Command": "LoadAssets", // 假设 UE 有加载资源的命令，需与 UE 端约定
             "Args": {
@@ -210,14 +180,17 @@ const loadThreeDModel = async () => {
                 "State": 0,
                 "Angle": angle,
                 "CoordType": 0,
-                "Location": `${x},${y},${z}`,
+                "Location": `${x},${y},0`,
                 "Scale": "1,1,1",
-                "OffsetVec": "X=0.0 Y=0.0 Z=550.000"
+                "OffsetVec": `X=0.0 Y=0.0 Z=${(Number(z) * 100).toFixed(3)}`
             }
         });
         sendMsgUE({
-            "Command": "GetAllAssets",
+            "Command": "GetAllAssets"
         });
+        setTimeout(() => {
+            isIframeLoading.value = false;
+        }, 6000);
     } catch (err) {
         ElMessage.error(`数据获取失败：${err.message || '未知错误'}`);
         console.error('加载 3D 模型异常：', err);
@@ -238,19 +211,53 @@ const sendMsgUE = (data) => {
         console.error('发送消息到 UE 失败：', err);
     }
 };
-const handleUEMessage = (e) => {
-    if (e.origin !== 'http://127.0.0.1:46150' && e.origin !== 'http://localhost') return;
-    console.log('收到 UE 回执：', e.data);
-};
+// window.addEventListener('message', event => {
+//     let ueMsg;
+//     try {
+//         ueMsg = JSON.parse(event.data);
+//     } catch (e) {
+//         console.error('解析 event.data 失败:', e);
+//         return; // 解析失败，直接返回
+//     }
+
+//     if (!ueMsg || !ueMsg.Args || !ueMsg.Args.State) {
+//         console.warn('ueMsg 结构不完整:', ueMsg);
+//         return;
+//     }
+
+//     const state = ueMsg.Args.State;
+
+//     if (state === '生成成功') {
+//         ElMessage.success('3D 模型加载成功！');
+//     } else if (state === 'ID有重复') {
+//         ElMessage.success('ID有重复！');
+//     } else if (state === '文件下载成功') {
+//         ElMessage.success('文件下载成功');
+//     } else if (state === '文件下载失败') {
+//         ElMessage.success('文件下载失败！');
+//     } else if (state === '文件状态:false') {
+//         ElMessage.success('minio找不到该路径文件！');
+//     } else if (state === '文件状态：true') {
+//         ElMessage.success('文件状态：true！');
+//     } else if (state === '文件挂载失败') {
+//         ElMessage.success('文件挂载失败！');
+//     }
+//     else {
+//         console.warn('未识别的状态:', state);
+//     }
+
+//     
+// });
 // 9. 生命周期：挂载时绑定事件总线
 onMounted(() => {
-    window.addEventListener('message', handleUEMessage);
     bus.on('attraction-body-clicked', handleAttractionClick);
+
+    //文件状态：true
+    setTimeout(() => loadThreeDModel(), 2000);
 });
 
 // 10. 生命周期：卸载时清理资源（关键！）
 onUnmounted(() => {
-    window.removeEventListener('message', handleUEMessage);
     bus.off('attraction-body-clicked', handleAttractionClick);
     isLeaving.value = false;
 });

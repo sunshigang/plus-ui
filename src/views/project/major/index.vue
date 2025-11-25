@@ -21,10 +21,10 @@
               <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
+            <!-- <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
               <el-input v-model="queryParams.scenicArea" placeholder="请输入涉及风景名胜区名称" clearable
                 @keyup.enter="handleQuery" />
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="建设单位名称" prop="constructionUnit">
               <el-input v-model="queryParams.constructionUnit" placeholder="请输入建设单位名称" clearable
                 @keyup.enter="handleQuery" />
@@ -33,13 +33,13 @@
               <el-input v-model="queryParams.organizationCode" placeholder="请输入组织机构代码" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="经办人" prop="contactPerson">
+            <!-- <el-form-item label="经办人" prop="contactPerson">
               <el-input v-model="queryParams.contactPerson" placeholder="请输入经办人" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="经办人联系方式" prop="contactPhone">
               <el-input v-model="queryParams.contactPhone" placeholder="请输入经办人联系方式" clearable
                 @keyup.enter="handleQuery" />
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="保护等级" prop="protectionLevel">
               <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级" clearable
                 @keyup.enter="handleQuery" />
@@ -79,7 +79,7 @@
 
       <el-table v-loading="loading" border :data="infoList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="序号" align="center" prop="id" width="180" />
+        <!-- <el-table-column label="序号" align="center" prop="id" width="180" /> -->
         <el-table-column label="建设项目名称" align="center" prop="projectName" width="180" />
         <el-table-column label="项目代码" align="center" prop="projectCode" width="150" />
         <el-table-column label="所属行政区划" align="center" prop="administrativeRegion" />
@@ -103,121 +103,35 @@
             {{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
+        <el-table-column fixed="right" label="操作"  width="280">
           <template #default="scope">
-            <!-- 1. 建设单位 (constructor) -->
-            <template v-if="currentUserRole === 'constructor'">
-              <!-- 管委会驳回/林业局驳回：仅二次填报 -->
-              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
-                v-if="['管委会驳回', '林业局驳回'].includes(scope.row.status)">
-                二次填报
-              </el-button>
-
-              <!-- 填报中：仅信息填报 -->
-              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
-                v-if="scope.row.status === '填报中'">
-                信息填报
-              </el-button>
-
-              <!-- 其他状态：仅查看 -->
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
-                v-if="!['管委会驳回', '林业局驳回', '填报中'].includes(scope.row.status)">
-                查看
-              </el-button>
-            </template>
-
-            <!-- 2. 系统管理员 (sysadmin) -->
-            <template v-else-if="currentUserRole === 'sysadmin'">
-              <!-- 林业局通过：数据共享 + 删除 -->
-              <template v-if="scope.row.status === '林业局通过'">
-                <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">
-                  数据共享
-                </el-button>
-                <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
-                  删除
-                </el-button>
-              </template>
-
-              <!-- 其他状态：查看 + 删除 -->
-              <template v-else>
-                <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-                  查看
-                </el-button>
-                <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
-                  删除
-                </el-button>
-              </template>
-            </template>
-
-            <!-- 3. 管委会 (mca) -->
-            <template v-else-if="currentUserRole === 'mca'">
-              <!-- 管委会审批中：仅审核 -->
-              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
-                v-if="scope.row.status === '管委会审批中'">
-                审核
-              </el-button>
-
-              <!-- 其他状态：仅查看 -->
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
-                v-if="scope.row.status !== '管委会审批中'">
-                查看
-              </el-button>
-            </template>
-
-            <!-- 4. 市林业局 (clb_audit) -->
-            <template v-else-if="currentUserRole === 'clb_audit'">
-              <!-- 管委会通过：仅审核 -->
-              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:lyjApprove']"
-                v-if="scope.row.status === '管委会通过'">
-                审核
-              </el-button>
-
-              <!-- 其他状态：仅查看 -->
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']"
-                v-if="scope.row.status !== '管委会通过'">
-                查看
-              </el-button>
-            </template>
-
-            <!-- 5. 省林业局 (plb_approve)：所有状态仅查看 -->
-            <template v-else-if="currentUserRole === 'plb_approve'">
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-                查看
-              </el-button>
-            </template>
-
-            <!-- 6. 超级管理员 (superadmin)：所有按钮权限 -->
-            <template v-else-if="currentUserRole === 'superadmin'">
-              <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']">
-                {{ ['管委会驳回', '林业局驳回'].includes(scope.row.status) ? '二次填报' : '信息填报' }}
-              </el-button>
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-                查看
-              </el-button>
-              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
-                v-if="scope.row.status === '管委会审批中'">
-                审核
-              </el-button>
-              <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:lyjApprove']"
-                v-if="scope.row.status === '管委会通过'">
-                审核
-              </el-button>
-              <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
-                删除
-              </el-button>
-              <el-button v-if="['已通过', '林业局通过'].includes(scope.row.status)" link type="primary"
-                @click="handleShare(scope.row)" v-hasPermi="['project:project:share']">
-                数据共享
-              </el-button>
-            </template>
-
-            <!-- 7. 其他角色：仅查看 -->
-            <template v-else>
-              <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-                查看
-              </el-button>
-            </template>
+            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+              v-if="scope.row.status === '填报中'">
+              信息填报
+            </el-button>
+            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+              v-if="['管委会驳回', '林业局驳回'].includes(scope.row.status)">
+              二次填报
+            </el-button>
+            <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
+              v-if="scope.row.status === '管委会审批中'">
+              审核
+            </el-button>
+            <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:lyjApprove']"
+              v-if="scope.row.status === '管委会通过'">
+              审核
+            </el-button>
+            <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']" v-if="scope.row.status === '林业局通过'">
+              数据共享
+            </el-button>
+            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+              查看
+            </el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
+              删除
+            </el-button>
           </template>
+
         </el-table-column>
       </el-table>
       <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"

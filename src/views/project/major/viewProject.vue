@@ -335,7 +335,7 @@
             </transition-group>
           </el-form-item>
         </el-form>
-        <el-form label-width="230px" v-if="['林业局通过', '林业局驳回'].includes(form.status)" disabled>
+        <el-form label-width="230px" v-if="['林业局通过', '林业局驳回','管委会审批中'].includes(form.status)" disabled>
           <el-form-item label="市林业局审批状态">
             <div class="approval-item">
               <span :class="['status-icon',
@@ -463,7 +463,7 @@ const forestryFeedbackFileList = ref([]);   //市林业局反馈文件
 // 计算属性：是否显示审批信息区域
 const showApprovalSection = computed(() => {
   const currentStatus = (form.status || '').trim();
-  const validStatuses = ['管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
+  const validStatuses = ['管委会审批中','管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
   return validStatuses.includes(currentStatus);
 
 })

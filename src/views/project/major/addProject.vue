@@ -191,8 +191,9 @@
                   :before-upload="(file) => handleBeforeUpload(file, 'meetingMaterials')"
                   :file-list="meetingMaterialsFileList" :limit="props.limit" :accept="getFileAccept()"
                   :on-error="(err, file) => handleUploadError(err, file, 'meetingMaterials')" :on-exceed="handleExceed"
-                  :on-success="(res, file) => handleUploadSuccess(res, file, 'meetingMaterials')" :show-file-list="false"
-                  :headers="headers" class="upload-file-uploader" :disabled="props.compDisabled">
+                  :on-success="(res, file) => handleUploadSuccess(res, file, 'meetingMaterials')"
+                  :show-file-list="false" :headers="headers" class="upload-file-uploader"
+                  :disabled="props.compDisabled">
                   <el-button type="primary">点击上传</el-button>
                 </el-upload>
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
@@ -639,34 +640,22 @@ const resetForm = () => {
 }
 
 /** 暂存按钮 */
-const temporarilyForm = () => {
-  infoFormRef.value?.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        // 准备提交数据（包含文件信息）
-        const submitData = {
-          ...form,
-          // 附加文件列表
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await stageInfo(submitData)
-        proxy?.$modal.msgSuccess("暂存成功")
-        router.push('/project/major')
-      } catch (err) {
-        proxy?.$modal.msgError("暂存失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    }
-  })
+const temporarilyForm = async () => {
+  // 准备提交数据（包含文件信息）
+  const submitData = {
+    ...form,
+    // 附加文件列表
+    locationPlan: JSON.stringify(locationPlanFileList.value),
+    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+    projectRedLine: JSON.stringify(projectRedLineFileList.value),
+    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+    threeDModel: JSON.stringify(threeDModelFileList.value),
+  }
+  await stageInfo(submitData)
+  proxy?.$modal.msgSuccess("暂存成功")
 }
 
 /** 提交按钮 */
