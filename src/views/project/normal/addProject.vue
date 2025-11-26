@@ -696,6 +696,19 @@ const handleModelPreview = () => {
     ElMessage.warning('请先上传三维模型文件')
     return
   }
+  if (!form.modelCoordinate) {
+    ElMessage.warning('请输入模型坐标')
+    return
+  }
+  const coordinateReg = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/
+  if (!coordinateReg.test(form.modelCoordinate)) {
+    ElMessage.warning('模型坐标格式错误，请输入：经度,纬度,高度,旋转方向（支持正负小数）')
+    return
+  }
+  if (!isTemporarilySaved.value) {
+    ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
+    return
+  }
   router.push({
     path: '/screen/preview',
     query: {

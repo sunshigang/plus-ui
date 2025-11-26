@@ -94,7 +94,7 @@
     </el-card>
 
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="1000px" append-to-body>
-      <el-form ref="roleFormRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="roleFormRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="角色名称" prop="roleName">
           <el-input v-model="form.roleName" placeholder="请输入角色名称" />
         </el-form-item>

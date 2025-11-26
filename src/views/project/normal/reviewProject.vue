@@ -316,26 +316,26 @@
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
-                  form.approveRecord[0].gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecord[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  form.approveRecords[0].gwhApproveResult === '通过' ? 'success' :
+                    form.approveRecords[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
                 ]">
                   {{
-                    form.approveRecord[0].gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecord[0].gwhApproveResult === '驳回' ? '✗' : '-'
+                    form.approveRecords[0].gwhApproveResult === '通过' ? '✓' :
+                      form.approveRecords[0].gwhApproveResult === '驳回' ? '✗' : '-'
                   }}
                 </span>
                 <span class="status-text">
-                  {{ form.approveRecord[0].gwhApproveResult || '待审批' }}
+                  {{ form.approveRecords[0].gwhApproveResult || '待审批' }}
                 </span>
               </div>
             </el-form-item>
 
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecord[0].gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ form.approveRecords[0].gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
 
             <el-form-item label="审批反馈">
-              <el-input type="textarea" :value="form.approveRecord[0].gwhApprovalReason || '暂无反馈'" :rows="2"
+              <el-input type="textarea" :value="form.approveRecords[0].gwhApprovalReason || '暂无反馈'" :rows="2"
                 style="background: #fff;" disabled />
             </el-form-item>
 
@@ -469,7 +469,7 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecord: [{
+  approveRecords: [{
     projectId: '',
     gwhApproveResult: '',
     gwhApproverId: '',
@@ -747,7 +747,7 @@ const loadProjectData = async (projectId) => {
     // 处理三维模型文件列表
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 处理审批反馈文件
-    const firstRecord = form.approveRecord[0] || {};
+    const firstRecord = form.approveRecords[0] || {};
     managementFeedbackFileList.value = parseFileList(firstRecord.gwhApprovalAttachment)
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))

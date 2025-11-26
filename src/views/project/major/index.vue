@@ -144,7 +144,6 @@
 import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
-import { getInfo as getUserInfo } from '@/api/login';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
 import { propTypes } from '@/utils/propTypes';
 import { globalHeaders } from '@/utils/request';
@@ -158,8 +157,6 @@ const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
-const currentUserRole = ref<string>('');
-
 // 状态颜色映射：返回对应Hex颜色值
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -378,10 +375,6 @@ const handleShare = async (row: InfoVO) => {
 };
 onMounted(async () => { // 保留async关键字
   try {
-    const res = await getUserInfo();
-    const userRoles = res.data?.roles || [];
-    currentUserRole.value = userRoles[0] || '';
-    console.log("🚀 ~ currentUserRole.value:", currentUserRole.value)
     getList();
   } catch (err) {
     console.error('获取用户信息失败：', err);

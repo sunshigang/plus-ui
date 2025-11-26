@@ -151,7 +151,6 @@ import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
 import { getCurrentInstance } from 'vue';
-import { getInfo as getUserInfo } from '@/api/login';
 const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
@@ -164,8 +163,6 @@ const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
-const currentUserRole = ref<string>(''); // 可根据实际登录情况获取
-
 // 状态颜色映射
 const getStatusColor = (status: string) => {
   const statusMap: Record<string, string> = {
@@ -373,10 +370,6 @@ const handleAudit = (row: InfoVO) => {
 // 初始化
 onMounted(async () => { // 保留async关键字
   try {
-    const res = await getUserInfo();
-    const userRoles = res.data?.roles || [];
-    currentUserRole.value = userRoles[0] || '';
-    console.log("🚀 ~ currentUserRole.value:", currentUserRole.value)
     getList();
   } catch (err) {
     console.error('获取用户信息失败：', err);

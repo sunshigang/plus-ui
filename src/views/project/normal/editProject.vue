@@ -358,12 +358,21 @@
                     :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                     :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
-                    class="upload-file-uploader" :disabled="props.compDisabled">
+                    class="upload-file-uploader" :disabled="props.compDisabled"
+                    :on-progress="(progressEvent, file) => handleUploadProgress(progressEvent, file, 'threeDModel')">
                     <el-button type="primary">点击上传</el-button>
                   </el-upload>
                   <div class="operation-group">
                     <el-button link type="primary" icon="Download"
                       @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
+                  </div>
+                  <!-- 三维模型上传进度条 -->
+                  <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
+                    class="upload-progress-container">
+                    <div class="progress-file-name">{{ item.fileName }}<span v-if="item.progressText"
+                        class="progress-text">{{ item.progressText }}</span></div>
+                    <el-progress :percentage="item.progress" :status="item.status" :stroke-width="6"
+                      class="upload-progress-bar" />
                   </div>
                   <transition-group class="upload-file-list el-upload-list el-upload-list--text"
                     name="el-fade-in-linear" tag="ul">
@@ -416,7 +425,6 @@
 import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
-import { getInfo as getUserInfo } from '@/api/login';
 import { delOss, listByIds } from '@/api/system/oss';
 import { useUserStore } from '@/store/modules/user'
 import { propTypes } from '@/utils/propTypes';
@@ -429,7 +437,8 @@ const route = useRoute()
 // 初始化 Pinia 实例
 const userStore = useUserStore()
 const declartionInformation = ref(true)
-
+// 三维模型上传进度条状态管理
+const threeDModelUploadProgress = ref([])
 // 定义组件属性
 const props = defineProps({
   modelValue: {
@@ -452,7 +461,6 @@ const props = defineProps({
   }
 });
 
-const currentUserRole = ref('');
 // 表单引用（关键：确保是同一个表单实例）
 const infoFormRef = ref(null)
 // 按钮加载状态
@@ -649,9 +657,6 @@ const getFileAccept = () => {
 
 // 生命周期：初始化时加载数据
 onMounted(async () => {
-  const res = await getUserInfo();
-  const userRoles = res.data?.roles || [];
-  currentUserRole.value = userRoles[0] || '';
   const projectId = route.params.id
   if (!projectId) {
     ElMessage.error('缺少项目ID，无法加载数据')
@@ -690,6 +695,13 @@ onMounted(async () => {
       threeDModelFileList.value = JSON.parse(projectData.threeDModel)
       if (threeDModelFileList.value.length > 0) {
         form.threeDModel = threeDModelFileList.value[0].url
+        // 初始化已上传文件的进度条状态（直接显示成功）
+        threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
+          fileName: getFileName(file.name),
+          progress: 100,
+          status: 'success',
+          fileId: file.ossId
+        }))
       }
     }
   } catch (err) {
@@ -717,14 +729,65 @@ const handleBeforeUpload = (file, type) => {
     ElMessage.error(`文件大小不能超过 ${props.fileSize}MB!`)
     return false
   }
+  if (type === 'threeDModel') {
+    const fileName = getFileName(file.name)
+    // 防止重复添加
+    const exists = threeDModelUploadProgress.value.some(item => item.fileName === fileName)
+    if (!exists) {
+      threeDModelUploadProgress.value.push({
+        fileName,
+        progress: 0,
+        status: '', // 上传中
+        fileId: '',
+        fileObj: file, // 保存文件对象，用于后续匹配
+        progressText: '（上传中...）' // 初始化进度文本
+      })
+    }
+  }
   return true
 }
 
 // 上传错误处理
 const handleUploadError = (err, file, type) => {
   ElMessage.error(`上传失败: ${err.message || '未知错误'}`)
-}
+  // 三维模型上传失败时更新进度条状态
+  if (type === 'threeDModel') {
+    const fileName = getFileName(file.name)
+    const existingIndex = threeDModelUploadProgress.value.findIndex(
+      item => item.fileName === fileName
+    )
 
+    if (existingIndex > -1) {
+      threeDModelUploadProgress.value[existingIndex] = {
+        ...threeDModelUploadProgress.value[existingIndex],
+        status: 'exception',
+        fileObj: null
+      }
+    }
+  }
+}
+const handleUploadProgress = (progressEvent, file, type) => {
+  if (type !== 'threeDModel') return // 只处理三维模型上传进度
+  const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+  const fileName = getFileName(file.name)
+
+  // 查找当前文件的进度记录
+  const existingIndex = threeDModelUploadProgress.value.findIndex(
+    item => item.fileName === fileName
+  )
+  if (existingIndex > -1) {
+    const status = '' // 始终使用合法的空状态
+    const progressText = percent === 100
+      ? '（服务器处理中...）'
+      : '（上传中...）'
+    threeDModelUploadProgress.value[existingIndex] = {
+      ...threeDModelUploadProgress.value[existingIndex],
+      progress: percent,
+      status,
+      progressText
+    }
+  }
+}
 // 上传超过限制处理
 const handleExceed = (files, fileList) => {
   ElMessage.warning(`每次最多上传 ${props.limit} 个文件`)
@@ -751,10 +814,39 @@ const handleUploadSuccess = (res, file, type) => {
       case 'threeDModel':
         threeDModelFileList.value.push(fileItem);
         form.threeDModel = res.data.url;
+        // 更新进度条状态为成功
+        const fileName = getFileName(file.name)
+        const progressIndex = threeDModelUploadProgress.value.findIndex(
+          item => item.fileName === fileName || item.fileObj === file
+        )
+        if (progressIndex > -1) {
+          threeDModelUploadProgress.value[progressIndex] = {
+            fileName,
+            progress: 100,
+            status: 'success',
+            fileId: res.data.ossId,
+            fileObj: null, // 释放文件对象引用
+            progressText: '' // 清空提示文本
+          }
+        }
         break
     }
     ElMessage.success('上传成功')
   } else {
+    if (type === 'threeDModel') {
+      const fileName = getFileName(file.name)
+      const progressIndex = threeDModelUploadProgress.value.findIndex(
+        item => item.fileName === fileName || item.fileObj === file
+      )
+      if (progressIndex > -1) {
+        threeDModelUploadProgress.value[progressIndex] = {
+          ...threeDModelUploadProgress.value[progressIndex],
+          status: 'exception',
+          fileObj: null,
+          progressText: '' // 清空提示文本
+        }
+      }
+    }
     ElMessage.error(res.msg || '上传失败')
   }
 }
@@ -763,6 +855,7 @@ const handleUploadSuccess = (res, file, type) => {
 const handleDeleteUploadFile = async (index, type) => {
   let fileList = []
   let fileId = ''
+  let fileName = ''
   // 确定当前操作的文件列表和文件ID
   switch (type) {
     case 'locationPlan':
@@ -796,6 +889,14 @@ const handleDeleteUploadFile = async (index, type) => {
     case 'threeDModel':
       fileList = threeDModelFileList.value;
       fileId = fileList[index].ossId;
+      fileName = getFileName(fileList[index].name);
+      // 移除对应的进度条（多重匹配确保准确）
+      const progressIndex = threeDModelUploadProgress.value.findIndex(
+        item => item.fileId === fileId || item.fileName === fileName
+      )
+      if (progressIndex > -1) {
+        threeDModelUploadProgress.value.splice(progressIndex, 1)
+      }
       break
   }
 
@@ -866,6 +967,12 @@ const resetForm = async () => {
     threeDModelFileList.value = projectData.threeDModel ? JSON.parse(projectData.threeDModel) : []
     // 重置三维模型URL
     form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
+    threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
+      fileName: getFileName(file.name),
+      progress: 100,
+      status: 'success',
+      fileId: file.ossId
+    }))
     // 重置表单校验状态
     infoFormRef.value.clearValidate()
     ElMessage.success('已重置为原始数据')
@@ -874,8 +981,15 @@ const resetForm = async () => {
   }
 }
 
-/** 暂存按钮（核心：先校验，后接口） */
+/** 暂存按钮 */
 const temporarilyForm = async () => {
+  const isUploading = threeDModelUploadProgress.value.some(item =>
+    item.progress < 100 || item.progressText.includes('服务器处理中')
+  )
+  if (isUploading) {
+    ElMessage.warning('有文件正在上传或处理中，请等待完成后再暂存')
+    return
+  }
   const submitData = {
     ...form,
     locationPlan: JSON.stringify(locationPlanFileList.value),
@@ -893,8 +1007,14 @@ const temporarilyForm = async () => {
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
+  const isUploading = threeDModelUploadProgress.value.some(item =>
+    item.progress < 100 || item.progressText.includes('服务器处理中')
+  )
+  if (isUploading) {
+    ElMessage.warning('有文件正在上传或处理中，请等待完成后再暂存')
+    return
+  }
   infoFormRef.value.validate(async (valid) => {
-    console.log("🚀 ~ submitForm ~ valid:", valid)
     if (valid) {
       buttonLoading.value = true
       try {
@@ -924,12 +1044,10 @@ const submitForm = () => {
 }
 // 三维模型预览
 const handleModelPreview = () => {
-  // 1. 校验三维模型是否上传
   if (threeDModelFileList.value.length === 0) {
     ElMessage.warning('请先上传三维模型文件')
     return
   }
-
   // 2. 校验模型坐标是否填写且格式正确
   if (!form.modelCoordinate) {
     ElMessage.warning('请输入模型坐标')
@@ -941,13 +1059,18 @@ const handleModelPreview = () => {
     ElMessage.warning('模型坐标格式错误，请输入：经度,纬度,高度,旋转方向（支持正负小数）')
     return
   }
-
   // 3. 校验是否已暂存
   if (!isTemporarilySaved.value) {
     ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
     return
   }
-
+  const isProcessing = threeDModelUploadProgress.value.some(item =>
+    item.progress < 100 || item.progressText.includes('服务器处理中')
+  )
+  if (isProcessing) {
+    ElMessage.warning('模型文件正在上传或处理中，请等待完成后再预览')
+    return
+  }
   // 所有校验通过，跳转预览页面
   router.push({
     path: '/screen/preview',

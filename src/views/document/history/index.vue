@@ -33,8 +33,7 @@
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column label="文件名" align="center" show-overflow-tooltip>
             <template #default="scope">
-              <!-- 优先显示自定义名称，无则显示拼接后的版本名 -->
-              {{ scope.row.customName || scope.row.name || `历史版本${scope.row.versionId}` }}
+              {{ scope.row.name || `未命名_版本${scope.row.versionId}` }}
             </template>
           </el-table-column>
           <el-table-column label="文件类型" align="center">
@@ -99,7 +98,7 @@ interface HistoryVO {
   versionUrls: string;
   versionSuffix: string;
   updateTime: string;
-  name?: string;
+  name: string;
   ossIds?: string | string[];
   customName?: string; // 新增：存储fileName拼接的版本名称
 }
@@ -118,26 +117,15 @@ const getHistoryList = async () => {
   try {
     const res = await documentHistory(historyQuery.fileId);
     const rawData = res.data || [];
-    console.log("🚀 ~ getHistoryList ~ rawData:", rawData)
-
-    // 处理ossIds格式 + 匹配fileId替换版本名称
-    historyList.value = rawData.map((item: any) => {
-      // 核心逻辑：对比接口返回的fileId与路由fileId是否一致
-      const isFileIdMatch = item.fileId === fileId.value;
-
-      return {
-        ...item,
-        // 处理ossIds格式（字符串转数组，过滤无效值）
-        ossIds: item.ossIds
-          ? typeof item.ossIds === 'string'
-            ? item.ossIds.split(',').filter((id: string) => id.trim() && /^\d+$/.test(id.trim()))
-            : item.ossIds
-          : [],
-        // 关键：fileId一致时，用fileName拼接版本名称（例："16版布局风景区名录范围_版本123"）
-        customName: isFileIdMatch ? `${fileName.value}_版本${item.versionId}` : undefined
-      };
-    }) as HistoryVO[];
-
+    // 直接赋值，name字段由接口返回（存储用户输入的名称）
+    historyList.value = rawData.map((item: any) => ({
+      ...item,
+      ossIds: item.ossIds
+        ? typeof item.ossIds === 'string'
+          ? item.ossIds.split(',').filter((id: string) => id.trim() && /^\d+$/.test(id.trim()))
+          : item.ossIds
+        : []
+    })) as HistoryVO[];
     historyQuery.total = historyList.value.length;
   } catch (err) {
     proxy?.$modal.msgError(`加载历史版本失败：${(err as Error).message || '未知错误'}`);
@@ -145,7 +133,6 @@ const getHistoryList = async () => {
     historyLoading.value = false;
   }
 };
-
 /** 重置历史版本查询参数 */
 const resetHistoryQuery = () => {
   historyQuery.startTime = '';

@@ -46,7 +46,9 @@
               @click="handleExport">导出</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-dropdown class="mt-[1px]">
+            <el-button  type="primary" plain icon="Download"
+              @click="importTemplate">下载模板</el-button>
+            <!-- <el-dropdown class="mt-[1px]">
               <el-button plain type="info">
                 更多
                 <el-icon class="el-icon--right"><arrow-down /></el-icon></el-button>
@@ -55,7 +57,7 @@
                   <el-dropdown-item icon="Download" @click="importTemplate">下载模板</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
-            </el-dropdown>
+            </el-dropdown> -->
           </el-col>
           <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true"
             @query-table="getList"></right-toolbar>

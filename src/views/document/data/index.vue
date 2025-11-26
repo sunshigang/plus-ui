@@ -59,16 +59,16 @@
     <!-- 新增/更新版本对话框（保留原功能） -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="970px" append-to-body>
       <el-form ref="documentFormRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="文件名称" prop="name" hidden>
-          <el-input v-model="form.name" placeholder="自动填充文件名" />
+        <el-form-item label="文件名称" prop="name">
+          <el-input v-model="form.name" placeholder="请输入文件名称" clearable />
         </el-form-item>
         <el-form-item label="上传文件" prop="ossIds">
           <FileUpload v-model="form.ossIds" :disabled="false" @update:modelValue="handleFileUploadChange"
             :fileType="getAllowedFileTypes" />
         </el-form-item>
-        <el-form-item label="文件类型" prop="fileSuffix" hidden>
+        <!-- <el-form-item label="文件类型" prop="fileSuffix" hidden>
           <el-input v-model="form.fileSuffix" />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -152,10 +152,11 @@ const data = reactive<PageData<DocumentForm, DocumentQuery>>({
     isAsc: 'descending'
   },
   rules: {
+    name: [{ required: true, message: '请输入文件名称', trigger: 'blur' }], // 文件名必填
     ossIds: [{ required: true, message: '请上传文件', trigger: 'change' }]
   }
 });
-const { queryParams, form, rules } = toRefs(data);
+const {  queryParams, form, rules } = toRefs(data);
 /** 历史版本按钮：改为路由跳转（核心修改） */
 const handleHistory = (row: DocumentVO) => {
   // 跳转到独立历史版本页面，携带fileId参数
@@ -225,44 +226,13 @@ const handleFile = () => {
   reset();
   dialog.visible = true;
   dialog.title = '新增规划文件';
+  originalFile.value = null; // 新增时无原文件
 };
 
 const getFileNameWithoutSuffix = (fileName: string) => {
   const lastDotIndex = fileName.lastIndexOf('.');
   return lastDotIndex !== -1 ? fileName.slice(0, lastDotIndex) : fileName;
 };
-
-/** 提交表单（新增/更新版本） */
-const submitForm = () => {
-  documentFormRef.value?.validate(async (valid: boolean) => {
-    if (valid) {
-      buttonLoading.value = true;
-      try {
-        const submitData = {
-          id: form.value.id,
-          ossIds: form.value.ossIds,
-          name: form.value.name,
-          fileSuffix: form.value.fileSuffix,
-          urls: form.value.urls,
-          disabledFlag: false
-        };
-        if (!form.value.id) {
-          await documentAdd(submitData);
-        } else {
-          await documentUpdate(submitData);
-        }
-        proxy?.$modal.msgSuccess(`${!form.value.id ? '新增' : '更新'}成功`);
-        dialog.visible = false;
-        await getList();
-      } catch (err) {
-        proxy?.$modal.msgError(`${!form.value.id ? '新增' : '更新'}失败：${(err as Error).message || '未知错误'}`);
-      } finally {
-        buttonLoading.value = false;
-      }
-    }
-  });
-};
-
 /** 编辑操作（回显数据） */
 const handleUpdate = async (row: DocumentVO) => {
   reset();
@@ -292,39 +262,24 @@ const handleUpdate = async (row: DocumentVO) => {
 };
 
 const getAllowedFileTypes = computed(() => {
-  // 更新模式：原文件有后缀限制时
+  // 更新模式：严格限制文件类型与原文件一致
   if (dialog.title === '更新规划文件' && originalFile.value?.fileSuffix) {
-    const fileSuffix = originalFile.value.fileSuffix;
-    // 处理后缀：去重、兼容大小写、保留原始格式（带点和不带点都支持）
-    const suffixes = Array.from(new Set(
-      fileSuffix.split(',')
-        .map(suffix => suffix.trim())
-        .filter(suffix => suffix)
-    ));
+    const originalSuffixes = originalFile.value.fileSuffix
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s)
+      .map(s => s.startsWith('.') ? s.slice(1) : s); // 去除前缀点
 
-    // 生成支持的文件类型数组：包含 带点/不带点 + 大小写 组合（确保文件选择器能识别）
-    const supportedTypes = suffixes.flatMap(suffix => {
-      const pureSuffix = suffix.startsWith('.') ? suffix.slice(1) : suffix;
-      return [
-        pureSuffix.toLowerCase(),
-        pureSuffix.toUpperCase(),
-        `.${pureSuffix.toLowerCase()}`,
-        `.${pureSuffix.toUpperCase()}`
-      ];
-    });
-
-    // 补充默认支持的相关格式（避免仅限制单个后缀导致文件无法识别）
-    const defaultRelatedTypes = [
-      'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
-      'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
-      'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'xml', 'shx', 'FBX', 'fbx', 'obj'
-    ];
-
-    // 合并去重：确保既限制原文件类型，又支持相关常用格式
-    return Array.from(new Set([...supportedTypes, ...defaultRelatedTypes]));
+    // 生成严格匹配的类型（带点/不带点 + 大小写）
+    return originalSuffixes.flatMap(suffix => [
+      suffix.toLowerCase(),
+      suffix.toUpperCase(),
+      `.${suffix.toLowerCase()}`,
+      `.${suffix.toUpperCase()}`
+    ]);
   }
 
-  // 新增模式：默认支持所有规划文件类型
+  // 新增模式：默认支持的规划文件类型（不变）
   return [
     'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
     'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
@@ -343,19 +298,47 @@ const handleFileUploadChange = (newOssIds: string) => {
           ossId: String(file.ossId),
           suffix: file.originalName.split('.').pop() || ''
         }));
+        // 自动填充文件类型（隐藏字段）
         const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
         form.value.fileSuffix = allSuffixes.join(',');
-        const fileName = formFiles.value[0].name;
-        form.value.name = getFileNameWithoutSuffix(fileName);
         form.value.urls = formFiles.value.map(file => file.url).join(',');
+        // 文件名由用户输入，不再自动填充
       }
     });
   } else {
     formFiles.value = [];
-    form.value.name = '';
     form.value.fileSuffix = '';
     form.value.urls = '';
   }
+};
+const submitForm = () => {
+  documentFormRef.value?.validate(async (valid: boolean) => {
+    if (valid) {
+      buttonLoading.value = true;
+      try {
+        const submitData = {
+          id: form.value.id,
+          ossIds: form.value.ossIds,
+          name: form.value.name, // 提交用户输入的名称
+          fileSuffix: form.value.fileSuffix, // 自动填充的文件类型
+          urls: form.value.urls,
+          disabledFlag: false
+        };
+        if (!form.value.id) {
+          await documentAdd(submitData);
+        } else {
+          await documentUpdate(submitData);
+        }
+        proxy?.$modal.msgSuccess(`${!form.value.id ? '新增' : '更新'}成功`);
+        dialog.visible = false;
+        await getList();
+      } catch (err) {
+        proxy?.$modal.msgError(`${!form.value.id ? '新增' : '更新'}失败：${(err as Error).message || '未知错误'}`);
+      } finally {
+        buttonLoading.value = false;
+      }
+    }
+  });
 };
 
 /** 批量停用 */
@@ -493,7 +476,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-/* 保留原样式，删除历史版本弹窗相关样式 */
 .disable-btn-active {
   color: #f19a0e !important;
   cursor: pointer;
