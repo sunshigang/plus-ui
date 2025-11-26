@@ -33,7 +33,7 @@
           <el-table-column type="selection" width="55" align="center" />
           <el-table-column label="文件名" align="center" show-overflow-tooltip>
             <template #default="scope">
-              {{ scope.row.name || `未命名_版本${scope.row.versionId}` }}
+              {{ scope.row.name || `历史版本_${scope.row.versionId}` }}
             </template>
           </el-table-column>
           <el-table-column label="文件类型" align="center">

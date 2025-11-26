@@ -441,10 +441,6 @@ const declartionInformation = ref(true)
 const threeDModelUploadProgress = ref([])
 // 定义组件属性
 const props = defineProps({
-  modelValue: {
-    type: [String, Object, Array],
-    default: () => []
-  },
   // 数量限制
   limit: propTypes.number.def(15),
   // 大小限制(MB)
@@ -983,13 +979,6 @@ const resetForm = async () => {
 
 /** 暂存按钮 */
 const temporarilyForm = async () => {
-  const isUploading = threeDModelUploadProgress.value.some(item =>
-    item.progress < 100 || item.progressText.includes('服务器处理中')
-  )
-  if (isUploading) {
-    ElMessage.warning('有文件正在上传或处理中，请等待完成后再暂存')
-    return
-  }
   const submitData = {
     ...form,
     locationPlan: JSON.stringify(locationPlanFileList.value),
@@ -1007,13 +996,6 @@ const temporarilyForm = async () => {
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
-  const isUploading = threeDModelUploadProgress.value.some(item =>
-    item.progress < 100 || item.progressText.includes('服务器处理中')
-  )
-  if (isUploading) {
-    ElMessage.warning('有文件正在上传或处理中，请等待完成后再暂存')
-    return
-  }
   infoFormRef.value.validate(async (valid) => {
     if (valid) {
       buttonLoading.value = true

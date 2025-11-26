@@ -291,18 +291,10 @@
                         <span class="label">模型坐标：</span>
                         <div class="file-list">
                           <el-input v-model="form.modelCoordinate" disabled />
-                          <!-- <template v-if="projectRedLineFileList.length">
-                            <el-link v-for="file in projectRedLineFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
-                              <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                            </el-link>
-                          </template>
-                          <span v-else>暂无</span> -->
                         </div>
                       </div>
                     </el-col>
                   </el-row>
-                  <!-- 其他文件列表同理，此处省略重复代码 -->
                 </div>
               </div>
             </div>
@@ -311,8 +303,8 @@
           <div class="approval-info">
             <h3 class="section-title">审批信息</h3>
             <!-- 管委会审批 -->
-            <div class="approval-item">
-              <div class="approval-header">
+            <div v-if="form.approveRecords && form.approveRecords.length" class="approval-item">
+              <div class="approval-header" style="padding: 10px 15px; background: #f9f9f9; display: flex; align-items: center;">
                 <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : 'error']">
                   {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : '✗' }}
                 </span>
@@ -326,10 +318,10 @@
                 </div>
                 <div class="feedback-item">
                   <span class="label">反馈文件：</span>
-                  <div class="file-list">
-                    <template v-if="form.approveRecords[0].gwhApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId"
-                        :href="file.url" :underline="false" target="_blank">
+                  <div class="inline-file-list">
+                    <template v-if="parseFileList(form.approveRecords[0].gwhApprovalAttachment).length">
+                      <el-link v-for="file in parseFileList(form.approveRecords[0].gwhApprovalAttachment)"
+                        :key="file.ossId" :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -338,31 +330,15 @@
                 </div>
               </div>
             </div>
-            <!-- 市林业局审批 -->
-            <div class="approval-item" v-if="['林业局通过', '林业局驳回'].includes(form.status)">
+            <div v-else class="approval-item">
               <div class="approval-header">
-                <span :class="['status-icon', form.approveRecords[0].lyjApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].lyjApproveResult === '通过' ? '✓' : '✗' }}
-                </span>
-                <span class="approval-title">市林业局审核</span>
-                <span class="approval-time">审核时间：{{ form.approveRecords[0].lyjApproveTime || '暂无' }}</span>
+                <span class="approval-title">管委会审核（首次）</span>
+                <span class="approval-time">审核时间：暂无</span>
               </div>
               <div class="approval-content">
                 <div class="feedback-item">
                   <span class="label">反馈建议：</span>
-                  <span class="value">{{ form.approveRecords[0].lyjApprovalReason || '暂无反馈建议' }}</span>
-                </div>
-                <div class="feedback-item">
-                  <span class="label">反馈文件：</span>
-                  <div class="file-list">
-                    <template v-if="form.approveRecords[0].lyjApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId"
-                        :href="file.url" :underline="false" target="_blank">
-                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                      </el-link>
-                    </template>
-                    <span v-else>暂无</span>
-                  </div>
+                  <span class="value">暂无审批记录</span>
                 </div>
               </div>
             </div>
@@ -655,18 +631,10 @@
                         <span class="label">模型坐标：</span>
                         <div class="file-list">
                           <el-input v-model="form.modelCoordinate" disabled />
-                          <!-- <template v-if="projectRedLineFileList.length">
-                            <el-link v-for="file in projectRedLineFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
-                              <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                            </el-link>
-                          </template>
-                          <span v-else>暂无</span> -->
                         </div>
                       </div>
                     </el-col>
                   </el-row>
-                  <!-- 其他文件列表同理，此处省略重复代码 -->
                 </div>
               </div>
             </div>
@@ -674,59 +642,48 @@
           <!-- 审批信息 -->
           <div class="approval-info">
             <h3 class="section-title">审批信息</h3>
-            <!-- 管委会审批 -->
-            <div class="approval-item">
-              <div class="approval-header">
-                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : '✗' }}
-                </span>
-                <span class="approval-title">管委会审核</span>
-                <span class="approval-time">审核时间：{{ form.approveRecords[0].gwhApproveTime || '暂无' }}</span>
-              </div>
-              <div class="approval-content">
-                <div class="feedback-item">
-                  <span class="label">反馈建议：</span>
-                  <span class="value">{{ form.approveRecords[0].gwhApprovalReason || '暂无反馈建议' }}</span>
+
+            <!-- 二次审批记录列表 -->
+            <div v-if="form.approveRecords && form.approveRecords.length > 1" class="approval-list">
+              <div v-for="(record, index) in form.approveRecords.slice(1)" :key="record.id || index"
+                class="approval-item">
+                <div class="approval-header">
+                  <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : 'error']">
+                    {{ record.gwhApproveResult === '通过' ? '✓' : '✗' }}
+                  </span>
+                  <span class="approval-title">管委会审核（第{{ index + 2 }}次）</span>
+                  <span class="approval-time">审核时间：{{ record.gwhApproveTime || '暂无' }}</span>
                 </div>
-                <div class="feedback-item">
-                  <span class="label">反馈文件：</span>
-                  <div class="file-list">
-                    <template v-if="form.approveRecords[0].gwhApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId"
-                        :href="file.url" :underline="false" target="_blank">
-                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                      </el-link>
-                    </template>
-                    <span v-else>暂无</span>
+                <div class="approval-content">
+                  <div class="feedback-item">
+                    <span class="label">反馈建议：</span>
+                    <span class="value">{{ record.gwhApprovalReason || '暂无反馈建议' }}</span>
+                  </div>
+                  <div class="feedback-item">
+                    <span class="label">反馈文件：</span>
+                    <div class="file-list">
+                      <template v-if="parseFileList(record.gwhApprovalAttachment).length">
+                        <el-link v-for="file in parseFileList(record.gwhApprovalAttachment)" :key="file.ossId"
+                          :href="file.url" :underline="false" target="_blank">
+                          <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                        </el-link>
+                      </template>
+                      <span v-else>暂无</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- 市林业局审批 -->
-            <div class="approval-item" v-if="['林业局通过', '林业局驳回'].includes(form.status)">
+            <!-- 无二次审批记录的提示 -->
+            <div v-else class="approval-item">
               <div class="approval-header">
-                <span :class="['status-icon', form.approveRecords[0].lyjApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].lyjApproveResult === '通过' ? '✓' : '✗' }}
-                </span>
-                <span class="approval-title">市林业局审核</span>
-                <span class="approval-time">审核时间：{{ form.approveRecords[0].lyjApproveTime || '暂无' }}</span>
+                <span class="approval-title">管委会审核（二次）</span>
+                <span class="approval-time">审核时间：暂无</span>
               </div>
               <div class="approval-content">
                 <div class="feedback-item">
                   <span class="label">反馈建议：</span>
-                  <span class="value">{{ form.approveRecords[0].lyjApprovalReason || '暂无反馈建议' }}</span>
-                </div>
-                <div class="feedback-item">
-                  <span class="label">反馈文件：</span>
-                  <div class="file-list">
-                    <template v-if="form.approveRecords[0].lyjApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].lyjApprovalAttachment" :key="file.ossId"
-                        :href="file.url" :underline="false" target="_blank">
-                        <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                      </el-link>
-                    </template>
-                    <span v-else>暂无</span>
-                  </div>
+                  <span class="value">暂无二次审批记录</span>
                 </div>
               </div>
             </div>
@@ -771,6 +728,9 @@ const props = defineProps({
 // 标签页状态
 const activeTab = ref('feedback') // 默认显示“信息填报”
 const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息”
+// 审批反馈折叠状态
+const basicInfoVisible = ref(true)
+const constructionInfoVisible = ref(false)
 const shareFlag = ref(false)
 // 表单引用
 const infoFormRef = ref(null)
@@ -811,27 +771,13 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: false,
-  approveRecords: [{
-    projectId: '',
-    gwhApproveResult: '',
-    gwhApproverId: '',
-    gwhApproveTime: '',
-    gwhApprovalReason: '',
-    gwhApprovalAttachment: '',
-    lyjApproveResult: '',
-    lyjApproverId: '',
-    lyjApproveTime: '',
-    lyjApprovalReason: '',
-    lyjApprovalAttachment: '',
-  }]
+  approveRecords: []
 })
 const dialog = reactive({
   visible: false,
   title: '',
 });
-// 审批反馈折叠状态
-const basicInfoVisible = ref(true)
-const constructionInfoVisible = ref(false)
+
 
 // 折叠控制方法
 const toggleBasicInfo = () => {
@@ -840,24 +786,6 @@ const toggleBasicInfo = () => {
 const toggleConstructionInfo = () => {
   constructionInfoVisible.value = !constructionInfoVisible.value
 }
-// 表单验证规则
-const rules = reactive({
-  projectName: [{ required: true, message: '请输入建设项目名称', trigger: 'blur' }],
-  administrativeRegion: [{ required: true, message: '请输入所属行政区划', trigger: 'blur' }],
-  applicantType: [{ required: true, message: '请选择建设类型', trigger: 'change' }],
-  constructionUnit: [{ required: true, message: '请输入建设单位名称', trigger: 'blur' }],
-  contactPerson: [{ required: true, message: '请输入经办人', trigger: 'blur' }],
-  contactPhone: [{
-    required: true,
-    message: '请输入经办人联系方式',
-    trigger: 'blur'
-  }, {
-    pattern: /^1[3-9]\d{9}$/,
-    message: '请输入正确的手机号码',
-    trigger: 'blur'
-  }]
-})
-
 // 文件列表（与editProject一致）
 const locationPlanFileList = ref([])
 const expertOpinionsFileList = ref([])
@@ -919,8 +847,8 @@ onMounted(async () => {
     projectRedLineFileList.value = parseFileList(projectData.projectRedLine)
     redLineCoordinateFileList.value = parseFileList(projectData.redLineCoordinate)
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
-    form.approveRecords[0].gwhApprovalAttachment = parseFileList(projectData.approveRecords[0].gwhApprovalAttachment)
-    form.approveRecords[0].lyjApprovalAttachment = parseFileList(projectData.approveRecords[0].lyjApprovalAttachment)
+    // 赋值审批记录数组
+    form.approveRecords = projectData.approveRecords || []
     shareFlag.value = projectData.shareFlag
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
@@ -977,6 +905,7 @@ const clickDataShare = async () => {
     buttonLoading.value = true;
     await shareInfo(form.id);
     proxy?.$modal.msgSuccess('数据共享成功');
+    shareFlag.value = true; // 共享成功后更新状
     dialog.visible = false;
   } catch (err) {
     if (err !== 'cancel') {
@@ -1050,9 +979,7 @@ const clickDataShare = async () => {
   z-index: 10;
 }
 
-.project-basic-info,
-.project-documents,
-.project-info {
+.project-info, .approval-info {
   background-color: #ffffff;
   padding: 20px;
   margin-bottom: 20px;
@@ -1073,6 +1000,7 @@ const clickDataShare = async () => {
   color: #1f2329;
   padding-left: 5px;
   border-left: 3px solid #409eff;
+  margin-bottom: 15px;
 }
 
 .modelPreview {
@@ -1086,11 +1014,44 @@ const clickDataShare = async () => {
     vertical-align: middle;
   }
 }
+/* 自定义折叠面板样式 */
+.custom-collapse-item {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
 
+.custom-collapse-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+}
 
+.arrow-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
 
+.collapse-title {
+  font-size: 18px;
+  /* 标题字体18px */
+  font-weight: 500;
+  /* 确保标题靠左，不被其他元素挤压 */
+  flex-grow: 1;
+  text-align: left;
+}
 
+.custom-collapse-content {
+  padding: 0 15px 15px;
+}
 
+.float-right {
+  float: right;
+}
 /* 审批反馈-项目信息样式 */
 .info-content {
   padding: 10px 0;
@@ -1119,7 +1080,14 @@ const clickDataShare = async () => {
   gap: 10px;
   flex-wrap: wrap;
 }
-
+/* 关键修改3：新增行内文件列表样式 */
+.inline-file-list {
+  flex: 1;
+  display: inline-flex; /* 行内flex布局 */
+  align-items: center;   /* 垂直居中对齐 */
+  gap: 10px;
+  flex-wrap: wrap;
+}
 /* 审批反馈-审批信息样式 */
 .approval-info {
   background-color: #ffffff;
@@ -1127,16 +1095,24 @@ const clickDataShare = async () => {
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-
+.approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
 .approval-item {
   margin-bottom: 20px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   overflow: hidden;
 }
-
-
-
+.approval-header {
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+}
 .status-icon {
   display: inline-block;
   width: 20px;
@@ -1164,30 +1140,12 @@ const clickDataShare = async () => {
 
 .approval-time {
   color: #666;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .approval-content {
   padding: 15px;
 }
-
-.feedback-item {
-  margin-bottom: 10px;
-  display: flex;
-  align-items: flex-start;
-}
-
-.feedback-item .label {
-  min-width: 100px;
-  font-weight: 500;
-  color: #666;
-}
-
-.feedback-item .value {
-  flex: 1;
-  color: #333;
-}
-
 /* 其他复用样式（与editProject一致） */
 .upload-file-list {
   margin-top: 10px;
@@ -1229,57 +1187,23 @@ const clickDataShare = async () => {
 
 .feedback-item {
   background-color: #f5f5f5;
-  /* 反馈建议/文件背景改为灰色 */
   padding: 8px 12px;
   border-radius: 4px;
+  display: flex; /* 改为flex布局 */
+  align-items: center; /* 垂直居中 */
+  margin-bottom: 8px; /* 增加间距 */
 }
 
-/* 自定义折叠面板样式 */
-.custom-collapse-item {
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.custom-collapse-header {
-  display: flex;
-  align-items: center;
-  padding: 12px 15px;
-  cursor: pointer;
-}
-
-.arrow-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 5px;
-  flex-shrink: 0;
-}
-
-.collapse-title {
-  font-size: 18px;
-  /* 标题字体18px */
+.feedback-item .label {
+  min-width: 100px;
   font-weight: 500;
-  /* 确保标题靠左，不被其他元素挤压 */
-  flex-grow: 1;
-  text-align: left;
+  color: #666;
+  flex-shrink: 0; /* 防止标签被压缩 */
 }
 
-.custom-collapse-content {
-  padding: 0 15px 15px;
-}
-
-.float-right {
-  float: right;
-}
-
-
-
-.feedback-item {
-  background-color: #f5f5f5;
-  /* 反馈建议/文件背景改为灰色 */
-  padding: 8px 12px;
-  border-radius: 4px;
+.feedback-item .value {
+  flex: 1;
+  color: #333;
 }
 </style>
 <style>

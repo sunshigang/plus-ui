@@ -683,26 +683,27 @@
           <!-- 审批信息 -->
           <div class="approval-info">
             <h3 class="section-title">审批信息</h3>
-            <!-- 管委会审批 -->
-            <div class="approval-item">
+            <!-- 遍历所有审批记录 -->
+            <div v-for="(record, index) in form.approveRecords" :key="record.id || index" class="approval-item">
               <div class="approval-header">
-                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : '✗' }}
+                <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : 'error']">
+                  {{ record.gwhApproveResult === '通过' ? '✓' : '✗' }}
                 </span>
-                <span class="approval-title">管委会审核</span>
-                <span class="approval-time">审核时间：{{ form.approveRecords[0].gwhApproveTime || '暂无' }}</span>
+                <span class="approval-title">管委会审核（第{{ index + 1 }}次）</span>
+                <span class="approval-time">审核时间：{{ record.gwhApproveTime || '暂无' }}</span>
               </div>
               <div class="approval-content">
                 <div class="feedback-item">
                   <span class="label">反馈建议：</span>
-                  <span class="value">{{ form.approveRecords[0].gwhApprovalReason || '暂无反馈建议' }}</span>
+                  <span class="value">{{ record.gwhApprovalReason || '暂无反馈建议' }}</span>
                 </div>
                 <div class="feedback-item">
                   <span class="label">反馈文件：</span>
                   <div class="file-list">
-                    <template v-if="form.approveRecords[0].gwhApprovalAttachment?.length">
-                      <el-link v-for="file in form.approveRecords[0].gwhApprovalAttachment" :key="file.ossId"
-                        :href="file.url" :underline="false" target="_blank">
+                    <!-- 解析反馈文件JSON字符串 -->
+                    <template v-if="record.gwhApprovalAttachment">
+                      <el-link v-for="(file, fileIndex) in parseFileList(record.gwhApprovalAttachment)"
+                        :key="file.ossId || fileIndex" :href="file.url" :underline="false" target="_blank">
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                     </template>
@@ -710,6 +711,10 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <!-- 无审批记录时的提示 -->
+            <div v-if="form.approveRecords.length === 0" class="no-approval-record">
+              暂无审批记录
             </div>
           </div>
         </el-tab-pane>
@@ -721,7 +726,7 @@
       <el-button @click="handleCancel">取消</el-button>
       <el-button type="warning" @click="resetForm">重置</el-button>
       <el-button type="success" v-hasPermi="['project:project:stage']" @click="temporarilyForm">暂存</el-button>
-      <el-button :loading="buttonLoading" type="primary" @click="submitForm">确定</el-button>
+      <el-button :loading="buttonLoading" type="primary" @click="submitForm">提交</el-button>
     </div>
   </div>
   <div class="add-content-container" v-else>
@@ -760,6 +765,7 @@ const props = defineProps({
   ]),
 });
 
+const isTemporarilySaved = ref(false)
 // 标签页状态
 const activeTab = ref('fill') // 默认显示“信息填报”
 const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息”
@@ -802,19 +808,7 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecords: [{
-    projectId: '',
-    gwhApproveResult: '',
-    gwhApproverId: '',
-    gwhApproveTime: '',
-    gwhApprovalReason: '',
-    gwhApprovalAttachment: '',
-    lyjApproveResult: '',
-    lyjApproverId: '',
-    lyjApproveTime: '',
-    lyjApprovalReason: '',
-    lyjApprovalAttachment: '',
-  }]
+  approveRecords: [] // 审批记录数组
 })
 const handleCancel = () => {
   router.push('/project/normal')
@@ -1023,8 +1017,8 @@ onMounted(async () => {
     projectRedLineFileList.value = parseFileList(projectData.projectRedLine)
     redLineCoordinateFileList.value = parseFileList(projectData.redLineCoordinate)
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
-    form.approveRecords[0].gwhApprovalAttachment = parseFileList(projectData.approveRecords[0].gwhApprovalAttachment)
-    form.approveRecords[0].lyjApprovalAttachment = parseFileList(projectData.approveRecords[0].lyjApprovalAttachment)
+    // 赋值审批记录数组
+    form.approveRecords = projectData.approveRecords || []
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/normal')
@@ -1231,6 +1225,7 @@ const temporarilyForm = async () => {
   }
   await stageInfo(submitData)
   proxy?.$modal.msgSuccess("暂存成功")
+  isTemporarilySaved.value = true // 标记已暂存
 }
 const submitForm = () => {
   infoFormRef.value.validate(async (valid) => {
@@ -1435,7 +1430,12 @@ const submitForm = () => {
   overflow: hidden;
   background-color: #fafafa;
 }
-
+.no-approval-record {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
 .status-icon {
   display: inline-block;
   width: 20px;

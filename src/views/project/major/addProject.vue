@@ -392,10 +392,6 @@ const userStore = useUserStore()
 
 // 定义组件属性
 const props = defineProps({
-  modelValue: {
-    type: [String, Object, Array],
-    default: () => []
-  },
   // 数量限制
   limit: propTypes.number.def(15),
   // 大小限制(MB)

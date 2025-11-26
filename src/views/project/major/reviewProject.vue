@@ -657,7 +657,7 @@ const submitAudit = async (result) => {
         )
         // 构造审核数据
         const auditData = {
-          // projectId: form.id,
+          projectId: form.id,
           approveResult: result,
           approvalReason: auditForm.approvalReason,
           approvalAttachment: JSON.stringify(feedbackFileList.value)

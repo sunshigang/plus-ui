@@ -174,7 +174,8 @@
                     </el-link>
                   </li>
                   <li v-if="meetingMaterialsFileList.length === 0"
-                    class="el-upload-list__item ele-upload-list__item-content empty-file" key="'empty-meetingMaterials'">
+                    class="el-upload-list__item ele-upload-list__item-content empty-file"
+                    key="'empty-meetingMaterials'">
                     <span class="el-icon-info"> 暂无文件 </span>
                   </li>
                 </transition-group>
@@ -288,55 +289,82 @@
         </el-form>
       </div>
 
-      <!-- 审批信息（按状态显示） -->
-      <div class="project-documents" v-if="showApprovalInfo">
+      <!-- 审批信息（多记录循环展示） -->
+      <div class="project-documents" v-if="showApprovalSection && form.approveRecords.length > 0">
         <h3 class="section-title">审批信息</h3>
-        <el-form label-width="230px" disabled>
+        <!-- 循环渲染每一条审批记录 -->
+        <div 
+          v-for="(record, index) in form.approveRecords" 
+          :key="record.id || `approval-record-${index}`" 
+          class="approval-record-item"
+        >
+          <div class="approval-record-header">
+            <span class="approval-record-index">审批记录 {{ index + 1 }}</span>
+            <span class="approval-record-time">{{ record.gwhApproveTime || '无审批时间' }}</span>
+          </div>
+          
           <!-- 管委会审批信息 -->
-          <template v-if="['管委会审批中','管委会通过', '管委会驳回'].includes(form.status)">
+          <el-form label-width="230px" disabled class="approval-form">
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
-                <span :class="['status-icon',
-                  form.approveRecords[0].gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecords[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
-                ]">
-                  {{
-                    form.approveRecords[0].gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecords[0].gwhApproveResult === '驳回' ? '✗' : '-'
-                  }}
+                <span 
+                  :class="[
+                    'status-icon', 
+                    record.gwhApproveResult === '通过' ? 'success' : 
+                    record.gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  ]"
+                >
+                  {{ record.gwhApproveResult === '通过' ? '✓' : record.gwhApproveResult === '驳回' ? '✗' : '-' }}
                 </span>
-                <span class="status-text">
-                  {{ form.approveRecords[0].gwhApproveResult || '待审批' }}
-                </span>
+                <span class="status-text">{{ record.gwhApproveResult || '待审批' }}</span>
               </div>
             </el-form-item>
-
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecords[0].gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ record.gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
-
+            
             <el-form-item label="审批反馈">
-              <el-input type="textarea" :value="form.approveRecords[0].gwhApprovalReason || '暂无反馈'" :rows="2"
-                style="background: #fff;" disabled />
+              <el-input 
+                type="textarea" 
+                :value="record.gwhApprovalReason || '暂无反馈'" 
+                :rows="2"
+                style="background: #fff;" 
+                disabled 
+              />
             </el-form-item>
-
+            
             <el-form-item label="反馈文件">
-              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
-                tag="ul">
-                <li v-for="(file, index) in managementFeedbackFileList" :key="file.ossId"
-                  class="el-upload-list__item ele-upload-list__item-content">
+              <transition-group 
+                class="upload-file-list el-upload-list el-upload-list--text" 
+                name="el-fade-in-linear"
+                tag="ul"
+              >
+                <li 
+                  v-for="(file, fileIndex) in parseFileList(record.gwhApprovalAttachment)" 
+                  :key="file.ossId || `file-${index}-${fileIndex}`"
+                  class="el-upload-list__item ele-upload-list__item-content"
+                >
                   <el-link :href="file.url" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                 </li>
-                <li v-if="managementFeedbackFileList.length === 0" class="el-upload-list__item"
-                  key="'empty-managementFeedback'">
+                <li 
+                  v-if="!record.gwhApprovalAttachment || parseFileList(record.gwhApprovalAttachment).length === 0" 
+                  class="el-upload-list__item empty-file" 
+                  :key="`empty-gwhFeedback-${index}`"
+                >
                   <span class="el-icon-info"> 暂无反馈文件 </span>
                 </li>
               </transition-group>
             </el-form-item>
-          </template>
-        </el-form>
+          </el-form>
+          
+          <!-- 记录分隔线 -->
+          <div 
+            class="approval-record-divider" 
+            v-if="index < form.approveRecords.length - 1"
+          ></div>
+        </div>
       </div>
     </div>
 
@@ -394,19 +422,7 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: false,
-  approveRecords: [{
-    projectId: '',
-    gwhApproveResult: '',
-    gwhApproverId: '',
-    gwhApproveTime: '',
-    gwhApprovalReason: '',
-    gwhApprovalAttachment: '',
-    lyjApproveResult: '',
-    lyjApproverId: '',
-    lyjApproveTime: '',
-    lyjApprovalReason: '',
-    lyjApprovalAttachment: '',
-  }]
+  approveRecords: [] // 审批记录数组
 })
 
 // 文件列表
@@ -418,21 +434,46 @@ const approvalDocumentsFileList = ref([])
 const projectRedLineFileList = ref([])
 const redLineCoordinateFileList = ref([])
 const threeDModelFileList = ref([])
-const managementFeedbackFileList = ref([]) // 管委会反馈文件
 
-// 计算属性：是否显示审批信息
-const showApprovalInfo = computed(() => {
-  // 填报中或管委会审批中时不显示审批信息
-  return !['填报中'].includes(form.status)
+// 计算属性：是否显示审批信息区域
+const showApprovalSection = computed(() => {
+  const currentStatus = (form.status || '').trim();
+  const validStatuses = ['管委会审批中', '管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
+  return validStatuses.includes(currentStatus);
 })
 
-// 获取文件名（截断长文件名）
+// 获取文件名（处理路径和空值）
 const getFileName = (name) => {
-  // 处理name为null/undefined的情况
   if (!name) return '未知文件名'
-  // 处理路径分隔符（兼容windows和unix）
   const separatorIndex = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'))
   return separatorIndex > -1 ? name.slice(separatorIndex + 1) : name
+}
+
+// 解析文件列表（支持JSON字符串/数组格式）
+const parseFileList = (fileData) => {
+  if (!fileData) return [];
+  try {
+    let list = [];
+    // 处理JSON字符串
+    if (typeof fileData === 'string') {
+      list = JSON.parse(fileData);
+    }
+    // 处理数组
+    else if (Array.isArray(fileData)) {
+      list = fileData;
+    }
+    // 过滤有效文件项并格式化
+    return list.filter(item => 
+      item && typeof item === 'object' && item.ossId && item.url
+    ).map(item => ({
+      name: item.name || '未知文件',
+      url: item.url,
+      ossId: item.ossId
+    }));
+  } catch (error) {
+    console.error('解析文件列表失败:', error);
+    return [];
+  }
 }
 
 // 三维模型预览
@@ -471,126 +512,30 @@ onMounted(async () => {
     await loadProjectData(projectId)
   }
 })
-const parseFileList = (fileData) => {
-  if (!fileData) return [];
-  try {
-    let list = [];
-    // 处理字符串类型（JSON字符串）
-    if (typeof fileData === 'string') {
-      list = JSON.parse(fileData);
-    }
-    // 处理数组类型
-    else if (Array.isArray(fileData)) {
-      list = fileData;
-    }
-    // 过滤无效文件项（确保包含必要字段）
-    return list.filter(item =>
-      typeof item === 'object' &&
-      item !== null &&
-      item.ossId &&
-      item.url
-    ).map(item => ({
-      // 确保文件名存在
-      name: item.name || '未知文件',
-      url: item.url,
-      ossId: item.ossId
-    }));
-  } catch (error) {
-    console.error('解析文件列表失败:', error);
-    return [];
-  }
-}
-// 新增：解析审批记录（兼容字符串转数组）
-const parseApproveRecord = (approveRecordData) => {
-  if (!approveRecordData) return [
-    {
-      projectId: '',
-      gwhApproveResult: '',
-      gwhApproverId: '',
-      gwhApproveTime: '',
-      gwhApprovalReason: '',
-      gwhApprovalAttachment: '',
-      lyjApproveResult: '',
-      lyjApproverId: '',
-      lyjApproveTime: '',
-      lyjApprovalReason: '',
-      lyjApprovalAttachment: '',
-    }
-  ];
 
-  try {
-    // 如果是字符串，尝试解析为数组
-    const recordList = typeof approveRecordData === 'string'
-      ? JSON.parse(approveRecordData)
-      : approveRecordData;
-
-    // 确保是数组，且每个元素包含新增字段
-    return Array.isArray(recordList)
-      ? recordList.map(item => ({
-        gwhApproverId: '', // 默认空值（避免字段缺失）
-        lyjApproverId: '', // 默认空值
-        ...item // 合并原有字段
-      }))
-      : [recordList]; // 非数组则转为数组
-  } catch (error) {
-    console.error('解析审批记录失败:', error);
-    // 解析失败返回默认结构
-    return [
-      {
-        projectId: '',
-        gwhApproveResult: '',
-        gwhApproverId: '',
-        gwhApproveTime: '',
-        gwhApprovalReason: '',
-        gwhApprovalAttachment: '',
-        lyjApproveResult: '',
-        lyjApproverId: '',
-        lyjApproveTime: '',
-        lyjApprovalReason: '',
-        lyjApprovalAttachment: '',
-      }
-    ];
-  }
-}
 // 加载项目详情
 const loadProjectData = async (projectId) => {
   try {
     const response = await getInfo(projectId)
     const projectData = response.data
     Object.assign(form, projectData)
-    form.approveRecords = parseApproveRecord(projectData.approveRecords);
-    // 初始化文件列表 - 使用通用解析方法处理JSON字符串
+
+    // 初始化文件列表
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
     meetingMaterialsFileList.value = parseFileList(projectData.meetingMaterials)
     siteSelectionReportFileList.value = parseFileList(projectData.siteSelectionReport)
     approvalDocumentsFileList.value = parseFileList(projectData.approvalDocuments)
     projectRedLineFileList.value = parseFileList(projectData.projectRedLine)
-    // 重点处理redLineCoordinate，确保正确解析并显示name
     redLineCoordinateFileList.value = parseFileList(projectData.redLineCoordinate)
-    // 处理三维模型文件列表
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
-
-    // 处理审批反馈文件
-    form.approveRecords[0].gwhApprovalAttachment = parseFileList(projectData.approveRecords[0].gwhApprovalAttachment)
-    form.approveRecords[0].lyjApprovalAttachment = parseFileList(projectData.approveRecords[0].lyjApprovalAttachment)
-    form.approveRecords = parseApproveRecord(projectData.approveRecords);
-    const firstRecord = form.approveRecords[0] || {};
-    managementFeedbackFileList.value = parseFileList(firstRecord.gwhApprovalAttachment)
+    // 赋值审批记录数组
+    form.approveRecords = projectData.approveRecords || []
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/normal')
   }
 }
-
-// 暴露接口供父组件调用
-defineExpose({
-  open: async (row) => {
-    if (row?.id) {
-      await loadProjectData(row.id)
-    }
-  }
-})
 </script>
 
 <style scoped>
@@ -617,6 +562,7 @@ defineExpose({
   display: flex;
   align-items: center;
   cursor: pointer;
+  margin-bottom: 20px;
 }
 
 .back-normal img {
@@ -651,28 +597,6 @@ defineExpose({
   align-items: center;
   margin-bottom: 15px;
 }
-.status-icon {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 20px;
-  margin-right: 8px;
-  color: white;
-  font-weight: bold;
-}
-.status-icon.success {
-  background-color: #52c41a;
-}
-
-.status-icon.error {
-  background-color: #f5222d;
-}
-.approval-content {
-  padding: 25px;
-}
-
 
 .section-title {
   font-size: 19px;
@@ -685,49 +609,91 @@ defineExpose({
 .modelPreview {
   display: flex;
   align-items: center;
-
-  .imgModel {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
 }
 
-
-
-.add-footer el-button+el-button {
-  margin-left: 10px;
+.modelPreview .imgModel {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
 }
 
-.operation-group {
+/* 审批记录样式 */
+.approval-record-item {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.approval-record-header {
   display: flex;
-  gap: 15px;
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  margin-left: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.operation-group div {
+.approval-record-index {
+  font-size: 16px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.approval-record-time {
+  font-size: 14px;
   color: #666;
-  font-size: 18px;
 }
 
-.upload-container {
+.approval-form {
+  margin-bottom: 0;
+}
+
+.approval-item {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.upload-file-uploader {
+.status-icon {
   display: inline-block;
-  width: auto;
-  text-align: left !important;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  margin-right: 8px;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
 }
 
+.status-icon.success {
+  background-color: #52c41a;
+}
+
+.status-icon.error {
+  background-color: #f5222d;
+}
+
+.status-icon.pending {
+  background-color: #faad14;
+}
+
+.status-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.approval-record-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 20px 0;
+}
+
+/* 文件列表样式 */
 .upload-file-list {
-  /* width: 100%; */
   box-sizing: border-box;
   padding-left: 0;
   margin: 0;
@@ -742,17 +708,22 @@ defineExpose({
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.ele-upload-list__item-content.empty-file {
+  border-style: dashed;
+  color: #999;
 }
 
 .ele-upload-list__item-content .el-link {
   flex: 1;
-  /* 占满剩余空间 */
   min-width: 0;
-  /* 允许宽度小于内容宽度 */
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 10px;
-  /* 与删除按钮保持距离 */
+  color: #409eff;
 }
 
 .ele-upload-list__item-content .el-icon-document {
@@ -760,23 +731,27 @@ defineExpose({
   vertical-align: middle;
 }
 
-.ele-upload-list__item-content-action {
-  flex-shrink: 0;
-  /* 不允许收缩 */
-  width: 40px;
-  /* 固定宽度确保按钮不被挤压 */
-  text-align: right;
-  /* 按钮右对齐 */
+/* 操作组样式 */
+.operation-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: 0;
+  margin-top: 8px;
 }
 
-.ele-upload-list__item-content-action .el-button {
-  padding: 0 5px;
-  min-width: auto;
-  white-space: nowrap;
-  /* 按钮文字不换行 */
+.operation-group div {
+  color: #666;
+  font-size: 14px;
+}
+
+.add-footer el-button+el-button {
+  margin-left: 10px;
 }
 </style>
 <style>
+/* 全局滚动条隐藏 */
 body {
   overflow: auto;
   scrollbar-width: none !important;
@@ -785,7 +760,6 @@ body {
 
 body::-webkit-scrollbar {
   display: none !important;
-  /* Chrome/Safari */
   width: 0 !important;
   height: 0 !important;
 }

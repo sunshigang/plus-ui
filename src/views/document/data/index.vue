@@ -44,7 +44,6 @@
         </el-table-column>
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
-            <!-- 历史版本按钮：改为路由跳转 -->
             <el-button link type="primary" @click="handleHistory(scope.row)">历史版本</el-button>
             <el-button link type="primary" @click="handleUpdate(scope.row)">更新</el-button>
             <el-button link type="primary" @click="handleDownload(scope.row)">下载</el-button>
@@ -55,20 +54,40 @@
       <pagination v-show="total > 0" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
         :total="total" @pagination="getList" />
     </el-card>
-
-    <!-- 新增/更新版本对话框（保留原功能） -->
+    <!-- 新增/更新版本对话框（使用原生el-upload默认文件列表） -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="970px" append-to-body>
-      <el-form ref="documentFormRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="documentFormRef" :model="form" :rules="rules">
         <el-form-item label="文件名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入文件名称" clearable />
         </el-form-item>
         <el-form-item label="上传文件" prop="ossIds">
-          <FileUpload v-model="form.ossIds" :disabled="false" @update:modelValue="handleFileUploadChange"
-            :fileType="getAllowedFileTypes" />
+          <el-upload ref="nativeUploadRef" multiple :action="uploadFileUrl" :before-upload="handleBeforeUpload"
+            :file-list="uploadFileList" :limit="15" :on-error="handleUploadError" :on-exceed="handleUploadExceed"
+            :on-success="handleUploadSuccess" :on-remove="handleUploadRemove" :show-file-list="true" :headers="headers"
+            class="native-upload">
+            <el-button type="primary">选取文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                最多上传15个文件，单个文件不超过500MB |
+                {{ dialog.title === '新增规划文件'
+                  ? '支持所有文件类型，无格式限制'
+                  : `仅支持与原文件一致的格式（${allowedTypesTip}）` }}
+              </div>
+            </template>
+          </el-upload>
+
+          <el-tooltip :content="tooltipContent" effect="dark" :enter-delay="500" class="tooltip-icon">
+            <el-icon>
+              <QuestionFilled />
+            </el-icon>
+          </el-tooltip>
+
+          <span class="format-desc">
+            {{ dialog.title === '新增规划文件'
+              ? '支持所有文件类型，无格式限制'
+              : `仅支持与原文件一致的格式（${allowedTypesTip}），上传后自动校验` }}
+          </span>
         </el-form-item>
-        <!-- <el-form-item label="文件类型" prop="fileSuffix" hidden>
-          <el-input v-model="form.fileSuffix" />
-        </el-form-item> -->
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -81,11 +100,9 @@
 </template>
 
 <script setup name="DocumentPlanningFile" lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
-import { useRouter } from 'vue-router'; // 导入路由
-import { listByIds } from '@/api/system/oss';
-import FileUpload from '@/components/FileUpload/index.vue';
-import { delOss } from '@/api/system/oss';
+import { ref, onMounted, computed, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
+import { delOss } from '@/api/system/oss'; // 移除listByIds导入（不再回显原文件）
 import {
   documentList as apiDocumentList,
   documentAdd,
@@ -93,25 +110,56 @@ import {
   documentDisable
 } from '@/api/document/index';
 import { DocumentForm, DocumentQuery, DocumentVO } from '@/api/document/types';
+import { QuestionFilled } from '@element-plus/icons-vue';
+import { ElMessage, UploadInstance, UploadFile, FormInstance, UploadUserFile, UploadStatus, UploadRawFile } from 'element-plus';
+import { globalHeaders } from '@/utils/request';
 
-const router = useRouter(); // 初始化路由
+// 路由初始化
+const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-// ===== 移除所有历史版本相关的响应式数据 =====
-// （删除 historyDialog、historyQuery、historyList、selectedHistoryIds 等）
+// 上传核心配置（原生el-upload）
+const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload';
+const headers = ref(globalHeaders());
+const nativeUploadRef = ref<UploadInstance | null>(null);
 
-// 保留原页面其他响应式数据
-interface DialogOption {
-  visible: boolean;
-  title: string;
+// 扩展UploadFile，兼容Element Plus类型
+interface UploadFileExtend extends UploadFile {
+  ossId?: string;
+  suffix?: string;
+  url?: string;
 }
-interface PageData<T, Q> {
-  form: T;
-  queryParams: Q;
-  rules: Record<string, any[]>;
-}
+
+// 状态管理
+const uploadFileList = ref<UploadUserFile[]>([] as unknown as UploadUserFile[]);
+const form = ref<DocumentForm>({
+  id: '',
+  name: '',
+  urls: '',
+  fileSuffix: '',
+  disabledFlag: false,
+  ossIds: '',
+  updateTime: '',
+  createTime: ''
+});
+const originalOssIds = ref<string>('');
+
+const queryParams = ref<DocumentQuery>({
+  pageNum: 1,
+  pageSize: 10,
+  name: '',
+  fileSuffix: '',
+  updateTime: '',
+  disabledFlag: undefined,
+});
+
+const rules = ref({
+  name: [{ required: true, message: '请输入文件名称', trigger: 'blur' }],
+  ossIds: [{ required: true, message: '请上传文件', trigger: 'change' }]
+});
+
+// 其他状态
 const originalFile = ref<DocumentVO | null>(null);
-const formFiles = ref<any[]>([]);
 const planningFileList = ref<DocumentVO[]>([]);
 const showTable = ref(true);
 const buttonLoading = ref(false);
@@ -122,87 +170,85 @@ const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
 
-const dialog = reactive<DialogOption>({
+const dialog = ref({
   visible: false,
-  title: ''
+  title: '' as string
 });
-const documentFormRef = ref<ElFormInstance>();
-const queryFormRef = ref<ElFormInstance>();
 
-const initFormData: DocumentForm = {
-  id: '',
-  name: '',
-  urls: '',
-  fileSuffix: '',
-  disabledFlag: false,
-  ossIds: '',
-  updateTime: '',
-  createTime: ''
+const documentFormRef = ref<FormInstance | null>(null);
+const queryFormRef = ref<FormInstance | null>(null);
+
+/** 生成唯一UID */
+const generateUniqueUid = (prefix = 'file') => {
+  return Date.now() + Math.floor(Math.random() * 10000);
 };
-const data = reactive<PageData<DocumentForm, DocumentQuery>>({
-  form: { ...initFormData },
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    name: '',
-    fileSuffix: '',
-    updateTime: '',
-    disabledFlag: undefined,
-    orderByColumn: 'updateTime',
-    isAsc: 'descending'
-  },
-  rules: {
-    name: [{ required: true, message: '请输入文件名称', trigger: 'blur' }], // 文件名必填
-    ossIds: [{ required: true, message: '请上传文件', trigger: 'change' }]
+
+/** 提取文件后缀（兼容多后缀文件，如.shp.xml） */
+const getFileSuffix = (fileName: string): string => {
+  const parts = fileName.split('.');
+  if (parts.length >= 3 && parts[parts.length - 2] === 'shp') {
+    return `${parts[parts.length - 2]}.${parts[parts.length - 1]}`.toLowerCase();
   }
-});
-const {  queryParams, form, rules } = toRefs(data);
-/** 历史版本按钮：改为路由跳转（核心修改） */
+  return parts.length >= 2 ? parts.pop()!.toLowerCase() : '';
+};
+
+/** 历史版本跳转 */
 const handleHistory = (row: DocumentVO) => {
-  // 跳转到独立历史版本页面，携带fileId参数
   router.push({
-    name: 'DocumentHistory', // 对应路由名称
-    params: { fileId: row.id }, // 传递文件ID
-    query: { fileName: row.name } // 传递文件名（用于页面标题）
+    name: 'DocumentHistory',
+    params: { fileId: row.id },
+    query: { fileName: row.name }
   });
 };
 
-// 其他方法（getList、handleQuery、submitForm、handleDownload等）保持不变
-/** 查询项目规划成果归档列表 */
+/** 查询列表 */
 const getList = async () => {
   loading.value = true;
-  const response = await apiDocumentList(queryParams.value);
-  const resData = response.data || response;
-  console.log("🚀 ~ getList ~ resData:", resData)
-  planningFileList.value = Array.isArray(resData.rows) ? resData.rows : [];
-  console.log("🚀 ~ getList ~ planningFileList.value:", planningFileList.value)
-  total.value = resData.total || 0;
-  loading.value = false;
-  showTable.value = true;
+  try {
+    const response = await apiDocumentList(queryParams.value);
+    const resData = response.data || response;
+    planningFileList.value = Array.isArray(resData.rows) ? resData.rows : [];
+    total.value = resData.total || 0;
+  } catch (err) {
+    proxy?.$modal.msgError(`查询失败：${(err as Error).message || '未知错误'}`);
+  } finally {
+    loading.value = false;
+    showTable.value = true;
+  }
 };
 
-/** 取消按钮操作 */
+/** 取消操作 */
 function cancel() {
-  dialog.visible = false;
-  reset();
+  dialog.value.visible = false;
+  resetForm();
   originalFile.value = null;
+  originalOssIds.value = '';
 }
 
-/** 表单重置 */
-function reset() {
-  form.value = { ...initFormData };
+/** 重置表单 */
+function resetForm() {
+  form.value = {
+    id: '',
+    name: '',
+    urls: '',
+    fileSuffix: '',
+    disabledFlag: false,
+    ossIds: '',
+    updateTime: '',
+    createTime: ''
+  };
   documentFormRef.value?.resetFields();
-  form.value.ossIds = '';
-  formFiles.value = [];
+  uploadFileList.value = [] as unknown as UploadUserFile[];
+  originalOssIds.value = '';
 }
 
-/** 搜索按钮操作 */
+/** 搜索 */
 function handleQuery() {
   queryParams.value.pageNum = 1;
   getList();
 }
 
-/** 重置按钮操作 */
+/** 重置搜索 */
 function resetQuery() {
   showTable.value = false;
   queryFormRef.value?.resetFields();
@@ -211,7 +257,7 @@ function resetQuery() {
   handleQuery();
 }
 
-/** 表格多选选中事件 */
+/** 多选事件 */
 function handleSelectionChange(selection: DocumentVO[]) {
   ids.value = selection.map(item => ({
     id: item.id,
@@ -221,96 +267,227 @@ function handleSelectionChange(selection: DocumentVO[]) {
   multiple.value = !selection.length;
 }
 
-/** 上传文件按钮操作 */
+/** 新增文件操作 */
 const handleFile = () => {
-  reset();
-  dialog.visible = true;
-  dialog.title = '新增规划文件';
-  originalFile.value = null; // 新增时无原文件
+  resetForm();
+  dialog.value.visible = true;
+  dialog.value.title = '新增规划文件';
+  originalFile.value = null;
 };
 
-const getFileNameWithoutSuffix = (fileName: string) => {
-  const lastDotIndex = fileName.lastIndexOf('.');
-  return lastDotIndex !== -1 ? fileName.slice(0, lastDotIndex) : fileName;
-};
-/** 编辑操作（回显数据） */
+/** 编辑文件 */
 const handleUpdate = async (row: DocumentVO) => {
-  reset();
+  resetForm();
   form.value.id = row.id;
+  form.value.name = row.name;
+  // 提取原文件格式（去重、标准化）
+  form.value.fileSuffix = row.fileSuffix
+    ? Array.from(new Set(row.fileSuffix.split(',').map(s => s.trim().toLowerCase()).filter(Boolean))).join(',')
+    : '';
+  originalFile.value = { ...row };
+  originalOssIds.value = row.ossIds || '';
+  
+  // 清空原有数据
   form.value.ossIds = '';
-  form.value.name = row.name; // 回显原文件名
-  form.value.fileSuffix = row.fileSuffix; // 回显原文件类型
-  form.value.urls = row.urls; // 回显原文件URL
-  formFiles.value = [];
-  originalFile.value = row;
+  form.value.urls = '';
+  uploadFileList.value = [] as unknown as UploadUserFile[];
 
-  // 可选：回显原文件列表（如果需要在更新时显示已上传文件）
-  if (row.ossIds) {
-    const res = await listByIds(row.ossIds);
-    if (res.data && res.data.length > 0) {
-      formFiles.value = res.data.map((file: any) => ({
-        name: file.originalName,
-        url: file.url,
-        ossId: String(file.ossId),
-        suffix: file.originalName.split('.').pop() || ''
-      }));
+  console.log("🚀 编辑更新 - 暂存原ossIds:", originalOssIds.value);
+  await nextTick();
+  dialog.value.visible = true;
+  dialog.value.title = '更新规划文件';
+};
+
+/** 允许上传的文件类型 */
+const getAllowedFileTypes = computed(() => {
+  if (dialog.value.title === '更新规划文件' && form.value.fileSuffix) {
+    return Array.from(
+      new Set(
+        form.value.fileSuffix
+          .split('、')
+          .map(s => s.trim().replace(/^\./, '').toLowerCase())
+          .filter(s => s)
+      )
+    );
+  }
+  return [];
+});
+
+/** 格式提示文本（Tooltip） */
+const tooltipContent = computed(() => {
+  if (dialog.value.title === '新增规划文件') {
+    return '支持所有文件类型，无格式限制';
+  } else {
+    const types = allowedTypesTip.value;
+    return `支持格式：${types || '无'}`;
+  }
+});
+
+/** 格式提示文本（上传区域） */
+const allowedTypesTip = computed(() => {
+  const types = getAllowedFileTypes.value;
+  return types.length > 0 ? types.join('、') : '无';
+});
+
+/** 上传前校验（新增：限制文件数量≤15） */
+const handleBeforeUpload = (rawFile: UploadRawFile) => {
+  // 1. 限制上传文件总数≤15
+  if (uploadFileList.value.length >= 15) {
+    ElMessage.error('最多只能上传 15 个文件，请删除部分文件后再试');
+    return false;
+  }
+
+  // 2. 校验文件大小（500MB限制）
+  const fileSizeMB = rawFile.size / 1024 / 1024;
+  if (fileSizeMB > 500) {
+    ElMessage.error(`文件大小不能超过 500MB，当前文件大小：${fileSizeMB.toFixed(2)}MB`);
+    return false;
+  }
+
+  // 3. 校验文件名（不含英文逗号）
+  if (rawFile.name.includes(',')) {
+    ElMessage.error('文件名不能包含英文逗号');
+    return false;
+  }
+
+  // 4. 更新模式：校验文件格式（跳过.shp.xml格式）
+  if (dialog.value.title === '更新规划文件') {
+    const allowedTypes = getAllowedFileTypes.value;
+    if (allowedTypes.length > 0) {
+      const fileSuffix = getFileSuffix(rawFile.name);
+      // 关键修改：如果是.shp.xml格式，直接跳过校验（允许上传）
+      if (fileSuffix === 'shp.xml') {
+        proxy?.$modal.loading('正在上传文件，请稍候...');
+        return true;
+      }
+      const isAllowed = allowedTypes.includes(fileSuffix);
+      if (!isAllowed) {
+        ElMessage.error(`文件格式不正确，请上传${allowedTypes.join('/')}格式的文件`);
+        return false;
+      }
     }
   }
 
-  dialog.visible = true;
-  dialog.title = '更新规划文件';
+  proxy?.$modal.loading('正在上传文件，请稍候...');
+  return true;
 };
 
-const getAllowedFileTypes = computed(() => {
-  // 更新模式：严格限制文件类型与原文件一致
-  if (dialog.title === '更新规划文件' && originalFile.value?.fileSuffix) {
-    const originalSuffixes = originalFile.value.fileSuffix
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s)
-      .map(s => s.startsWith('.') ? s.slice(1) : s); // 去除前缀点
 
-    // 生成严格匹配的类型（带点/不带点 + 大小写）
-    return originalSuffixes.flatMap(suffix => [
-      suffix.toLowerCase(),
-      suffix.toUpperCase(),
-      `.${suffix.toLowerCase()}`,
-      `.${suffix.toUpperCase()}`
-    ]);
+/** 上传超出数量限制 */
+const handleUploadExceed = () => {
+  ElMessage.error('最多只能上传 15 个文件');
+};
+
+/** 上传失败处理 */
+const handleUploadError = (err: Error, file: UploadFile) => {
+  proxy?.$modal.closeLoading();
+  ElMessage.error(`文件 ${file.name} 上传失败：${err.message || '未知错误'}`);
+
+  const fileUid = String(file.uid);
+  const fileList = uploadFileList.value as unknown as UploadFileExtend[];
+  const failIndex = fileList.findIndex(item => String(item.uid) === fileUid);
+  if (failIndex > -1) {
+    uploadFileList.value.splice(failIndex, 1);
   }
+};
 
-  // 新增模式：默认支持的规划文件类型（不变）
-  return [
-    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
-    'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
-    'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'xml', 'shx', 'FBX', 'fbx', 'obj'
-  ];
-});
+/** 上传成功处理（优化：去重+trim） */
+const handleUploadSuccess = (res: any, file: UploadFile) => {
+  proxy?.$modal.closeLoading();
+  if (res.code === 200 && res.data) {
+    const filename = res.data.filename || file.name;
+    const ossId = res.data.ossId?.trim(); // 去重空格
+    const url = res.data.url?.trim();     // 去重空格
+    if (!ossId) {
+      ElMessage.error(`文件 ${filename} 上传失败：缺少有效ossId`);
+      return;
+    }
 
-const handleFileUploadChange = (newOssIds: string) => {
-  form.value.ossIds = newOssIds;
-  if (newOssIds) {
-    listByIds(newOssIds).then(res => {
-      if (res.data && res.data.length > 0) {
-        formFiles.value = res.data.map((file: any) => ({
-          name: file.originalName,
-          url: file.url,
-          ossId: String(file.ossId),
-          suffix: file.originalName.split('.').pop() || ''
-        }));
-        // 自动填充文件类型（隐藏字段）
-        const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
-        form.value.fileSuffix = allSuffixes.join(',');
-        form.value.urls = formFiles.value.map(file => file.url).join(',');
-        // 文件名由用户输入，不再自动填充
-      }
-    });
+    const fileSuffix = getFileSuffix(filename);
+
+    const successFile: UploadFileExtend = {
+      ...file,
+      ossId: ossId,
+      url:url,
+      suffix: fileSuffix,
+      response: res,
+      status: 'success' as UploadStatus
+    };
+    console.log("🚀 ~ handleUploadSuccess ~ successFile:", successFile)
+
+    const userFile = successFile as unknown as UploadUserFile;
+
+    const fileList = uploadFileList.value as unknown as UploadFileExtend[];
+    const fileUid = String(file.uid);
+    const existingIndex = fileList.findIndex(item => String(item.uid) === fileUid);
+
+    if (existingIndex > -1) {
+      uploadFileList.value.splice(existingIndex, 1, userFile);
+    } else {
+      uploadFileList.value.push(userFile);
+    }
+
+    // 优化：去重ossId和url，URL拼接为'url1,url2'格式（仅外层单引号）
+    const successFiles = uploadFileList.value as unknown as UploadFileExtend[];
+    const uniqueOssIds = Array.from(new Set(successFiles.map(item => item.ossId).filter(Boolean))).join(',');
+    // 关键修改：URL拼接为'url1,url2'格式（整体包裹单引号，内部逗号分隔）
+    const urlArray = Array.from(new Set(successFiles.map(item => item.url).filter(Boolean)));
+    const uniqueUrls = urlArray.join(','); // 直接拼接，无单引号
+    const uniqueSuffixes = Array.from(new Set(successFiles.map(item => item.suffix).filter(Boolean))).join(',');
+
+    form.value.ossIds = uniqueOssIds;
+    form.value.urls = uniqueUrls; // 最终格式：url1,url2,url3
+    console.log("🚀 上传成功 - urls:", form.value.urls);
+    form.value.fileSuffix = uniqueSuffixes;
+    console.log("🚀 上传成功 - fileSuffix:", form.value.fileSuffix);
+
+    ElMessage.success(`文件 ${filename} 上传成功`);
   } else {
-    formFiles.value = [];
-    form.value.fileSuffix = '';
-    form.value.urls = '';
+    ElMessage.error(`文件 ${file.name} 上传失败：${res.msg || '未知错误'}`);
+    handleUploadRemove(file);
   }
 };
+
+/** 移除文件处理 */
+const handleUploadRemove = (file: UploadFile) => {
+  const extendFile = file as unknown as UploadFileExtend;
+  const fileUid = String(extendFile.uid);
+  const fileList = uploadFileList.value as unknown as UploadFileExtend[];
+  const deleteIndex = fileList.findIndex(item => String(item.uid) === fileUid);
+
+  if (deleteIndex === -1) return;
+
+  // 删除服务器文件
+  if (extendFile.status === 'success' && extendFile.ossId) {
+    delOss(extendFile.ossId).catch(err => {
+      console.warn(`删除服务器文件失败：${err.message}`);
+    });
+  }
+
+  // 从列表中移除
+  uploadFileList.value.splice(deleteIndex, 1);
+
+  // 更新form字段
+  const successFiles = uploadFileList.value as unknown as UploadFileExtend[];
+  const uniqueOssIds = Array.from(new Set(successFiles.map(item => item.ossId).filter(Boolean))).join(',');
+  const urlArray = Array.from(new Set(successFiles.map(item => item.url).filter(Boolean)));
+  const uniqueUrls = urlArray.join(','); // 无单引号
+  const uniqueSuffixes = Array.from(new Set(successFiles.map(item => item.suffix).filter(Boolean))).join(',');
+
+  form.value.ossIds = uniqueOssIds;
+  form.value.urls = uniqueUrls;
+  form.value.fileSuffix = uniqueSuffixes;
+};
+
+/** 获取文件名（处理URL路径） */
+const getFileName = (name: string) => {
+  if (name.lastIndexOf('/') > -1) {
+    return name.slice(name.lastIndexOf('/') + 1);
+  }
+  return name;
+};
+
+/** 提交表单 */
 const submitForm = () => {
   documentFormRef.value?.validate(async (valid: boolean) => {
     if (valid) {
@@ -319,55 +496,30 @@ const submitForm = () => {
         const submitData = {
           id: form.value.id,
           ossIds: form.value.ossIds,
-          name: form.value.name, // 提交用户输入的名称
-          fileSuffix: form.value.fileSuffix, // 自动填充的文件类型
-          urls: form.value.urls,
+          name: form.value.name,
+          fileSuffix: form.value.fileSuffix,
+          urls: form.value.urls, // 最终提交格式：纯URL逗号分隔，无单引号
           disabledFlag: false
         };
+        console.log("🚀 提交数据 - final:", submitData);
+        
         if (!form.value.id) {
           await documentAdd(submitData);
         } else {
           await documentUpdate(submitData);
         }
         proxy?.$modal.msgSuccess(`${!form.value.id ? '新增' : '更新'}成功`);
-        dialog.visible = false;
+        dialog.value.visible = false;
         await getList();
       } catch (err) {
         proxy?.$modal.msgError(`${!form.value.id ? '新增' : '更新'}失败：${(err as Error).message || '未知错误'}`);
+        console.error("🚀 提交失败:", err);
       } finally {
         buttonLoading.value = false;
+        originalOssIds.value = '';
       }
     }
   });
-};
-
-/** 批量停用 */
-const handleDisable = async (row?: DocumentVO) => {
-  const disableIds = row?.id ? [row.id] : ids.value.map(item => item.id);
-  if (!disableIds.length) {
-    proxy?.$modal.msgError('请选择需要停用的数据');
-    return;
-  }
-  await proxy?.$modal.confirm(`请确认是否停用选中的${disableIds.length}个规划文件，停用后相关数据信息将不再三维场景中展示。`);
-  loading.value = true;
-  try {
-    await documentDisable(disableIds);
-    if (row) {
-      row.disabledFlag = !row.disabledFlag;
-    } else {
-      planningFileList.value.forEach(item => {
-        if (disableIds.includes(item.id)) {
-          item.disabledFlag = true;
-        }
-      });
-    }
-    getList();
-    proxy?.$modal.msgSuccess('停用成功');
-  } catch (err) {
-    proxy?.$modal.msgError(`停用失败：${(err as Error).message || '未知错误'}`);
-  } finally {
-    loading.value = false;
-  }
 };
 
 /** 批量下载 */
@@ -411,11 +563,11 @@ const handleDownload = async (row: DocumentVO) => {
   let ossIdsArray: string[] = [];
   if (row.ossIds) {
     if (typeof row.ossIds === 'string') {
-      ossIdsArray = row.ossIds.split(',').filter(ossId =>
+      ossIdsArray = row.ossIds.split(',').filter((ossId: string) =>
         ossId.trim() && /^\d+$/.test(ossId.trim())
       );
     } else if (Array.isArray(row.ossIds)) {
-      ossIdsArray = row.ossIds.filter(ossId =>
+      ossIdsArray = (row.ossIds as string[]).filter((ossId: string) =>
         typeof ossId === 'string' && ossId.trim() && /^\d+$/.test(ossId.trim())
       );
     }
@@ -441,35 +593,7 @@ const handleDownload = async (row: DocumentVO) => {
   failCount === 0 ? proxy?.$modal.msgSuccess(resultMsg) : proxy?.$modal.msgWarning(resultMsg);
 };
 
-// 监听ossIds变化
-watch(
-  () => form.value.ossIds,
-  async (ossIds) => {
-    if (ossIds) {
-      const res = await listByIds(ossIds);
-      if (res.data && res.data.length > 0) {
-        formFiles.value = res.data.map((file: any) => ({
-          name: file.originalName,
-          url: file.url,
-          ossId: file.ossId,
-          suffix: file.originalName.split('.').pop() || ''
-        }));
-        const allSuffixes = formFiles.value.map(file => file.suffix).filter(Boolean);
-        form.value.fileSuffix = allSuffixes.join(',');
-        form.value.name = getFileNameWithoutSuffix(formFiles.value[0].name);
-        form.value.urls = formFiles.value.map(file => file.url).join(',');
-      }
-    } else {
-      formFiles.value = [];
-      form.value.name = '';
-      form.value.fileSuffix = '';
-      form.value.urls = '';
-    }
-  },
-  { immediate: true }
-);
-
-// 页面挂载时查询列表
+// 挂载查询
 onMounted(() => {
   getList();
 });
@@ -485,5 +609,30 @@ onMounted(() => {
   color: #c0c4cc !important;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.native-upload {
+  width: 100%;
+}
+
+.tooltip-icon {
+  margin-top: 2px;
+  cursor: help;
+  color: #666;
+}
+
+.format-desc {
+  margin-top: 2px;
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.el-upload-list--text {
+  margin-top: 8px !important;
+}
+
+.el-upload-list__item {
+  margin-bottom: 6px !important;
 }
 </style>
