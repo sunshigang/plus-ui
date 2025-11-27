@@ -701,7 +701,8 @@ onMounted(async () => {
           fileName: getFileName(file.name),
           progress: 100,
           status: 'success',
-          fileId: file.ossId
+          fileId: file.ossId,
+          progressText: '' // 新增：默认空字符串
         }))
       }
     }
@@ -974,7 +975,8 @@ const resetForm = async () => {
       fileName: getFileName(file.name),
       progress: 100,
       status: 'success',
-      fileId: file.ossId
+      fileId: file.ossId,
+      progressText: ''
     }))
     // 重置表单校验状态
     infoFormRef.value.clearValidate()
@@ -1053,7 +1055,7 @@ const handleModelPreview = () => {
     return
   }
   const isProcessing = threeDModelUploadProgress.value.some(item =>
-    item.progress < 100 || item.progressText.includes('服务器处理中')
+    item.progress < 100 || (item.progressText?.includes('服务器处理中') ?? false)
   )
   if (isProcessing) {
     ElMessage.warning('模型文件正在上传或处理中，请等待完成后再预览')

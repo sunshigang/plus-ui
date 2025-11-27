@@ -555,7 +555,7 @@ const clickBack = () => {
                 router.push(`/project/major/major-review/${projectIdCheck.value}`)
             }
         }
-    }, 1000);
+    }, 2000);
 };
 onMounted(async () => {
     // sendMsgUE({

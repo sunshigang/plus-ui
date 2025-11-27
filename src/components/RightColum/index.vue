@@ -237,7 +237,7 @@
                     <div v-if="layerContentStyleRemark" class="contentBodyA">
                         <div class="scrollContentA">
                             <div class="scrollDetailA" v-for="item in checkItemsRemark" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.type }}：{{ item.layerName }}</div>
+                                <div class="scrollDetailFontA">{{ item.layerName }}</div>
                                 <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
                                     @change="handleCheckChangeRemark(item)" />
                             </div>
@@ -301,6 +301,38 @@
 import { toRefs, reactive, ref, onMounted, computed, watch } from 'vue'
 import bus from '../../libs/eventbus'
 import { getMarkList } from "./remark.js";
+// 存储所有选中的图层名称（去重）
+const selectedLayerNames = ref([]);
+
+// 核心方法：更新选中的图层名称列表并发送事件
+const updateSelectedLayerNames = () => {
+    // 清空原有列表
+    selectedLayerNames.value = [];
+    // 遍历所有图层分组（A-K + 备注）
+    const allCheckGroups = [
+        checkItemsA, checkItemsB, checkItemsC, checkItemsD, checkItemsE,
+        checkItemsF, checkItemsG, checkItemsH, checkItemsI, checkItemsJ,
+        checkItemsK, checkItemsRemark
+    ];
+    // 遍历每个分组的子项
+    allCheckGroups.forEach(group => {
+        group.value.forEach(item => {
+            if (item.checked) {
+                // 特殊处理：checkItemsF 用 label 显示，其他用 name
+                const displayName = item.layerName || item.label || item.name;
+                selectedLayerNames.value.push(displayName);
+            }
+        });
+    });
+    // 去重（避免重复名称）
+    selectedLayerNames.value = [...new Set(selectedLayerNames.value)];
+    // 通过EventBus发送选中的名称列表
+    bus.emit('layerNamesSelected', selectedLayerNames.value);
+    console.log('当前选中的图层名称：', selectedLayerNames.value);
+};
+
+
+
 const isAllCheckedA = ref(false);
 const isAllCheckedB = ref(false);
 const isAllCheckedC = ref(false);
@@ -318,72 +350,85 @@ const handleAllCheckA = (isChecked) => {
         item.checked = isChecked;
         handleCheckChangeA(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckB = (isChecked) => {
     checkItemsB.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeB(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckC = (isChecked) => {
     checkItemsC.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeC(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckD = (isChecked) => {
     checkItemsD.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeD(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckE = (isChecked) => {
     checkItemsE.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeE(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckF = (isChecked) => {
     checkItemsF.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeF(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckG = (isChecked) => {
     checkItemsG.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeG(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckH = (isChecked) => {
     checkItemsH.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeH(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckI = (isChecked) => {
     checkItemsI.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeI(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckJ = (isChecked) => {
     checkItemsJ.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeJ(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckK = (isChecked) => {
     checkItemsK.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeK(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckRemark = (isChecked) => {
     checkItemsRemark.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeRemark(item);
     });
+    updateSelectedLayerNames();
+    bus.emit('layerNamesSelected', selectedLayerNames.value);
 };
 
 const checkItemsA = ref([
@@ -523,25 +568,55 @@ const handleCheckChangeA = item => {
     // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('attractionTypeMessage', item)
+    updateSelectedLayerNames();
 }
 const handleCheckChangeB = item => {
     // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('cultureTypeMessage', item)
+    updateSelectedLayerNames();
 }
-const handleCheckChangeC = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeD = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeE = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeF = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeG = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeH = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeI = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeJ = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeK = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeC = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames();
+};
+const handleCheckChangeD = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames();
+};
+const handleCheckChangeE = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeF = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeG = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeH = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeI = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeJ = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeK = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
 const handleCheckChangeRemark = item => {
     // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('remarkMessage', item)
+    updateSelectedLayerNames()
 }
 const clickLayerContentA = () => {
     layerContentStyleA.value = !layerContentStyleA.value
@@ -602,6 +677,7 @@ const setOnlyEcoRedlineChecked = (isChecked) => {
     checkItemsRemark.value.forEach(item => item.checked = false);
     isAllCheckedRemark.value = false;
     layerContentStyleRemark.value = false;
+    updateSelectedLayerNames();
 };
 // 1. 修复：用对象存储每个按钮的独立选中状态（默认全未选中）
 const isSelected = ref({
@@ -658,6 +734,7 @@ watch(
     (checkedList) => {
         // 所有子项都选中时，全选框勾选；否则取消
         isAllCheckedA.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true } // 深度监听数组内元素变化
 );
@@ -665,6 +742,7 @@ watch(
     () => checkItemsB.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedB.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -674,6 +752,7 @@ watch(
     () => checkItemsC.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedC.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -683,6 +762,7 @@ watch(
     () => checkItemsD.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedD.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -692,6 +772,7 @@ watch(
     () => checkItemsE.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedE.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -701,6 +782,7 @@ watch(
     () => checkItemsF.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedF.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -710,6 +792,7 @@ watch(
     () => checkItemsG.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedG.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -719,6 +802,7 @@ watch(
     () => checkItemsH.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedH.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -728,6 +812,7 @@ watch(
     () => checkItemsI.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedI.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -746,6 +831,7 @@ watch(
         if (isChecked !== undefined) {
             isSelected.value[0] = isChecked; // 子项勾选 → 按钮激活；子项取消 → 按钮取消
         }
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -755,6 +841,7 @@ watch(
     () => checkItemsK.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedK.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
@@ -763,11 +850,13 @@ watch(
     (checkedList) => {
         // 所有备注子项都选中时，全选框勾选；否则取消
         isAllCheckedRemark.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true } // 深度监听数组内元素变化
 );
 
 onMounted(() => {
+    updateSelectedLayerNames();
     setOnlyEcoRedlineChecked(isSelected.value[0]);
     isAllCheckedRemark.value = false;
     bus.on('scheme-review-clicked', data => {
@@ -782,6 +871,7 @@ onMounted(() => {
         }
         getMarkList().then((res) => {
             checkItemsRemark.value = res.rows
+            bus.emit('updateRemarkLegend', res.rows);
             if (isSelected.value[0]) {
                 checkItemsRemark.value.forEach(item => item.checked = true);
                 isAllCheckedRemark.value = true;
@@ -882,7 +972,7 @@ onMounted(() => {
 
                 .scroll-custom-checkbox {
                     position: absolute;
-                    right: 35px; 
+                    right: 35px;
                     top: 50%; // 垂直居中第一步：顶部对齐50%
                     transform: translateY(-50%); // 垂直居中第二步：向上偏移自身50%，实现完全居中
                     margin: 0; // 清除原有margin，避免干扰
@@ -1061,6 +1151,7 @@ onMounted(() => {
             margin-bottom: 15px;
             cursor: pointer;
             transition: font-size 0.3s ease;
+
             &.active {
                 font-size: 30px;
                 color: #ffa621;

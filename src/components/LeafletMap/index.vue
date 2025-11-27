@@ -22,9 +22,9 @@ const initMap = () => {
   if (map.value) return;
   map.value = L.map('map', {
     center: [28.927237, 120.187512],
-    zoom: 18,
+    zoom: 17,
     maxZoom: 21,
-    minZoom: 8,
+    minZoom: 15,
     // crs: L.CRS.EPSG3857, //设置坐标系4326
     logoControl: false,
     zoomControl: false, //禁用 + - 按钮
@@ -75,9 +75,19 @@ const initMap = () => {
   //     };
   //   }
   // }).addTo(map.value);
-
+  L.tileLayer.wms('http://127.0.0.1:8080/geoserver/fangyan/wms?', {
+    layers: 'fangyan:dom', //需要加载的图层
+    format: 'image/png', //返回的数据格式
+    maxZoom: 21,
+    transparent: true,
+    tileSize: 256,
+    continuousWorld: true,
+    noWrap: true,
+  }).addTo(map.value);
 
 }
+
+
 
 // 停止当前所有绘制
 const stopAllDrawing = () => {

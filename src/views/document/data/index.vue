@@ -102,7 +102,6 @@
 <script setup name="DocumentPlanningFile" lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { delOss } from '@/api/system/oss'; // 移除listByIds导入（不再回显原文件）
 import {
   documentList as apiDocumentList,
   documentAdd,
@@ -113,7 +112,7 @@ import { DocumentForm, DocumentQuery, DocumentVO } from '@/api/document/types';
 import { QuestionFilled } from '@element-plus/icons-vue';
 import { ElMessage, UploadInstance, UploadFile, FormInstance, UploadUserFile, UploadStatus, UploadRawFile } from 'element-plus';
 import { globalHeaders } from '@/utils/request';
-
+import { getCurrentInstance, ComponentInternalInstance } from 'vue'; // 补充缺失的导入
 // 路由初始化
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
@@ -129,7 +128,37 @@ interface UploadFileExtend extends UploadFile {
   suffix?: string;
   url?: string;
 }
+// ========== 核心新增：标准化文件后缀的工具函数 ==========
+/**
+ * 标准化文件后缀（统一为：.后缀名 格式，小写）
+ * @param suffix 原始后缀（如：PDF、pdf、.PDF、png 等）
+ * @returns 标准化后缀（如：.pdf、.png）
+ */
+const normalizeFileSuffix = (suffix: string): string => {
+  if (!suffix) return '';
+  // 1. 转小写 2. 移除前置点（避免重复） 3. 补充前置点
+  const pureSuffix = suffix.trim().toLowerCase().replace(/^\./, '');
+  return pureSuffix ? `.${pureSuffix}` : '';
+};
 
+/**
+ * 提取文件后缀并标准化（兼容多后缀文件，如.shp.xml）
+ * @param fileName 文件名
+ * @returns 标准化后缀（如：.pdf、.shp.xml）
+ */
+const getFileSuffix = (fileName: string): string => {
+  const parts = fileName.split('.');
+  console.log("🚀 ~ getFileSuffix ~ parts:", parts)
+  let rawSuffix = '';
+  // 处理特殊多后缀（如.shp.xml）
+  if (parts.length >= 3 && parts[parts.length - 2] === 'shp') {
+    rawSuffix = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+  } else if (parts.length >= 2) {
+    rawSuffix = parts.pop()!;
+  }
+  // 标准化后缀格式
+  return normalizeFileSuffix(rawSuffix);
+};
 // 状态管理
 const uploadFileList = ref<UploadUserFile[]>([] as unknown as UploadUserFile[]);
 const form = ref<DocumentForm>({
@@ -182,16 +211,6 @@ const queryFormRef = ref<FormInstance | null>(null);
 const generateUniqueUid = (prefix = 'file') => {
   return Date.now() + Math.floor(Math.random() * 10000);
 };
-
-/** 提取文件后缀（兼容多后缀文件，如.shp.xml） */
-const getFileSuffix = (fileName: string): string => {
-  const parts = fileName.split('.');
-  if (parts.length >= 3 && parts[parts.length - 2] === 'shp') {
-    return `${parts[parts.length - 2]}.${parts[parts.length - 1]}`.toLowerCase();
-  }
-  return parts.length >= 2 ? parts.pop()!.toLowerCase() : '';
-};
-
 /** 历史版本跳转 */
 const handleHistory = (row: DocumentVO) => {
   router.push({
@@ -207,7 +226,14 @@ const getList = async () => {
   try {
     const response = await apiDocumentList(queryParams.value);
     const resData = response.data || response;
-    planningFileList.value = Array.isArray(resData.rows) ? resData.rows : [];
+    // 对列表数据的fileSuffix进行标准化处理
+    planningFileList.value = Array.isArray(resData.rows)
+      ? resData.rows.map(row => ({
+        ...row,
+        // 标准化接口返回的后缀（如.PDF → .pdf）
+        fileSuffix: normalizeFileSuffix(row.fileSuffix || '')
+      }))
+      : [];
     total.value = resData.total || 0;
   } catch (err) {
     proxy?.$modal.msgError(`查询失败：${(err as Error).message || '未知错误'}`);
@@ -277,16 +303,24 @@ const handleFile = () => {
 
 /** 编辑文件 */
 const handleUpdate = async (row: DocumentVO) => {
+  console.log("🚀 ~ handleUpdate ~ row.fileSuffix:", row.fileSuffix)
   resetForm();
   form.value.id = row.id;
   form.value.name = row.name;
-  // 提取原文件格式（去重、标准化）
+  // 提取并标准化原文件格式（去重、标准化）
   form.value.fileSuffix = row.fileSuffix
-    ? Array.from(new Set(row.fileSuffix.split(',').map(s => s.trim().toLowerCase()).filter(Boolean))).join(',')
+    ? Array.from(
+      new Set(
+        row.fileSuffix.split(',')
+          .map(s => normalizeFileSuffix(s)) // 标准化每个后缀
+          .filter(Boolean)
+      )
+    ).join(',')
     : '';
+  console.log("🚀 ~ handleUpdate ~ form.value.fileSuffix:", form.value.fileSuffix)
   originalFile.value = { ...row };
   originalOssIds.value = row.ossIds || '';
-  
+
   // 清空原有数据
   form.value.ossIds = '';
   form.value.urls = '';
@@ -304,8 +338,8 @@ const getAllowedFileTypes = computed(() => {
     return Array.from(
       new Set(
         form.value.fileSuffix
-          .split('、')
-          .map(s => s.trim().replace(/^\./, '').toLowerCase())
+          .split(',')
+          .map(s => s.trim().replace(/^\./, '').toLowerCase()) // 移除前置点用于校验
           .filter(s => s)
       )
     );
@@ -354,7 +388,7 @@ const handleBeforeUpload = (rawFile: UploadRawFile) => {
   if (dialog.value.title === '更新规划文件') {
     const allowedTypes = getAllowedFileTypes.value;
     if (allowedTypes.length > 0) {
-      const fileSuffix = getFileSuffix(rawFile.name);
+     const fileSuffix = getFileSuffix(rawFile.name).replace(/^\./, ''); // 移除前置点用于校验
       // 关键修改：如果是.shp.xml格式，直接跳过校验（允许上传）
       if (fileSuffix === 'shp.xml') {
         proxy?.$modal.loading('正在上传文件，请稍候...');
@@ -391,7 +425,7 @@ const handleUploadError = (err: Error, file: UploadFile) => {
   }
 };
 
-/** 上传成功处理（优化：去重+trim） */
+/** 上传成功处理（关键修改：标准化fileSuffix） */
 const handleUploadSuccess = (res: any, file: UploadFile) => {
   proxy?.$modal.closeLoading();
   if (res.code === 200 && res.data) {
@@ -408,7 +442,7 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
     const successFile: UploadFileExtend = {
       ...file,
       ossId: ossId,
-      url:url,
+      url: url,
       suffix: fileSuffix,
       response: res,
       status: 'success' as UploadStatus
@@ -438,7 +472,7 @@ const handleUploadSuccess = (res: any, file: UploadFile) => {
     form.value.ossIds = uniqueOssIds;
     form.value.urls = uniqueUrls; // 最终格式：url1,url2,url3
     console.log("🚀 上传成功 - urls:", form.value.urls);
-    form.value.fileSuffix = uniqueSuffixes;
+    form.value.fileSuffix = uniqueSuffixes; // 最终存储标准化后的后缀（如：.pdf）
     console.log("🚀 上传成功 - fileSuffix:", form.value.fileSuffix);
 
     ElMessage.success(`文件 ${filename} 上传成功`);
@@ -458,11 +492,11 @@ const handleUploadRemove = (file: UploadFile) => {
   if (deleteIndex === -1) return;
 
   // 删除服务器文件
-  if (extendFile.status === 'success' && extendFile.ossId) {
-    delOss(extendFile.ossId).catch(err => {
-      console.warn(`删除服务器文件失败：${err.message}`);
-    });
-  }
+  // if (extendFile.status === 'success' && extendFile.ossId) {
+  //   delOss(extendFile.ossId).catch(err => {
+  //     console.warn(`删除服务器文件失败：${err.message}`);
+  //   });
+  // }
 
   // 从列表中移除
   uploadFileList.value.splice(deleteIndex, 1);
@@ -497,12 +531,12 @@ const submitForm = () => {
           id: form.value.id,
           ossIds: form.value.ossIds,
           name: form.value.name,
-          fileSuffix: form.value.fileSuffix,
-          urls: form.value.urls, // 最终提交格式：纯URL逗号分隔，无单引号
+          fileSuffix: form.value.fileSuffix, // 提交标准化后的后缀（如：.pdf）
+          urls: form.value.urls,
           disabledFlag: false
         };
         console.log("🚀 提交数据 - final:", submitData);
-        
+
         if (!form.value.id) {
           await documentAdd(submitData);
         } else {

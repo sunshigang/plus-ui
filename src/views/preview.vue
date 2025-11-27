@@ -67,48 +67,54 @@ if (!projectId) {
 }
 
 // 2. 点击返回按钮
-const clickBack = () => {
+const clickBack = async () => {
     if (isLeaving.value) return; // 防止重复点击
     isLeaving.value = true; // 标记开始离开
     console.log("🚀 ~ clickBack ~ projectThreeDModelOssId.value:", projectThreeDModelOssId.value)
-    sendMsgUE({
-        "Command": "DeleteAssets",
-        "Args": { "ID": projectThreeDModelOssId.value }
-    });
-    // 2. 切换相机
-    sendMsgUE({
-        "Command": "SwitchCamera",
-        "Args": { "ID": "Main", "Duration": 1.0 }
-    });
-    // 延迟跳回对应页面
-    setTimeout(() => {
-        const targetRoute = projectMajorFlag.value
-        if (targetRoute == true) {
-            if (projectType == 'major-add') {
-                router.push(`/project/major/major-add/${projectId}`)
-            } else if (projectType == 'major-edit') {
-                router.push(`/project/major/major-edit/${projectId}`)
-            } else if (projectType == 'major-repeatEdit') {
-                router.push(`/project/major/major-repeat-edit/${projectId}`)
-            } else if (projectType == 'major-share') {
-                router.push(`/project/major/major-share/${projectId}`)
+    try {
+        sendMsgUE({
+            "Command": "DeleteAssets",
+            "Args": { "ID": projectThreeDModelOssId.value }
+        });
+        // 2. 切换相机
+        sendMsgUE({
+            "Command": "SwitchCamera",
+            "Args": { "ID": "Main", "Duration": 1.0 }
+        });
+        // 延迟跳回对应页面
+        setTimeout(() => {
+            const targetRoute = projectMajorFlag.value
+            if (targetRoute == true) {
+                if (projectType == 'major-add') {
+                    router.push(`/project/major/major-add/${projectId}`)
+                } else if (projectType == 'major-edit') {
+                    router.push(`/project/major/major-edit/${projectId}`)
+                } else if (projectType == 'major-repeatEdit') {
+                    router.push(`/project/major/major-repeat-edit/${projectId}`)
+                } else if (projectType == 'major-share') {
+                    router.push(`/project/major/major-share/${projectId}`)
+                } else {
+                    router.push(`/project/major/major-view/${projectId}`)
+                }
             } else {
-                router.push(`/project/major/major-view/${projectId}`)
+                if (projectType == 'normal-add') {
+                    router.push(`/project/normal/normal-add/${projectId}`)
+                } else if (projectType == 'normal-edit') {
+                    router.push(`/project/normal/normal-edit/${projectId}`)
+                } else if (projectType == 'normal-repeatEdit') {
+                    router.push(`/project/normal/normal-repeat-edit/${projectId}`)
+                } else if (projectType == 'normal-share') {
+                    router.push(`/project/normal/normal-share/${projectId}`)
+                } else {
+                    router.push(`/project/normal/normal-view/${projectId}`)
+                }
             }
-        } else {
-            if (projectType == 'normal-add') {
-                router.push(`/project/normal/normal-add/${projectId}`)
-            } else if (projectType == 'normal-edit') {
-                router.push(`/project/normal/normal-edit/${projectId}`)
-            } else if (projectType == 'normal-repeatEdit') {
-                router.push(`/project/normal/normal-repeat-edit/${projectId}`)
-            } else if (projectType == 'normal-share') {
-                router.push(`/project/normal/normal-share/${projectId}`)
-            } else {
-                router.push(`/project/normal/normal-view/${projectId}`)
-            }
-        }
-    }, 1000);
+        }, 2000);
+    } catch (err) {
+        // 处理删除失败/超时
+        ElMessage.error(`删除模型失败：${err.message}`);
+        isLeaving.value = false; // 重置状态，允许重新点击
+    }
 };
 
 // 3. 监听事件总线：切换相机
@@ -190,7 +196,7 @@ const loadThreeDModel = async () => {
         });
         setTimeout(() => {
             isIframeLoading.value = false;
-        }, 6000);
+        }, 11000);
     } catch (err) {
         ElMessage.error(`数据获取失败：${err.message || '未知错误'}`);
         console.error('加载 3D 模型异常：', err);

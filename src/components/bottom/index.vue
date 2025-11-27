@@ -18,9 +18,9 @@
 
     <div class="legend" v-if="legendShowHide">
         <div class="legendBody">
-            <div class="legendTitle" v-for="item in legendItems" :key="item.id">
+            <div class="legendTitle" v-for="item in filteredLegendItems" :key="item.id">
                 <div class="legendRect"
-                    :style="{ background: item.rgb, border: item.id <= 26 ? '2px solid #25A239' : 'none' }"></div>
+                    :style="{ background: item.rgb, border: item.id <= 26 ? '1px solid #25A239' : 'none' }"></div>
                 <div class="legendText">{{ item.name }}</div>
             </div>
         </div>
@@ -32,12 +32,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, computed } from 'vue'
 import bus from '../../libs/eventbus'
 const route = useRoute()
+const filteredLegendItems = ref([]);
 const timeIsShow = ref(false)
 const years = ref([2022, 2023, 2024, 2025]) // 年份数组
 const currentYear = ref(2025) // 默认选中 2023
 const router = useRouter()
 const legendShowHide = ref(false) // 图例显示隐藏状态
-const legendItems = ref([
+const staticLegendItems = ref([
     { id: 1, name: '一级保护区', rgb: 'rgb(213, 133, 146)' },
     { id: 2, name: '二级保护区', rgb: 'rgb(229, 227, 108) ' },
     { id: 3, name: '三级保护区', rgb: 'rgb(145, 149, 194)' },
@@ -64,7 +65,97 @@ const legendItems = ref([
     { id: 24, name: '方岩风景名胜区范围_16版', rgb: 'rgb(197, 229, 252)' },
     { id: 25, name: '方岩风景名胜区总体规划范围', rgb: 'rgb(204, 252, 228)' },
     { id: 26, name: '在编方岩风景名胜区范围', rgb: 'rgb(255, 190, 190)' },
-])
+    { id: 27, name: '生态保护红线', rgb: 'rgb(255, 0, 0)' },
+    { id: 28, name: '一级人文景源', rgb: 'rgb(255, 102, 102)' },
+    { id: 29, name: '二级人文景源', rgb: 'rgb(255, 153, 102)' },
+    { id: 30, name: '三级人文景源', rgb: 'rgb(255, 204, 102)' },
+    { id: 31, name: '一级自然景源', rgb: 'rgb(102, 255, 102)' },
+    { id: 32, name: '二级自然景源', rgb: 'rgb(102, 255, 153)' },
+    { id: 33, name: '三级自然景源', rgb: 'rgb(102, 255, 204)' },
+    { id: 34, name: '行政村', rgb: 'rgb(102, 153, 255)' },
+    { id: 35, name: '停车场', rgb: 'rgb(204, 102, 255)' },
+    // 文化资源分布现状（B）
+    { id: 36, name: '岩洞寺庙文化景源', rgb: 'rgb(153, 102, 255)' },
+    { id: 37, name: '胡公文化景源', rgb: 'rgb(204, 102, 153)' },
+    { id: 38, name: '书院文化景源', rgb: 'rgb(102, 204, 153)' },
+    { id: 39, name: '抗战历史文化景源', rgb: 'rgb(255, 102, 153)' },
+    // 现状交通图（C）
+    { id: 40, name: '对外交通', rgb: 'rgb(255, 204, 0)' },
+    { id: 41, name: '机动车道', rgb: 'rgb(204, 204, 0)' },
+    // 游赏规划（D）
+    { id: 42, name: '一级车行道', rgb: 'rgb(153, 204, 0)' },
+    { id: 43, name: '一级游步道', rgb: 'rgb(102, 204, 0)' },
+    { id: 44, name: '二级游步道', rgb: 'rgb(51, 204, 0)' },
+    { id: 45, name: '客运索道', rgb: 'rgb(0, 204, 51)' },
+    // 主要景观游赏线（E）
+    { id: 46, name: '主要景观游赏线', rgb: 'rgb(0, 204, 102)' },
+]);
+// 动态备注图例项（根据checkItemsRemark动态生成）
+const dynamicRemarkLegendItems = ref([]);
+const legendItems = computed(() => {
+    // 动态备注项ID从47开始，避免与静态项冲突
+    const remarkItems = dynamicRemarkLegendItems.value.map((item, index) => ({
+        id: 47 + index,
+        name: item.name, // 动态取备注的layerName
+        rgb: item.rgb,   // 备注项自定义颜色
+        isRemark: true   // 标记为备注项（可选，方便后续区分）
+    }));
+    return [...staticLegendItems.value, ...remarkItems];
+});
+// const legendItems = ref([
+//     { id: 1, name: '一级保护区', rgb: 'rgb(213, 133, 146)' },
+//     { id: 2, name: '二级保护区', rgb: 'rgb(229, 227, 108) ' },
+//     { id: 3, name: '三级保护区', rgb: 'rgb(145, 149, 194)' },
+//     { id: 4, name: '灵岩山湖景区', rgb: 'rgb(87, 116, 115)' },
+//     { id: 5, name: '方山山林景区', rgb: 'rgb(130, 145, 143)' },
+//     { id: 6, name: '方岩丹霞景区', rgb: 'rgb(228, 176, 129)' },
+//     { id: 7, name: '风景游赏用地', rgb: 'rgb(192, 218, 117)' },
+//     { id: 8, name: '旅游服务设施用地', rgb: 'rgb(248, 61, 114)' },
+//     { id: 9, name: '居民社会用地', rgb: 'rgb(255, 166, 78)' },
+//     { id: 10, name: '交通与功能用地', rgb: 'rgb(255, 255, 255)' },
+//     { id: 11, name: '林地', rgb: 'rgb(81, 137, 14)' },
+//     { id: 12, name: '园地', rgb: 'rgb(94, 182, 60,0.2) ' },
+//     { id: 13, name: '耕地', rgb: 'rgb(187, 186, 34)' },
+//     { id: 14, name: '草地', rgb: 'rgb(128, 160, 93)' },
+//     { id: 15, name: '水域', rgb: 'rgb(32, 227, 255)' },
+//     { id: 16, name: '滞留地', rgb: 'rgb(147, 146, 146)' },
+//     { id: 17, name: '景群', rgb: 'rgb(189, 188, 153)' },
+//     { id: 18, name: '景区分区', rgb: 'rgb(170, 163, 108)' },
+//     { id: 19, name: '居民社会用地', rgb: 'rgb(255, 166, 78)' },
+//     { id: 20, name: '交通与功能用地', rgb: 'rgb(255, 255, 255)' },
+//     { id: 21, name: '灵岩山湖景区', rgb: 'rgb(87, 116, 115)' },
+//     { id: 22, name: '方山山林景区', rgb: 'rgb(130, 145, 143)' },
+//     { id: 23, name: '方岩丹霞景区', rgb: 'rgb(228, 176, 129)' },
+//     { id: 24, name: '方岩风景名胜区范围_16版', rgb: 'rgb(197, 229, 252)' },
+//     { id: 25, name: '方岩风景名胜区总体规划范围', rgb: 'rgb(204, 252, 228)' },
+//     { id: 26, name: '在编方岩风景名胜区范围', rgb: 'rgb(255, 190, 190)' },
+//     { id: 27, name: '生态保护红线', rgb: 'rgb(255, 0, 0)' },
+//     { id: 28, name: '一级人文景源', rgb: 'rgb(255, 102, 102)' },
+//     { id: 29, name: '二级人文景源', rgb: 'rgb(255, 153, 102)' },
+//     { id: 30, name: '三级人文景源', rgb: 'rgb(255, 204, 102)' },
+//     { id: 31, name: '一级自然景源', rgb: 'rgb(102, 255, 102)' },
+//     { id: 32, name: '二级自然景源', rgb: 'rgb(102, 255, 153)' },
+//     { id: 33, name: '三级自然景源', rgb: 'rgb(102, 255, 204)' },
+//     { id: 34, name: '行政村', rgb: 'rgb(102, 153, 255)' },
+//     { id: 35, name: '停车场', rgb: 'rgb(204, 102, 255)' },
+//     // 文化资源分布现状（B）
+//     { id: 36, name: '岩洞寺庙文化景源', rgb: 'rgb(153, 102, 255)' },
+//     { id: 37, name: '胡公文化景源', rgb: 'rgb(204, 102, 153)' },
+//     { id: 38, name: '书院文化景源', rgb: 'rgb(102, 204, 153)' },
+//     { id: 39, name: '抗战历史文化景源', rgb: 'rgb(255, 102, 153)' },
+//     // 现状交通图（C）
+//     { id: 40, name: '对外交通', rgb: 'rgb(255, 204, 0)' },
+//     { id: 41, name: '机动车道', rgb: 'rgb(204, 204, 0)' },
+//     // 游赏规划（D）
+//     { id: 42, name: '一级车行道', rgb: 'rgb(153, 204, 0)' },
+//     { id: 43, name: '一级游步道', rgb: 'rgb(102, 204, 0)' },
+//     { id: 44, name: '二级游步道', rgb: 'rgb(51, 204, 0)' },
+//     { id: 45, name: '客运索道', rgb: 'rgb(0, 204, 51)' },
+//     // 主要景观游赏线（E）
+//     { id: 46, name: '主要景观游赏线', rgb: 'rgb(0, 204, 102)' },
+//     // 备注信息（可自定义名称，比如合并 type+layerName）
+//     { id: 47, name: '备注信息', rgb: 'rgb(0, 0, 0)' }, // 示例配色
+// ])
 // 滑块移动方法（向右/向左切换年份）
 const moveSlider = direction => {
     const currentIndex = years.value.findIndex(item => item === currentYear.value)
@@ -82,6 +173,36 @@ const clickRightArrow = () => {
     moveSlider(1)
 }
 onMounted(() => {
+    bus.on('updateRemarkLegend', (remarkList) => {
+        if (!remarkList || !Array.isArray(remarkList) || remarkList.length === 0) {
+            dynamicRemarkLegendItems.value = [];
+            filteredLegendItems.value = [];
+            return;
+        }
+        // 核心修复：name 直接取 layerName，无值则给默认名
+        dynamicRemarkLegendItems.value = remarkList.map((item, index) => ({
+            id: 47 + index, // 唯一ID，避免与静态项冲突
+            name: item.layerName || `未命名备注${index + 1}`, // 确保name有值
+            rgb: item.rgb || 'rgb(252, 218, 78)', // 自定义颜色，无则默认黑色
+            isRemark: true // 标记为备注项（便于后续区分）
+        }));
+        // 关键：更新备注项后，重新触发选中名称过滤，确保图例刷新
+        bus.emit('layerNamesSelected', selectedLayerNames.value || []);
+    });
+    bus.on('layerNamesSelected', (selectedNames) => {
+        if (!selectedNames || selectedNames.length === 0) {
+            filteredLegendItems.value = []; // 无选中时清空图例
+            return;
+        }
+        // 过滤图例：只保留名称在选中列表中的项
+        filteredLegendItems.value = legendItems.value.filter(item => {
+            return selectedNames.includes(item.name);
+        });
+        // 去重（解决legendItems中重复名称的问题）
+        filteredLegendItems.value = [...new Map(
+            filteredLegendItems.value.map(item => [item.name, item])
+        ).values()];
+    });
     bus.on('function-panel-clicked', index => {
         console.log('🚀 ~ index:', index)
         if (index.index === 0) {
@@ -101,6 +222,7 @@ onMounted(() => {
     })
     bus.on('scheme-review-clicked', data => {
         legendShowHide.value = data
+        if (!data) filteredLegendItems.value = [];
     })
     bus.on('vector-layer-clicked', data => {
         if (data) {
@@ -124,7 +246,7 @@ watch(currentYear, newYear => {
     z-index: 2;
     pointer-events: auto;
     position: absolute;
-    width: 300px;
+    width: 330px;
     height: 156px;
     left: 11%;
     bottom: 4%;
@@ -322,6 +444,4 @@ watch(currentYear, newYear => {
         }
     }
 }
-
-
 </style>

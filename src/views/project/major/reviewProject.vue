@@ -853,7 +853,7 @@ defineExpose({
   background-color: #f6f6f6;
   box-sizing: border-box;
   position: relative;
-  height: 100vh;
+  height: 91vh;
 }
 
 .add-content-wrapper {
@@ -884,7 +884,7 @@ defineExpose({
 
 .add-content {
   width: 100%;
-  max-height: calc(100vh - 60px);
+  max-height: calc(91vh - 60px);
   overflow-y: auto;
 }
 
