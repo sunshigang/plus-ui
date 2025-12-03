@@ -88,16 +88,17 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="保护区等级" prop="protectionLevel">
-                <el-select v-model="form.protectionLevel" placeholder="请选择保护区等级">
+                <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple>
                   <el-option label="一级保护区" value="一级保护区"></el-option>
                   <el-option label="二级保护区" value="二级保护区"></el-option>
-                  <el-option label="三级保护区（非核心景区）" value="三级保护区（非核心景区）"></el-option>
+                  <el-option label="三级保护区" value="三级保护区"></el-option>
+                  <el-option label="一级保护区（非核心景区）" value="一级保护区（非核心景区）"></el-option>
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="项目占用类型" prop="projectType">
-                <el-select v-model="form.projectType" placeholder="请选择项目占用类型">
+                <el-select v-model="form.projectType" placeholder="请选择项目占用类型，可多选" multiple>
                   <el-option label="长期" value="长期"></el-option>
                   <el-option label="临时" value="临时"></el-option>
                 </el-select>
@@ -107,7 +108,8 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="项目用途" prop="projectUsage">
-                <el-input v-model="form.projectUsage" placeholder="请输入项目用途" />
+                <el-input v-model="form.projectUsage"
+                  placeholder="请输入项目用途，例如：旅游开发、公路、铁路、机场、水利水电、电力通讯、防灾减灾、公用设施、其他......" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -117,13 +119,15 @@
             </el-col>
           </el-row>
           <el-form-item label="建设项目拟投资额（万元）" prop="projectInvestment">
-            <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" />
+            <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资额" />
           </el-form-item>
           <el-form-item label="规划依据" prop="planningBasis">
-            <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入规划依据" />
+            <el-input v-model="form.planningBasis" type="textarea"
+              placeholder="请输入规划依据，如**风景名胜区总体规划**景区详细规划。（没有纳入风景名胜区规划的自然灾害修复、国防建设等特殊类项目，或符合专项规划的交通、店里、通讯等国家或省重点基础建设项目，需说明有关情况）" />
           </el-form-item>
           <el-form-item label="建设内容涉及规模" prop="constructionContent">
-            <el-input v-model="form.constructionContent" type="textarea" placeholder="请输入建设内容涉及规模" />
+            <el-input v-model="form.constructionContent" type="textarea"
+              placeholder="请输入涉及的具体建设内容，规模信息包括项目用地面积、线性工程长度及配套设施占地、构筑物规模、建筑限高、停车位指标等，若有涉及新建、改造、保留的情况，应分别注明相关指标" />
           </el-form-item>
           <el-form-item label="其他需要说明的情况" prop="otherExplanations">
             <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况" />
@@ -477,9 +481,9 @@ const form = reactive({
   organizationCode: undefined,
   contactPerson: undefined,
   contactPhone: undefined,
-  protectionLevel: '',
+  protectionLevel: [],
   status: undefined,
-  projectType: '',
+  projectType: [],
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -669,7 +673,8 @@ onMounted(async () => {
     const response = await getInfo(projectId)
     const projectData = response.data
     Object.assign(form, projectData)
-
+    form.protectionLevel = projectData.protectionLevel ? (Array.isArray(projectData.protectionLevel) ? projectData.protectionLevel : projectData.protectionLevel.split(',').filter(Boolean)) : []
+    form.projectType = projectData.projectType ? (Array.isArray(projectData.projectType) ? projectData.projectType : projectData.projectType.split(',').filter(Boolean)) : []
     // 解析文件列表
     if (projectData.locationPlan) {
       locationPlanFileList.value = JSON.parse(projectData.locationPlan)
@@ -692,18 +697,22 @@ onMounted(async () => {
     if (projectData.redLineCoordinate) {
       redLineCoordinateFileList.value = JSON.parse(projectData.redLineCoordinate)
     }
+    // onMounted中初始化三维模型进度条的部分
     if (projectData.threeDModel) {
       threeDModelFileList.value = JSON.parse(projectData.threeDModel)
       if (threeDModelFileList.value.length > 0) {
         form.threeDModel = threeDModelFileList.value[0].url
-        // 初始化已上传文件的进度条状态（直接显示成功）
-        threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
-          fileName: getFileName(file.name),
-          progress: 100,
-          status: 'success',
-          fileId: file.ossId,
-          progressText: '' // 新增：默认空字符串
-        }))
+        // 优化：清空旧进度条，重新初始化（避免重复）
+        threeDModelUploadProgress.value = []
+        threeDModelFileList.value.forEach(file => {
+          threeDModelUploadProgress.value.push({
+            fileName: getFileName(file.name),
+            progress: 100,
+            status: 'success',
+            fileId: file.ossId,
+            progressText: ''
+          })
+        })
       }
     }
   } catch (err) {
@@ -960,6 +969,19 @@ const resetForm = async () => {
     const response = await getInfo(form.id)
     const projectData = response.data
     Object.assign(form, projectData)
+    // ========== 重置多选字段为数组格式 ==========
+    form.protectionLevel = projectData.protectionLevel
+      ? (Array.isArray(projectData.protectionLevel)
+        ? projectData.protectionLevel
+        : projectData.protectionLevel.split(',').filter(Boolean)
+      )
+      : []
+    form.projectType = projectData.projectType
+      ? (Array.isArray(projectData.projectType)
+        ? projectData.projectType
+        : projectData.projectType.split(',').filter(Boolean)
+      )
+      : []
     // 重置文件列表
     locationPlanFileList.value = projectData.locationPlan ? JSON.parse(projectData.locationPlan) : []
     expertOpinionsFileList.value = projectData.expertOpinions ? JSON.parse(projectData.expertOpinions) : []
@@ -989,6 +1011,8 @@ const resetForm = async () => {
 const temporarilyForm = async () => {
   const submitData = {
     ...form,
+    protectionLevel: form.protectionLevel.join(','),
+    projectType: form.projectType.join(','),
     locationPlan: JSON.stringify(locationPlanFileList.value),
     expertOpinions: JSON.stringify(expertOpinionsFileList.value),
     meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
@@ -1010,6 +1034,8 @@ const submitForm = () => {
       try {
         const submitData = {
           ...form,
+          protectionLevel: form.protectionLevel.join(','),
+          projectType: form.projectType.join(','),
           locationPlan: JSON.stringify(locationPlanFileList.value),
           expertOpinions: JSON.stringify(expertOpinionsFileList.value),
           meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
@@ -1217,6 +1243,41 @@ const handleModelPreview = () => {
 .operation-group div {
   color: #666;
   font-size: 14px;
+}
+
+.upload-progress-container {
+  width: 50%;
+  display: flex;
+  gap: 6px;
+}
+
+.progress-file-name {
+  font-size: 14px;
+  color: #666;
+  width: 70%;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #999;
+  width: 70%;
+}
+
+.upload-progress-bar {
+  width: 100% !important;
+  --el-progress-text-color: #666;
+  --el-progress-success-color: #67c23a;
+  --el-progress-exception-color: #f56c6c;
+}
+
+:deep(.el-progress-bar) {
+  width: 100% !important;
+}
+
+:deep(.el-progress__text) {
+  flex: none !important;
+  width: auto !important;
+  margin-left: 8px !important;
 }
 
 .upload-container {

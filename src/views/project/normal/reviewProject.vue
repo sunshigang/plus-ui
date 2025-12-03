@@ -101,16 +101,17 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="保护区等级" prop="protectionLevel">
-                    <el-select v-model="form.protectionLevel" placeholder="请选择保护区等级" disabled>
+                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple disabled>
                       <el-option label="一级保护区" value="一级保护区"></el-option>
                       <el-option label="二级保护区" value="二级保护区"></el-option>
-                      <el-option label="三级保护区（非核心景区）" value="三级保护区（非核心景区）"></el-option>
+                      <el-option label="三级保护区" value="三级保护区"></el-option>
+                      <el-option label="一级保护区（非核心景区）" value="一级保护区（非核心景区）"></el-option>
                     </el-select>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="项目占用类型" prop="projectType" disabled>
-                    <el-select v-model="form.projectType" placeholder="请选择项目占用类型">
+                    <el-select v-model="form.projectType" placeholder="请选择项目占用类型，可多选" multiple disabled>
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
@@ -447,9 +448,9 @@ const form = reactive({
   organizationCode: undefined,
   contactPerson: undefined,
   contactPhone: undefined,
-  protectionLevel: '',
+  protectionLevel: [],
   status: undefined,
-  projectType: '',
+  projectType: [],
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -635,7 +636,7 @@ const submitAudit = async (result) => {
   })
 }
 const handleViewDetail = () => {
-  router.push(`/project/mormal/mormal-view/${route.params.id}`);
+  router.push(`/project/normal/normal-view/${route.params.id}`);
 }
 // 取消操作
 const handleCancel = () => {
@@ -734,7 +735,14 @@ const loadProjectData = async (projectId) => {
     const response = await getInfo(projectId)
     const projectData = response.data
     Object.assign(form, projectData)
-    form.approveRecord = parseApproveRecord(projectData.approveRecord);
+    form.protectionLevel = projectData.protectionLevel
+      ? projectData.protectionLevel.split(',').filter(Boolean)
+      : [];
+    // 项目占用类型：逗号分隔字符串转数组，过滤空值
+    form.projectType = projectData.projectType
+      ? projectData.projectType.split(',').filter(Boolean)
+      : [];
+    form.approveRecords = parseApproveRecord(projectData.approveRecord);
     // 初始化文件列表 - 使用通用解析方法处理JSON字符串
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -921,6 +929,7 @@ defineExpose({
   font-size: 22px;
   /* 可根据需要调整标题大小 */
 }
+
 .status-icon {
   display: inline-block;
   width: 20px;
@@ -940,6 +949,7 @@ defineExpose({
 .status-icon.error {
   background-color: #f5222d;
 }
+
 .audit-title {
   padding: 10px;
   margin-left: 30px;

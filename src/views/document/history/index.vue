@@ -222,7 +222,7 @@ const handleBack = () => {
   padding: 20px;
   box-sizing: border-box;
   position: relative;
-  min-height: 96vh;
+  min-height: 92vh;
   padding-bottom: 80px;
 }
 

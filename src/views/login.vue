@@ -43,7 +43,6 @@ import { HttpStatus } from '@/enums/RespEnum';
 import { useI18n } from 'vue-i18n';
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-console.log("🚀 ~ proxy:", proxy)
 
 const title = import.meta.env.VITE_APP_TITLE;
 const userStore = useUserStore();
@@ -140,7 +139,6 @@ const getCode = async () => {
 const getLoginData = () => {
   const tenantId = localStorage.getItem('tenantId');
   const username = localStorage.getItem('username');
-  console.log("🚀 ~ getLoginData ~ username:", username)
   const password = localStorage.getItem('password');
   const rememberMe = localStorage.getItem('rememberMe');
   loginForm.value = {
@@ -149,7 +147,6 @@ const getLoginData = () => {
     password: password === null ? String(loginForm.value.password) : String(password),
     rememberMe: rememberMe === null ? false : Boolean(rememberMe)
   } as LoginData;
-  console.log("🚀 ~ getLoginData ~ loginForm.value:", loginForm.value)
 };
 
 /**

@@ -11,12 +11,12 @@
 
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleBasicInfo">
-                <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
+              <div class="custom-collapse-header" @click="toggleBasicInfo()">
+                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
-              <div class="custom-collapse-content" v-if="basicInfoVisible">
+              <div class="custom-collapse-content" v-if="collapseVisible[activeTab].basic">
                 <!-- 基础信息内容 -->
                 <div class="info-content">
                   <el-row :gutter="20">
@@ -67,8 +67,8 @@
 
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleConstructionInfo">
-                <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
+              <div class="custom-collapse-header" @click="toggleConstructionInfo()">
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
@@ -76,7 +76,7 @@
                   <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
-              <div class="custom-collapse-content" v-if="constructionInfoVisible">
+              <div class="custom-collapse-content" v-if="collapseVisible[activeTab].construction">
                 <!-- 建设信息内容 -->
                 <div class="info-content">
                   <el-row :gutter="20">
@@ -111,13 +111,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">保护区等级：</span>
-                        <span class="value">{{ form.protectionLevel || '暂无' }}</span>
+                        <span class="value">{{ formatMultiSelectValue(form.protectionLevel) }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目占用类型：</span>
-                        <span class="value">{{ form.projectType || '暂无' }}</span>
+                        <span class="value">{{ formatMultiSelectValue(form.projectType) }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -304,9 +304,10 @@
             <h3 class="section-title">审批信息</h3>
             <!-- 管委会审批 -->
             <div v-if="form.approveRecords && form.approveRecords.length" class="approval-item">
-              <div class="approval-header" style="padding: 10px 15px; background: #f9f9f9; display: flex; align-items: center;">
-                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : 'error']">
-                  {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : '✗' }}
+              <div class="approval-header"
+                style="padding: 10px 15px; background: #f9f9f9; display: flex; align-items: center;">
+                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : (form.approveRecords[0].gwhApproveResult ? 'error' : 'pending')]">
+                  {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : (form.approveRecords[0].gwhApproveResult ? '✗' : '—') }}
                 </span>
                 <span class="approval-title">管委会审核</span>
                 <span class="approval-time">审核时间：{{ form.approveRecords[0].gwhApproveTime || '暂无' }}</span>
@@ -332,6 +333,7 @@
             </div>
             <div v-else class="approval-item">
               <div class="approval-header">
+                <span class="status-icon pending">—</span>
                 <span class="approval-title">管委会审核（首次）</span>
                 <span class="approval-time">审核时间：暂无</span>
               </div>
@@ -351,12 +353,12 @@
 
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleBasicInfo">
-                <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
+              <div class="custom-collapse-header" @click="toggleBasicInfo()">
+                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
-              <div class="custom-collapse-content" v-if="basicInfoVisible">
+              <div class="custom-collapse-content" v-if="collapseVisible[activeTab].basic">
                 <!-- 基础信息内容 -->
                 <div class="info-content">
                   <el-row :gutter="20">
@@ -407,8 +409,8 @@
 
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleConstructionInfo">
-                <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
+              <div class="custom-collapse-header" @click="toggleConstructionInfo()">
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
@@ -416,7 +418,7 @@
                   <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
-              <div class="custom-collapse-content" v-if="constructionInfoVisible">
+              <div class="custom-collapse-content" v-if="collapseVisible[activeTab].construction">
                 <!-- 建设信息内容 -->
                 <div class="info-content">
                   <el-row :gutter="20">
@@ -451,13 +453,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">保护区等级：</span>
-                        <span class="value">{{ form.protectionLevel || '暂无' }}</span>
+                        <span class="value">{{ formatMultiSelectValue(form.protectionLevel) }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目占用类型：</span>
-                        <span class="value">{{ form.projectType || '暂无' }}</span>
+                        <span class="value">{{ formatMultiSelectValue(form.projectType) }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -648,8 +650,8 @@
               <div v-for="(record, index) in form.approveRecords.slice(1)" :key="record.id || index"
                 class="approval-item">
                 <div class="approval-header">
-                  <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : 'error']">
-                    {{ record.gwhApproveResult === '通过' ? '✓' : '✗' }}
+                  <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : (record.gwhApproveResult ? 'error' : 'pending')]">
+                    {{ record.gwhApproveResult === '通过' ? '✓' : (record.gwhApproveResult ? '✗' : '—') }}
                   </span>
                   <span class="approval-title">管委会审核（第{{ index + 2 }}次）</span>
                   <span class="approval-time">审核时间：{{ record.gwhApproveTime || '暂无' }}</span>
@@ -677,6 +679,7 @@
             <!-- 无二次审批记录的提示 -->
             <div v-else class="approval-item">
               <div class="approval-header">
+                <span class="status-icon pending">—</span>
                 <span class="approval-title">管委会审核（二次）</span>
                 <span class="approval-time">审核时间：暂无</span>
               </div>
@@ -724,13 +727,27 @@ const props = defineProps({
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
 });
-
+const formatMultiSelectValue = (value) => {
+  // 处理空值、非数组情况
+  if (!value || !Array.isArray(value) || value.length === 0) {
+    return '暂无';
+  }
+  // 数组转中文逗号分隔的字符串
+  return value.join('，');
+};
 // 标签页状态
-const activeTab = ref('feedback') // 默认显示“信息填报”
-const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息”
-// 审批反馈折叠状态
-const basicInfoVisible = ref(true)
-const constructionInfoVisible = ref(false)
+const activeTab = ref('feedback') // 默认显示“二次审批信息”
+// 拆分折叠状态：按标签页独立存储
+const collapseVisible = ref({
+  fill: { // 首次审批
+    basic: true,
+    construction: false
+  },
+  feedback: { // 二次审批
+    basic: true,
+    construction: false
+  }
+})
 const shareFlag = ref(false)
 // 表单引用
 const infoFormRef = ref(null)
@@ -749,9 +766,9 @@ const form = reactive({
   organizationCode: undefined,
   contactPerson: undefined,
   contactPhone: undefined,
-  protectionLevel: '',
+  protectionLevel: [],
   status: undefined,
-  projectType: '',
+  projectType: [],
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -778,14 +795,14 @@ const dialog = reactive({
   title: '',
 });
 
-
-// 折叠控制方法
+// 折叠控制方法：按当前激活的标签页切换状态
 const toggleBasicInfo = () => {
-  basicInfoVisible.value = !basicInfoVisible.value
+  collapseVisible.value[activeTab.value].basic = !collapseVisible.value[activeTab.value].basic
 }
 const toggleConstructionInfo = () => {
-  constructionInfoVisible.value = !constructionInfoVisible.value
+  collapseVisible.value[activeTab.value].construction = !collapseVisible.value[activeTab.value].construction
 }
+
 // 文件列表（与editProject一致）
 const locationPlanFileList = ref([])
 const expertOpinionsFileList = ref([])
@@ -824,6 +841,18 @@ const parseFileList = (fileData) => {
     return [];
   }
 }
+
+// 标签页切换事件
+const handleTabChange = (tabName) => {
+  activeTab.value = tabName
+  // 可根据需求设置标签页切换后的默认折叠状态，比如：
+  // if (tabName === 'fill') {
+  //   collapseVisible.value.fill.basic = true
+  // } else if (tabName === 'feedback') {
+  //   collapseVisible.value.feedback.basic = true
+  // }
+}
+
 // 初始化加载数据
 onMounted(async () => {
   const projectId = route.params.id
@@ -838,6 +867,14 @@ onMounted(async () => {
     const projectData = response.data
     // 填充表单数据
     Object.assign(form, projectData)
+    form.protectionLevel = typeof projectData.protectionLevel === 'string'
+      ? projectData.protectionLevel.split(',').filter(Boolean)
+      : (Array.isArray(projectData.protectionLevel) ? projectData.protectionLevel : []);
+
+    // 项目占用类型：字符串转数组（逗号分隔），过滤空值
+    form.projectType = typeof projectData.projectType === 'string'
+      ? projectData.projectType.split(',').filter(Boolean)
+      : (Array.isArray(projectData.projectType) ? projectData.projectType : []);
     // 加载文件列表
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -855,14 +892,6 @@ onMounted(async () => {
     router.push('/project/normal')
   }
 })
-
-// 标签页切换事件
-const handleTabChange = (tabName) => {
-  // 切换到审批反馈时，确保基础信息展开、建设信息关闭
-  if (tabName === 'feedback') {
-    activeCollapse.value = ['basic']
-  }
-}
 
 // 工具方法：获取文件名
 const getFileName = (name) => {
@@ -896,7 +925,7 @@ const clickDataDownload = async () => {
     proxy?.$modal.closeLoading();
     proxy?.$modal.msgSuccess('数据下载成功');
   } catch (err) {
-    ElMessage.error('重置失败：' + (err.message || '未知错误'))
+    ElMessage.error('下载失败：' + (err.message || '未知错误'))
   }
 }
 const clickDataShare = async () => {
@@ -905,18 +934,16 @@ const clickDataShare = async () => {
     buttonLoading.value = true;
     await shareInfo(form.id);
     proxy?.$modal.msgSuccess('数据共享成功');
-    shareFlag.value = true; // 共享成功后更新状
+    shareFlag.value = true; // 共享成功后更新状态
     dialog.visible = false;
   } catch (err) {
     if (err !== 'cancel') {
-      proxy?.$modal.msgError('数据共享失败：' + (err).message || '未知错误');
+      proxy?.$modal.msgError('数据共享失败：' + (err.message || '未知错误'));
     }
   } finally {
     buttonLoading.value = false;
   }
 }
-// 暴露接口
-
 </script>
 
 <style scoped>
@@ -979,7 +1006,8 @@ const clickDataShare = async () => {
   z-index: 10;
 }
 
-.project-info, .approval-info {
+.project-info,
+.approval-info {
   background-color: #ffffff;
   padding: 20px;
   margin-bottom: 20px;
@@ -1014,6 +1042,7 @@ const clickDataShare = async () => {
     vertical-align: middle;
   }
 }
+
 /* 自定义折叠面板样式 */
 .custom-collapse-item {
   background-color: #fff;
@@ -1052,6 +1081,7 @@ const clickDataShare = async () => {
 .float-right {
   float: right;
 }
+
 /* 审批反馈-项目信息样式 */
 .info-content {
   padding: 10px 0;
@@ -1080,14 +1110,18 @@ const clickDataShare = async () => {
   gap: 10px;
   flex-wrap: wrap;
 }
+
 /* 关键修改3：新增行内文件列表样式 */
 .inline-file-list {
   flex: 1;
-  display: inline-flex; /* 行内flex布局 */
-  align-items: center;   /* 垂直居中对齐 */
+  display: inline-flex;
+  /* 行内flex布局 */
+  align-items: center;
+  /* 垂直居中对齐 */
   gap: 10px;
   flex-wrap: wrap;
 }
+
 /* 审批反馈-审批信息样式 */
 .approval-info {
   background-color: #ffffff;
@@ -1095,17 +1129,20 @@ const clickDataShare = async () => {
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
 .approval-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
+
 .approval-item {
   margin-bottom: 20px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   overflow: hidden;
 }
+
 .approval-header {
   padding: 12px 15px;
   background-color: #f8f9fa;
@@ -1113,6 +1150,7 @@ const clickDataShare = async () => {
   display: flex;
   align-items: center;
 }
+
 .status-icon {
   display: inline-block;
   width: 20px;
@@ -1123,6 +1161,7 @@ const clickDataShare = async () => {
   margin-right: 8px;
   color: white;
   font-weight: bold;
+  font-size: 14px;
 }
 
 .status-icon.success {
@@ -1131,6 +1170,11 @@ const clickDataShare = async () => {
 
 .status-icon.error {
   background-color: #f5222d;
+}
+
+/* 新增：暂无审核状态样式 */
+.status-icon.pending {
+  background-color: #faad14;
 }
 
 .approval-title {
@@ -1146,6 +1190,7 @@ const clickDataShare = async () => {
 .approval-content {
   padding: 15px;
 }
+
 /* 其他复用样式（与editProject一致） */
 .upload-file-list {
   margin-top: 10px;
@@ -1189,16 +1234,20 @@ const clickDataShare = async () => {
   background-color: #f5f5f5;
   padding: 8px 12px;
   border-radius: 4px;
-  display: flex; /* 改为flex布局 */
-  align-items: center; /* 垂直居中 */
-  margin-bottom: 8px; /* 增加间距 */
+  display: flex;
+  /* 改为flex布局 */
+  align-items: center;
+  /* 垂直居中 */
+  margin-bottom: 8px;
+  /* 增加间距 */
 }
 
 .feedback-item .label {
   min-width: 100px;
   font-weight: 500;
   color: #666;
-  flex-shrink: 0; /* 防止标签被压缩 */
+  flex-shrink: 0;
+  /* 防止标签被压缩 */
 }
 
 .feedback-item .value {

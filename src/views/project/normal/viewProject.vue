@@ -86,16 +86,17 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="保护区等级" prop="protectionLevel">
-                <el-select v-model="form.protectionLevel" placeholder="请选择保护区等级" disabled>
+                <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple disabled>
                   <el-option label="一级保护区" value="一级保护区"></el-option>
                   <el-option label="二级保护区" value="二级保护区"></el-option>
-                  <el-option label="三级保护区（非核心景区）" value="三级保护区（非核心景区）"></el-option>
+                  <el-option label="三级保护区" value="三级保护区"></el-option>
+                  <el-option label="一级保护区（非核心景区）" value="一级保护区（非核心景区）"></el-option>
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="项目占用类型" prop="projectType" disabled>
-                <el-select v-model="form.projectType" placeholder="请选择项目占用类型">
+                <el-select v-model="form.projectType" placeholder="请选择项目占用类型，可多选" multiple disabled>
                   <el-option label="长期" value="长期"></el-option>
                   <el-option label="临时" value="临时"></el-option>
                 </el-select>
@@ -293,27 +294,22 @@
       <div class="project-documents" v-if="showApprovalSection && form.approveRecords.length > 0">
         <h3 class="section-title">审批信息</h3>
         <!-- 循环渲染每一条审批记录 -->
-        <div 
-          v-for="(record, index) in form.approveRecords" 
-          :key="record.id || `approval-record-${index}`" 
-          class="approval-record-item"
-        >
+        <div v-for="(record, index) in form.approveRecords" :key="record.id || `approval-record-${index}`"
+          class="approval-record-item">
           <div class="approval-record-header">
             <span class="approval-record-index">审批记录 {{ index + 1 }}</span>
             <span class="approval-record-time">{{ record.gwhApproveTime || '无审批时间' }}</span>
           </div>
-          
+
           <!-- 管委会审批信息 -->
           <el-form label-width="230px" disabled class="approval-form">
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
-                <span 
-                  :class="[
-                    'status-icon', 
-                    record.gwhApproveResult === '通过' ? 'success' : 
+                <span :class="[
+                  'status-icon',
+                  record.gwhApproveResult === '通过' ? 'success' :
                     record.gwhApproveResult === '驳回' ? 'error' : 'pending'
-                  ]"
-                >
+                ]">
                   {{ record.gwhApproveResult === '通过' ? '✓' : record.gwhApproveResult === '驳回' ? '✗' : '-' }}
                 </span>
                 <span class="status-text">{{ record.gwhApproveResult || '待审批' }}</span>
@@ -322,48 +318,32 @@
             <el-form-item label="审批时间">
               <span>{{ record.gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
-            
+
             <el-form-item label="审批反馈">
-              <el-input 
-                type="textarea" 
-                :value="record.gwhApprovalReason || '暂无反馈'" 
-                :rows="2"
-                style="background: #fff;" 
-                disabled 
-              />
+              <el-input type="textarea" :value="record.gwhApprovalReason || '暂无反馈'" :rows="2" style="background: #fff;"
+                disabled />
             </el-form-item>
-            
+
             <el-form-item label="反馈文件">
-              <transition-group 
-                class="upload-file-list el-upload-list el-upload-list--text" 
-                name="el-fade-in-linear"
-                tag="ul"
-              >
-                <li 
-                  v-for="(file, fileIndex) in parseFileList(record.gwhApprovalAttachment)" 
+              <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
+                tag="ul">
+                <li v-for="(file, fileIndex) in parseFileList(record.gwhApprovalAttachment)"
                   :key="file.ossId || `file-${index}-${fileIndex}`"
-                  class="el-upload-list__item ele-upload-list__item-content"
-                >
+                  class="el-upload-list__item ele-upload-list__item-content">
                   <el-link :href="file.url" :underline="false" target="_blank">
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                 </li>
-                <li 
-                  v-if="!record.gwhApprovalAttachment || parseFileList(record.gwhApprovalAttachment).length === 0" 
-                  class="el-upload-list__item empty-file" 
-                  :key="`empty-gwhFeedback-${index}`"
-                >
+                <li v-if="!record.gwhApprovalAttachment || parseFileList(record.gwhApprovalAttachment).length === 0"
+                  class="el-upload-list__item empty-file" :key="`empty-gwhFeedback-${index}`">
                   <span class="el-icon-info"> 暂无反馈文件 </span>
                 </li>
               </transition-group>
             </el-form-item>
           </el-form>
-          
+
           <!-- 记录分隔线 -->
-          <div 
-            class="approval-record-divider" 
-            v-if="index < form.approveRecords.length - 1"
-          ></div>
+          <div class="approval-record-divider" v-if="index < form.approveRecords.length - 1"></div>
         </div>
       </div>
     </div>
@@ -400,9 +380,9 @@ const form = reactive({
   organizationCode: undefined,
   contactPerson: undefined,
   contactPhone: undefined,
-  protectionLevel: '',
+  protectionLevel: [],
   status: undefined,
-  projectType: '',
+  projectType: [],
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -463,7 +443,7 @@ const parseFileList = (fileData) => {
       list = fileData;
     }
     // 过滤有效文件项并格式化
-    return list.filter(item => 
+    return list.filter(item =>
       item && typeof item === 'object' && item.ossId && item.url
     ).map(item => ({
       name: item.name || '未知文件',
@@ -519,7 +499,14 @@ const loadProjectData = async (projectId) => {
     const response = await getInfo(projectId)
     const projectData = response.data
     Object.assign(form, projectData)
+    form.protectionLevel = typeof projectData.protectionLevel === 'string'
+      ? projectData.protectionLevel.split(',').filter(Boolean) // 拆分逗号分隔字符串，过滤空值
+      : (Array.isArray(projectData.protectionLevel) ? projectData.protectionLevel : []);
 
+    // 项目占用类型：同上
+    form.projectType = typeof projectData.projectType === 'string'
+      ? projectData.projectType.split(',').filter(Boolean)
+      : (Array.isArray(projectData.projectType) ? projectData.projectType : []);
     // 初始化文件列表
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -631,7 +618,7 @@ const loadProjectData = async (projectId) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 1px;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -700,7 +687,6 @@ const loadProjectData = async (projectId) => {
   align-self: stretch;
 }
 
-
 .ele-upload-list__item-content {
   display: flex;
   align-items: center;
@@ -708,7 +694,6 @@ const loadProjectData = async (projectId) => {
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
-  padding: 8px 12px;
   margin-bottom: 8px;
 }
 

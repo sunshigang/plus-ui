@@ -75,7 +75,7 @@
           </template>
         </el-table-column>
         <el-table-column label="备注" prop="remark" width="200" />
-        <el-table-column fixed="right" label="操作" width="360">
+        <el-table-column align="center" label="操作" width="360">
           <template #default="scope">
             <el-button v-hasPermi="['system:role:edit']" link type="primary"
               @click="handleUpdate(scope.row)">编辑</el-button>
@@ -93,7 +93,7 @@
         v-model:limit="queryParams.pageSize" @pagination="getList" />
     </el-card>
 
-    <el-dialog v-model="dialog.visible" :title="dialog.title" width="1000px" append-to-body>
+    <el-dialog v-model="dialog.visible" :title="dialog.title" width="1200px" append-to-body>
       <el-form ref="roleFormRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="角色名称" prop="roleName">
           <el-input v-model="form.roleName" placeholder="请输入角色名称" />
@@ -369,8 +369,14 @@ const handleUpdate = async (row?: RoleVO) => {
   const res = await getRoleMenuTreeselect(roleId);
   dialog.title = '修改角色';
   dialog.visible = true;
-  res.checkedKeys.forEach((v) => {
-    nextTick(() => {
+
+  // ========== 新增：默认勾选展开/折叠并触发菜单树展开 ==========
+  menuExpand.value = true; // 勾选“展开/折叠”复选框
+  await nextTick(() => {
+    // 执行展开逻辑（复用原有handleCheckedTreeExpand方法）
+    handleCheckedTreeExpand(true, 'menu');
+    // 原有设置菜单选中的逻辑
+    res.checkedKeys.forEach((v) => {
       menuRef.value?.setChecked(v, true, false);
     });
   });

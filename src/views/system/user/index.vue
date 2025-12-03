@@ -93,11 +93,12 @@
               @change="handleStatusChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="200">
+        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="250"/>
+        <!-- <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="200">
           <template #default="scope">
             <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column key="remark" label="备注" align="center" prop="remark" width="220" />
         <el-table-column label="操作" fixed="right" width="330" class-name="small-padding fixed-width">
           <template #default="scope">

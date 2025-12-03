@@ -7,7 +7,7 @@ import bus from '../../libs/eventbus'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-editable'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const map = ref(null);
 const pointLngLat = ref([]);
@@ -18,19 +18,38 @@ const calculatePolygonArea = ref(null);
 const startDrawPointFunction = ref(false)
 const startDrawPolylineFunction = ref(false)
 const startDrawPolygonFunction = ref(false)
+
+// 存储地图事件处理函数（用于后续解绑）
+const mapEventHandlers = ref({
+  pointClick: null,
+  lineClick: null,
+  lineMousemove: null,
+  lineContextmenu: null,
+  polygonClick: null,
+  polygonMousemove: null,
+  polygonDblclick: null
+});
+
+// 封装获取map DOM的工具函数（统一判空）
+const getMapDom = () => {
+  return document.getElementById('map');
+};
+
 const initMap = () => {
   if (map.value) return;
+  const mapDom = getMapDom();
+  if (!mapDom) return; // 新增：DOM不存在则终止初始化
+
   map.value = L.map('map', {
     center: [28.927237, 120.187512],
     zoom: 17,
     maxZoom: 21,
     minZoom: 15,
-    // crs: L.CRS.EPSG3857, //设置坐标系4326
     logoControl: false,
-    zoomControl: false, //禁用 + - 按钮
-    doubleClickZoom: false, // 禁用双击放大
-    attributionControl: false, // 移除右下角leaflet标识
-    preferCanvas: true, //使用canvas模式渲染矢量图形
+    zoomControl: false,
+    doubleClickZoom: false,
+    attributionControl: false,
+    preferCanvas: true,
     editable: true
   })
   const tainditu = L.tileLayer(
@@ -42,8 +61,8 @@ const initMap = () => {
     {
       subdomains: ["0", "1", "2", "3", "4", "5", "6", "7"],
       isBaseMap: true,
-      maxNativeZoom: 18, // 底图实际支持的最大级别
-      maxZoom: 21, // 地图允许的最大缩放级别（高于 maxNativeZoom 时拉伸显示）
+      maxNativeZoom: 18,
+      maxZoom: 21,
     }
   )
   const taindituLabel = L.tileLayer(
@@ -55,43 +74,69 @@ const initMap = () => {
     {
       subdomains: ["0", "1", "2", "3", "4", "5", "6", "7"],
       isBaseMap: true,
-      maxNativeZoom: 18, // 底图实际支持的最大级别
-      maxZoom: 21, // 地图允许的最大缩放级别（高于 maxNativeZoom 时拉伸显示）
+      maxNativeZoom: 18,
+      maxZoom: 21,
     }
   )
   tainditu.addTo(map.value);
   taindituLabel.addTo(map.value);
   map.value.editable = new L.Editable(map.value, {
-    position: 'topright', // 编辑工具条位置
-    edit: { marker: true } // 启用点编辑支持
+    position: 'topright',
+    edit: { marker: true }
   });
-  // L.geoJSON(geojsonData, {
-  //   style: function (feature) {
-  //     return {
-  //       color: "blue",
-  //       weight: 2,
-  //       fillColor: "lightblue",
-  //       fillOpacity: 0.5
-  //     };
-  //   }
-  // }).addTo(map.value);
+
   L.tileLayer.wms('http://127.0.0.1:8080/geoserver/fangyan/wms?', {
-    layers: 'fangyan:dom', //需要加载的图层
-    format: 'image/png', //返回的数据格式
+    layers: 'fangyan:dom',
+    format: 'image/png',
     maxZoom: 21,
     transparent: true,
     tileSize: 256,
     continuousWorld: true,
     noWrap: true,
   }).addTo(map.value);
-
 }
 
-
-
-// 停止当前所有绘制
+// 停止所有绘制（核心修复：所有DOM操作先判空）
 const stopAllDrawing = () => {
-  if (!map.value) return;
+  // 1. 先判空map实例
+  if (!map.value) {
+    // 即使map实例不存在，也要尝试恢复鼠标样式（判空DOM）
+    const mapDom = getMapDom();
+    if (mapDom) mapDom.style.cursor = 'grab';
+    return;
+  }
+
+  // 2. 解绑所有地图事件
+  if (mapEventHandlers.value.pointClick) {
+    map.value.off('click', mapEventHandlers.value.pointClick);
+    mapEventHandlers.value.pointClick = null;
+  }
+  if (mapEventHandlers.value.lineClick) {
+    map.value.off('click', mapEventHandlers.value.lineClick);
+    mapEventHandlers.value.lineClick = null;
+  }
+  if (mapEventHandlers.value.lineMousemove) {
+    map.value.off('mousemove', mapEventHandlers.value.lineMousemove);
+    mapEventHandlers.value.lineMousemove = null;
+  }
+  if (mapEventHandlers.value.lineContextmenu) {
+    map.value.off('contextmenu', mapEventHandlers.value.lineContextmenu);
+    mapEventHandlers.value.lineContextmenu = null;
+  }
+  if (mapEventHandlers.value.polygonClick) {
+    map.value.off('click', mapEventHandlers.value.polygonClick);
+    mapEventHandlers.value.polygonClick = null;
+  }
+  if (mapEventHandlers.value.polygonMousemove) {
+    map.value.off('mousemove', mapEventHandlers.value.polygonMousemove);
+    mapEventHandlers.value.polygonMousemove = null;
+  }
+  if (mapEventHandlers.value.polygonDblclick) {
+    map.value.off('dblclick', mapEventHandlers.value.polygonDblclick);
+    mapEventHandlers.value.polygonDblclick = null;
+  }
+
+  // 3. 移除自定义绘制图层（判空map.value）
   map.value.eachLayer(layer => {
     const isPointLayer = layer.options?.icon?.options?.title === '点图片';
     const isLineOrPolygonLayer = layer.options?.title === '线' || layer.options?.title === '面';
@@ -99,33 +144,53 @@ const stopAllDrawing = () => {
       map.value.removeLayer(layer);
     }
   });
-  // 重置状态变量
+
+  // 4. 重置状态变量
   pointLngLat.value = [];
   polylineCoordinates.value = [];
   polygonCoordinates.value = [];
   distancelength.value = null;
   calculatePolygonArea.value = null;
-  document.getElementById('map').style.cursor = 'grab';
-  map.value.doubleClickZoom.disable();
+
+  // 5. 恢复鼠标样式（核心修复：先判空DOM）
+  const mapDom = getMapDom();
+  if (mapDom) {
+    mapDom.style.cursor = 'grab';
+  }
+
+  // 6. 禁用双击放大（判空）
+  if (map.value.doubleClickZoom) {
+    map.value.doubleClickZoom.disable();
+  }
 };
+
 const startDrawPoint = () => {
   stopAllDrawing();
+  const mapDom = getMapDom();
+  if (!mapDom) return; // 新增：DOM不存在则终止
+
   let pointIcon = L.icon({
     title: '点图片',
     iconUrl: "/poi.png",
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   })
-  document.getElementById('map').style.cursor = 'crosshair';
-  const onClick = (e) => {
+  // 修复：判空后设置cursor
+  mapDom.style.cursor = 'crosshair';
+
+  mapEventHandlers.value.pointClick = (e) => {
     pointLngLat.value = [e.latlng.lng, e.latlng.lat];
     const point = L.marker(e.latlng, {
       draggable: true,
       icon: pointIcon
     }).addTo(map.value);
     point.enableEdit();
-    map.value.off({ click: onClick });
-    document.getElementById('map').style.cursor = 'grab';
+    map.value.off('click', mapEventHandlers.value.pointClick);
+    mapEventHandlers.value.pointClick = null;
+
+    // 修复：判空后恢复cursor
+    if (mapDom) mapDom.style.cursor = 'grab';
+
     point.on("dragend", (e) => {
       pointLngLat.value = []
       const newLatLng = e.target.getLatLng();
@@ -135,11 +200,16 @@ const startDrawPoint = () => {
     });
     bus.emit('draw-result', { type: 'point', coordinates: pointLngLat.value, status: startDrawPointFunction.value });
   };
-  map.value.on("click", onClick);
+
+  map.value.on("click", mapEventHandlers.value.pointClick);
 };
+
 // 开始绘制线
 const startDrawLine = () => {
   stopAllDrawing()
+  const mapDom = getMapDom();
+  if (!mapDom || !map.value) return; // 新增：判空
+
   const polylineOption = {
     title: '线',
     stroke: true,
@@ -147,43 +217,42 @@ const startDrawLine = () => {
     weight: 2
   };
   const latlngs = [];
-  // 绘制线段
   const polyline = L.polyline(latlngs, polylineOption);
   const tempLine = L.polyline([], polylineOption);
-  document.getElementById('map').style.cursor = 'crosshair';
-  const onClick = e => {
+
+  // 修复：判空后设置cursor
+  if (mapDom) mapDom.style.cursor = 'crosshair';
+
+  mapEventHandlers.value.lineClick = e => {
     latlngs.push([e.latlng.lat, e.latlng.lng]);
     polyline.addLatLng(e.latlng);
     polyline.addTo(map.value);
     polylineCoordinates.value = latlngs
-    // 计算并更新距离
     distancelength.value = calculateDistance(latlngs);
   };
-  map.value.on("click", onClick);
-  const onMouseMove = evt => {
+
+  mapEventHandlers.value.lineMousemove = evt => {
     if (latlngs.length > 0) {
-      // 添加临时线段
       const coords = [
         latlngs[latlngs.length - 1],
         [evt.latlng.lat, evt.latlng.lng]
       ];
       tempLine.setLatLngs(coords);
       map.value.addLayer(tempLine);
-      // 计算并更新临时距离
       const tempLatlngs = [...latlngs, [evt.latlng.lat, evt.latlng.lng]];
       distancelength.value = calculateDistance(tempLatlngs);
     }
   };
-  map.value.on("mousemove", onMouseMove);
-  // 监听鼠标右键事件以结束绘制
-  map.value.on("contextmenu", () => {
-    document.getElementById('map').style.cursor = 'grab';
+
+  mapEventHandlers.value.lineContextmenu = () => {
+    // 修复：判空后恢复cursor
+    if (mapDom) mapDom.style.cursor = 'grab';
+
     map.value.removeLayer(tempLine);
     polyline.enableEdit();
 
     polyline.on('editable:vertex:dragend', function (e) {
       polylineCoordinates.value = []
-      // 获取更新后的 Polyline 数据
       const updatedLatLngs = polyline.getLatLngs();
       updatedLatLngs.forEach(e => {
         polylineCoordinates.value.push([e.lat, e.lng])
@@ -192,8 +261,20 @@ const startDrawLine = () => {
       bus.emit('draw-result', { type: 'polyline', coordinates: polylineCoordinates.value, length: distancelength.value.toFixed(3), status: startDrawPolylineFunction.value });
     })
     bus.emit('draw-result', { type: 'polyline', coordinates: polylineCoordinates.value, length: distancelength.value.toFixed(3), status: startDrawPolylineFunction.value });
-    map.value.off({ click: onClick, mousemove: onMouseMove });
-  })
+
+    // 解绑线相关事件
+    map.value.off('click', mapEventHandlers.value.lineClick);
+    map.value.off('mousemove', mapEventHandlers.value.lineMousemove);
+    map.value.off('contextmenu', mapEventHandlers.value.lineContextmenu);
+    mapEventHandlers.value.lineClick = null;
+    mapEventHandlers.value.lineMousemove = null;
+    mapEventHandlers.value.lineContextmenu = null;
+  };
+
+  map.value.on("click", mapEventHandlers.value.lineClick);
+  map.value.on("mousemove", mapEventHandlers.value.lineMousemove);
+  map.value.on("contextmenu", mapEventHandlers.value.lineContextmenu);
+
   // 计算线的距离
   function calculateDistance (latlngs) {
     let totalDistance = 0;
@@ -205,9 +286,13 @@ const startDrawLine = () => {
     return totalDistance;
   }
 }
+
 // 开始绘制面
 const startDrawPolygon = () => {
   stopAllDrawing()
+  const mapDom = getMapDom();
+  if (!mapDom || !map.value) return; // 新增：判空
+
   const latlngs = [];
   const polygonOption = {
     title: '面',
@@ -219,26 +304,26 @@ const startDrawPolygon = () => {
   };
   const tempLine = L.polyline([], polygonOption);
   const polygon = L.polygon(latlngs, polygonOption);
-  document.getElementById('map').style.cursor = 'crosshair';
 
-  // 1. 定义 dblclick 事件处理函数（单独提取，便于后续解绑）
-  const handleDoubleClick = () => {
-    document.getElementById('map').style.cursor = 'grab';
-    // 修正坐标：只删除最后一个临时点（避免删除过多导致坐标不足3个）
+  // 修复：判空后设置cursor
+  if (mapDom) mapDom.style.cursor = 'crosshair';
+
+  mapEventHandlers.value.polygonDblclick = () => {
+    // 修复：判空后恢复cursor
+    if (mapDom) mapDom.style.cursor = 'grab';
+
     if (polygonCoordinates.value.length > 3) {
       polygonCoordinates.value.pop();
     }
     map.value.removeLayer(tempLine);
     polygon.enableEdit();
 
-    // 编辑顶点时的逻辑（保持不变）
     polygon.on('editable:vertex:dragend', function (e) {
       polygonCoordinates.value = [];
       const updatedPolygonData = polygon.getLatLngs()[0];
       updatedPolygonData.forEach(e => {
         polygonCoordinates.value.push([e.lat, e.lng]);
       });
-      // 移除 Leaflet 自动添加的重复终点（避免面积计算错误）
       if (polygonCoordinates.value.length > 0 &&
         polygonCoordinates.value[0].toString() === polygonCoordinates.value.at(-1).toString()) {
         polygonCoordinates.value.pop();
@@ -252,7 +337,6 @@ const startDrawPolygon = () => {
       });
     });
 
-    // 回传最终数据
     bus.emit('draw-result', {
       type: 'polygon',
       coordinates: polygonCoordinates.value,
@@ -260,19 +344,17 @@ const startDrawPolygon = () => {
       status: startDrawPolygonFunction.value
     });
 
-    // -------------------------- 核心修复：关闭双击相关事件 --------------------------
-    // 1. 解绑当前的 dblclick 事件监听器（避免事件残留）
-    map.value.off('dblclick', handleDoubleClick);
-    // 2. 解绑 click 和 mousemove 事件（原逻辑保留，确保完整清理）
-    map.value.off('click', onClick);
-    map.value.off('mousemove', onMouseMove);
-    // 3. 强制禁用 doubleClickZoom（彻底关闭双击放大功能）
+    // 解绑面相关事件
+    map.value.off('dblclick', mapEventHandlers.value.polygonDblclick);
+    map.value.off('click', mapEventHandlers.value.polygonClick);
+    map.value.off('mousemove', mapEventHandlers.value.polygonMousemove);
+    mapEventHandlers.value.polygonDblclick = null;
+    mapEventHandlers.value.polygonClick = null;
+    mapEventHandlers.value.polygonMousemove = null;
     map.value.doubleClickZoom.disable();
-    // -------------------------------------------------------------------------------
   };
 
-  // 点击添加顶点（原逻辑不变）
-  const onClick = evt => {
+  mapEventHandlers.value.polygonClick = evt => {
     latlngs.push([evt.latlng.lat, evt.latlng.lng]);
     polygon.addLatLng(evt.latlng);
     if (!map.value.hasLayer(polygon)) {
@@ -282,15 +364,13 @@ const startDrawPolygon = () => {
     calculatePolygonArea.value = calculateArea(latlngs);
   };
 
-  // 鼠标移动更新临时线（原逻辑不变）
-  const onMouseMove = evt => {
+  mapEventHandlers.value.polygonMousemove = evt => {
     if (latlngs.length > 0) {
       tempLine.setLatLngs([
         latlngs[0],
         evt.latlng,
         latlngs[latlngs.length - 1]
       ]);
-      // 避免临时线重复添加（优化性能）
       if (!map.value.hasLayer(tempLine)) {
         map.value.addLayer(tempLine);
       }
@@ -300,14 +380,12 @@ const startDrawPolygon = () => {
     }
   };
 
-  // 2. 绑定 dblclick 事件（使用单独定义的 handleDoubleClick，便于解绑）
-  map.value.on('dblclick', handleDoubleClick);
-  map.value.on('click', onClick);
-  map.value.on('mousemove', onMouseMove);
+  map.value.on('dblclick', mapEventHandlers.value.polygonDblclick);
+  map.value.on('click', mapEventHandlers.value.polygonClick);
+  map.value.on('mousemove', mapEventHandlers.value.polygonMousemove);
 
-  // 计算面积函数（原逻辑不变，优化重复坐标判断）
+  // 计算面积函数
   function calculateArea (latlngs) {
-    // 移除重复的终点（Leaflet 可能自动添加，导致计算错误）
     const uniqueLatlngs = [...latlngs];
     if (uniqueLatlngs.length > 3 &&
       uniqueLatlngs[0].toString() === uniqueLatlngs.at(-1).toString()) {
@@ -327,40 +405,95 @@ const startDrawPolygon = () => {
     return area;
   }
 }
-// 页面挂载完成的生命周期函数
+
+// Bus监听函数
+const handleDrawPointClicked = (isActive) => {
+  startDrawPointFunction.value = isActive;
+  if (isActive) {
+    startDrawPoint()
+  } else {
+    stopAllDrawing()
+  }
+};
+
+const handleDrawPolylineClicked = (isActive) => {
+  startDrawPolylineFunction.value = isActive;
+  if (isActive) {
+    startDrawLine()
+  } else {
+    stopAllDrawing()
+  }
+};
+
+const handleDrawPolygonClicked = (isActive) => {
+  startDrawPolygonFunction.value = isActive;
+  if (isActive) {
+    startDrawPolygon()
+  } else {
+    stopAllDrawing()
+    if (map.value) map.value.doubleClickZoom.disable();
+  }
+};
+
+// 页面挂载完成
 onMounted(() => {
   initMap()
-  // 监听绘制点事件
-  bus.on('draw-point-clicked', (isActive) => {
-    startDrawPointFunction.value = isActive;
-    if (isActive) {
-      startDrawPoint()
-    } else {
-      stopAllDrawing()
-    }
-  })
-  // 监听绘制线事件
-  bus.on('draw-polyline-clicked', (isActive) => {
-    startDrawPolylineFunction.value = isActive;
-    if (isActive) {
-      startDrawLine()
-    } else {
-      stopAllDrawing()
-    }
-  })
-  // 监听绘制面事件
-  bus.on('draw-polygon-clicked', (isActive) => {
-    startDrawPolygonFunction.value = isActive;
-    if (isActive) {
-      startDrawPolygon()
-    } else {
-      stopAllDrawing()
-      // 关闭鼠标双击事件
-      map.value.doubleClickZoom.disable();
-    }
-  })
+  bus.on('draw-point-clicked', handleDrawPointClicked);
+  bus.on('draw-polyline-clicked', handleDrawPolylineClicked);
+  bus.on('draw-polygon-clicked', handleDrawPolygonClicked);
 })
 
+// 组件卸载（优化：严格判空，避免空指针）
+onUnmounted(() => {
+  // 1. 先解绑所有Bus监听
+  bus.off('draw-point-clicked', handleDrawPointClicked);
+  bus.off('draw-polyline-clicked', handleDrawPolylineClicked);
+  bus.off('draw-polygon-clicked', handleDrawPolygonClicked);
+
+  // 2. 停止绘制（此时DOM可能已销毁，stopAllDrawing内部已做判空）
+  stopAllDrawing();
+
+  // 3. 销毁地图实例（严格判空）
+  if (map.value) {
+    // 先解绑所有地图事件
+    map.value.off();
+    // 移除所有图层
+    map.value.eachLayer(layer => {
+      map.value.removeLayer(layer);
+    });
+    // 销毁地图实例
+    map.value.remove();
+    // 清空引用（避免内存泄漏）
+    map.value = null;
+  }
+
+  // 4. 重置所有状态
+  pointLngLat.value = [];
+  polylineCoordinates.value = [];
+  polygonCoordinates.value = [];
+  distancelength.value = null;
+  calculatePolygonArea.value = null;
+  startDrawPointFunction.value = false;
+  startDrawPolylineFunction.value = false;
+  startDrawPolygonFunction.value = false;
+
+  // 5. 重置事件处理器
+  mapEventHandlers.value = {
+    pointClick: null,
+    lineClick: null,
+    lineMousemove: null,
+    lineContextmenu: null,
+    polygonClick: null,
+    polygonMousemove: null,
+    polygonDblclick: null
+  };
+
+  // 6. 最终恢复鼠标样式（判空）
+  const mapDom = getMapDom();
+  if (mapDom) {
+    mapDom.style.cursor = 'default';
+  }
+})
 
 </script>
 

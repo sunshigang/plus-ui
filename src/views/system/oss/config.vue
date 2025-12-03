@@ -4,13 +4,13 @@
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
-            <el-form-item label="配置key" prop="configKey">
+            <el-form-item label="配置key" prop="configKey" label-width='80'>
               <el-input v-model="queryParams.configKey" placeholder="配置key" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="桶名称" prop="bucketName">
               <el-input v-model="queryParams.bucketName" placeholder="请输入桶名称" clearable @keyup.enter="handleQuery" />
             </el-form-item>
-            <el-form-item label="是否默认" prop="status">
+            <el-form-item label="是否默认" prop="status" label-width='80'>
               <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
                 <el-option key="0" label="是" value="0" />
                 <el-option key="1" label="否" value="1" />

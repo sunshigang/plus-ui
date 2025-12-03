@@ -62,7 +62,7 @@
                 <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
-            <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef1" :model="form" label-width="230px" :rules="rules">
               <!-- 建设信息表单内容 -->
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -91,16 +91,17 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="保护区等级" prop="protectionLevel">
-                    <el-select v-model="form.protectionLevel" placeholder="请选择保护区等级">
+                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple>
                       <el-option label="一级保护区" value="一级保护区"></el-option>
                       <el-option label="二级保护区" value="二级保护区"></el-option>
-                      <el-option label="三级保护区（非核心景区）" value="三级保护区（非核心景区）"></el-option>
+                      <el-option label="三级保护区" value="三级保护区"></el-option>
+                      <el-option label="一级保护区（非核心景区）" value="一级保护区（非核心景区）"></el-option>
                     </el-select>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="项目占用类型" prop="projectType">
-                    <el-select v-model="form.projectType" placeholder="请选择项目占用类型">
+                    <el-select v-model="form.projectType" placeholder="请选择项目占用类型，可多选" multiple>
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
@@ -110,7 +111,8 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="项目用途" prop="projectUsage">
-                    <el-input v-model="form.projectUsage" placeholder="请输入项目用途" />
+                    <el-input v-model="form.projectUsage"
+                      placeholder="请输入项目用途，例如：旅游开发、公路、铁路、机场、水利水电、电力通讯、防灾减灾、公用设施、其他......" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -120,13 +122,15 @@
                 </el-col>
               </el-row>
               <el-form-item label="建设项目拟投资额（万元）" prop="projectInvestment">
-                <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资" />
+                <el-input v-model="form.projectInvestment" placeholder="请输入建设项目总投资额" />
               </el-form-item>
               <el-form-item label="规划依据" prop="planningBasis">
-                <el-input v-model="form.planningBasis" type="textarea" placeholder="请输入规划依据" />
+                <el-input v-model="form.planningBasis" type="textarea"
+                  placeholder="请输入规划依据，如**风景名胜区总体规划**景区详细规划。（没有纳入风景名胜区规划的自然灾害修复、国防建设等特殊类项目，或符合专项规划的交通、店里、通讯等国家或省重点基础建设项目，需说明有关情况）" />
               </el-form-item>
               <el-form-item label="建设内容涉及规模" prop="constructionContent">
-                <el-input v-model="form.constructionContent" type="textarea" placeholder="请输入建设内容涉及规模" />
+                <el-input v-model="form.constructionContent" type="textarea"
+                  placeholder="请输入涉及的具体建设内容，规模信息包括项目用地面积、线性工程长度及配套设施占地、构筑物规模、建筑限高、停车位指标等，若有涉及新建、改造、保留的情况，应分别注明相关指标" />
               </el-form-item>
               <el-form-item label="其他需要说明的情况" prop="otherExplanations">
                 <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况" />
@@ -484,13 +488,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">保护区等级：</span>
-                        <span class="value">{{ form.protectionLevel || '暂无' }}</span>
+                        <span class="value">{{ form.protectionLevel?.join(',') || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目占用类型：</span>
-                        <span class="value">{{ form.projectType || '暂无' }}</span>
+                        <span class="value">{{ form.projectType?.join(',') || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -772,6 +776,7 @@ const activeCollapse = ref(['basic']) // 折叠面板默认展开“基础信息
 
 // 表单引用
 const infoFormRef = ref(null)
+const infoFormRef1 = ref(null)
 // 按钮加载状态
 const buttonLoading = ref(false)
 // 表单数据
@@ -786,9 +791,9 @@ const form = reactive({
   organizationCode: undefined,
   contactPerson: undefined,
   contactPhone: undefined,
-  protectionLevel: '',
+  protectionLevel: [],
   status: undefined,
-  projectType: '',
+  projectType: [],
   projectUsage: undefined,
   projectPurpose: undefined,
   createTime: undefined,
@@ -1008,6 +1013,12 @@ onMounted(async () => {
     const projectData = response.data
     // 填充表单数据
     Object.assign(form, projectData)
+    form.protectionLevel = projectData.protectionLevel
+      ? projectData.protectionLevel.split(',').filter(Boolean) // 过滤空值
+      : []
+    form.projectType = projectData.projectType
+      ? projectData.projectType.split(',').filter(Boolean)
+      : []
     // 加载文件列表
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -1143,7 +1154,7 @@ const handleDeleteUploadFile = async (index, type) => {
   }
 }
 const handleFileRemove = (type) => {
-  infoFormRef.value.validateField(type)
+  infoFormRef1.value.validateField(type)
 }
 const handleDownloadTemplate = (type) => {
   if (type === 'instructions') proxy?.$download.oss('1987829892356124674');
@@ -1193,6 +1204,12 @@ const resetForm = async () => {
     const response = await getInfo(form.id)
     const projectData = response.data
     Object.assign(form, projectData)
+    form.protectionLevel = projectData.protectionLevel
+      ? projectData.protectionLevel.split(',').filter(Boolean)
+      : []
+    form.projectType = projectData.projectType
+      ? projectData.projectType.split(',').filter(Boolean)
+      : []
     // 重置文件列表
     locationPlanFileList.value = projectData.locationPlan ? JSON.parse(projectData.locationPlan) : []
     expertOpinionsFileList.value = projectData.expertOpinions ? JSON.parse(projectData.expertOpinions) : []
@@ -1206,6 +1223,7 @@ const resetForm = async () => {
     form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
     // 重置表单校验状态
     infoFormRef.value.clearValidate()
+    infoFormRef1.value.clearValidate()
     ElMessage.success('已重置为原始数据')
   } catch (err) {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
@@ -1214,6 +1232,8 @@ const resetForm = async () => {
 const temporarilyForm = async () => {
   const submitData = {
     ...form,
+    protectionLevel: form.protectionLevel.join(','),
+    projectType: form.projectType.join(','),
     locationPlan: JSON.stringify(locationPlanFileList.value),
     expertOpinions: JSON.stringify(expertOpinionsFileList.value),
     meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
@@ -1229,31 +1249,39 @@ const temporarilyForm = async () => {
 }
 const submitForm = () => {
   infoFormRef.value.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const { approveRecords, ...formWithoutApprove } = form;
-        const submitData = {
-          ...formWithoutApprove,
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        await submitInfo(submitData)
-        showSuccessPopup.value = false
-      } catch (err) {
-        proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
-      ElMessage.warning('基础信息填写不符合要求，请检查')
+    if (!valid) {
+      ElMessage.warning('项目基础信息填写不符合要求，请检查')
+      return
     }
+    infoFormRef1.value.validate(async (valid1) => {
+      if (valid1) {
+        buttonLoading.value = true
+        try {
+          const { approveRecords, ...formWithoutApprove } = form;
+          const submitData = {
+            ...formWithoutApprove,
+            protectionLevel: form.protectionLevel.join(','),
+            projectType: form.projectType.join(','),
+            locationPlan: JSON.stringify(locationPlanFileList.value),
+            expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+            meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+            siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+            approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+            projectRedLine: JSON.stringify(projectRedLineFileList.value),
+            redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+            threeDModel: JSON.stringify(threeDModelFileList.value),
+          }
+          await submitInfo(submitData)
+          showSuccessPopup.value = false
+        } catch (err) {
+          proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
+        } finally {
+          buttonLoading.value = false
+        }
+      } else {
+        ElMessage.warning('建设信息填写不符合要求，请检查')
+      }
+    })
   })
 }
 </script>
@@ -1430,12 +1458,14 @@ const submitForm = () => {
   overflow: hidden;
   background-color: #fafafa;
 }
+
 .no-approval-record {
   text-align: center;
   padding: 20px;
   color: #999;
   font-size: 14px;
 }
+
 .status-icon {
   display: inline-block;
   width: 20px;
@@ -1504,10 +1534,10 @@ const submitForm = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 10px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
-  margin-bottom: 5px;
+  margin-top: -5px;
+  margin-left: 5px;
 }
 
 .ele-upload-list__item-content-action {

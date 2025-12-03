@@ -13,6 +13,7 @@ const dragPosition = ref(50); // 拖动图标当前的left百分比（10%-90%）
 const isDragging = ref(false);
 const draggingStyle = ref(false);
 
+// ========== 1. 提取所有事件处理函数为命名函数（关键：确保off能精准销毁） ==========
 // 开始拖动：记录初始位置
 const startDrag = (e) => {
     e.preventDefault();
@@ -51,22 +52,47 @@ const handleMouseUp = () => {
     }
 };
 
-// 监听事件与清理
+// Bus事件：功能面板点击回调（命名函数）
+const handleFunctionPanelClicked = (data) => {
+    draggingStyle.value = data.index === 1 && data.isSelected;
+};
+
+// ========== 2. 挂载/卸载生命周期：完整绑定+精准销毁 ==========
 onMounted(() => {
+    // Window事件绑定（命名函数）
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('mouseleave', handleMouseUp);
 
-    bus.on('function-panel-clicked', (data) => {
-        draggingStyle.value = data.index === 1 && data.isSelected;
-    });
+    // Bus事件绑定（命名函数）
+    bus.on('function-panel-clicked', handleFunctionPanelClicked);
 });
 
 onUnmounted(() => {
+    // ========== 核心：精准销毁所有监听 ==========
+    // 1. 销毁Window事件（必须传原函数引用）
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
     window.removeEventListener('mouseleave', handleMouseUp);
-    bus.off('function-panel-clicked');
+
+    // 2. 销毁Bus事件（必须传原函数引用，精准解绑）
+    bus.off('function-panel-clicked', handleFunctionPanelClicked);
+
+    // ========== 兜底：清理所有状态/全局变量 ==========
+    // 重置响应式状态
+    dragPosition.value = 50;
+    isDragging.value = false;
+    draggingStyle.value = false;
+
+    // 清理window上的自定义属性（避免内存泄漏）
+    delete window.dragStartX;
+    delete window.dragStartPercent;
+
+    // 兜底：若仍在拖动中，强制结束并重置
+    if (isDragging.value) {
+        isDragging.value = false;
+        bus.emit('dragIcon:screenRatio', 0.5); // 恢复默认比例
+    }
 });
 </script>
 

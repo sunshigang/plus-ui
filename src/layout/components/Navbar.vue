@@ -7,14 +7,14 @@
 
     <div class="right-menu flex align-center">
       <template v-if="appStore.device !== 'mobile'">
-        <el-select v-if="userId === 1 && tenantEnabled" v-model="companyName" class="min-w-244px" clearable filterable
+        <!-- <el-select v-if="userId === 1 && tenantEnabled" v-model="companyName" class="min-w-244px" clearable filterable
           reserve-keyword :placeholder="proxy.$t('navbar.selectTenant')" @change="dynamicTenantEvent"
           @clear="dynamicClearEvent">
           <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId">
           </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select>
-        <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']"
+        </el-select> -->
+        <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']" v-if="showScreen"
           class="screen-link-btn">可视化大屏</el-button>
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
@@ -91,6 +91,7 @@ import { TenantVO } from '@/api/types';
 import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBox, ElMessageBoxOptions } from 'element-plus';
+import { getInfo as getUserInfo } from '@/api/login';
 // 声明自定义 proxy 类型
 interface CustomProxy {
   $router: {
@@ -108,6 +109,7 @@ interface CustomProxy {
   };
   $t: (key: string) => string; // 国际化方法
 }
+const showScreen = ref(false)
 const noticeStore = useNoticeStore();
 const appStore = useAppStore();
 const userStore = useUserStore();
@@ -220,9 +222,15 @@ watch(
   },
   { deep: true }
 );
-onMounted(() => {
+onMounted(async () => {
   noticeStore.fetchUnreadCount();
   // 原有 initTenantList 等逻辑保留
+  const res = await getUserInfo();
+  if (res.data.roles[0] == 'sysadmin'||res.data.roles[0] == 'superadmin') {
+    showScreen.value = true
+  } else {
+    showScreen.value = false
+  }
 });
 </script>
 

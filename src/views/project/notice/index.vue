@@ -61,11 +61,12 @@
           </template>
         </el-table-column>
         <el-table-column label="创建者" align="center" prop="createByName" width="150" />
-        <el-table-column label="创建时间" align="center" prop="createTime" width="150">
+         <el-table-column label="创建时间" align="center" prop="createTime" width="250" />
+        <!-- <el-table-column label="创建时间" align="center" prop="createTime" width="150">
           <template #default="scope">
             <span>{{ proxy.parseTime(scope.row.createTime, '{y}-{m}-{d}') }}</span>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template #default="scope">
             <el-button v-hasPermi="['system:notice:view']" link type="primary"
