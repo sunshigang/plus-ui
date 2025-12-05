@@ -15,7 +15,7 @@
             <el-form-item label="创建时间" style="width: 420px">
               <el-date-picker v-model="dateRangeCreateTime" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
                 range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
-                :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"></el-date-picker>
+                :default-time="[new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]"></el-date-picker>
             </el-form-item>
             <el-form-item label="所属行政区划" prop="administrativeRegion">
               <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
@@ -103,7 +103,7 @@
             {{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作"  width="280">
+        <el-table-column fixed="right" label="操作" width="280">
           <template #default="scope">
             <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
               v-if="scope.row.status === '填报中'">
@@ -121,7 +121,8 @@
               v-if="scope.row.status === '管委会通过'">
               审核
             </el-button>
-            <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']" v-if="scope.row.status === '林业局通过'">
+            <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']"
+              v-if="scope.row.status === '林业局通过'">
               数据共享
             </el-button>
             <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
@@ -142,11 +143,9 @@
 
 <script setup name="Info" lang="ts">
 import { useRouter } from 'vue-router'
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, reactive, toRefs, getCurrentInstance } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
-import { propTypes } from '@/utils/propTypes';
-import { globalHeaders } from '@/utils/request';
 const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
@@ -178,47 +177,15 @@ const getStatusColor = (status: string) => {
 const handleAudit = (row: InfoVO) => {
   router.push(`/project/major/major-review/${row.id}`);
 };
-const fileUploadRef = ref<ElUploadInstance>();
 const queryFormRef = ref<ElFormInstance>();
-const infoFormRef = ref<ElFormInstance>();
-const baseUrl = import.meta.env.VITE_APP_BASE_API;
-const uploadFileUrl = ref(baseUrl + '/resource/oss/upload');
-const headers = ref(globalHeaders());
-const fileList = ref<any[]>([]);
-const props = defineProps({
-  modelValue: {
-    type: [String, Object, Array],
-    default: () => []
-  },
-  // 数量限制
-  limit: propTypes.number.def(15),
-  // 大小限制(MB)
-  fileSize: propTypes.number.def(500),
-  // 文件类型, 例如['png', 'jpg', 'jpeg']
-  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak']),
-  // 是否显示提示
-  isShowTip: propTypes.bool.def(true),
-});
-const emit = defineEmits(['update:modelValue']);
-watch(
-  () => props.modelValue,
-  async (val) => {
-    fileList.value = []; // 先重置，避免残留旧数据
-    if (!val) return; // 若val为null/undefined，直接返回
-    let list: any[] = [];
-    // 3. 处理文件列表，生成唯一uid
-    let temp = 1;
-    fileList.value = list.map((item) => ({
-      name: item.name || '未知文件名',
-      url: item.url || '',
-      ossId: item.ossId || '',
-      uid: item.uid || new Date().getTime() + temp++ // 确保uid唯一
-    }));
-  },
-  { deep: true, immediate: true }
-);
-const initFormData: InfoForm = {
-  id: undefined,
+const queryParams = reactive<InfoQuery & {
+  pageNum: number;
+  pageSize: number;
+  createTimeFrom?: string;
+  createTimeTo?: string;
+}>({
+  pageNum: 1,
+  pageSize: 10,
   projectName: undefined,
   projectCode: undefined,
   administrativeRegion: undefined,
@@ -231,92 +198,40 @@ const initFormData: InfoForm = {
   protectionLevel: undefined,
   status: undefined,
   projectType: undefined,
-  projectUsage: undefined,
-  projectPurpose: undefined,
-  createTime: undefined,
-  updateTime: undefined,
-  projectInvestment: undefined,
-  planningBasis: undefined,
-  constructionContent: undefined,
-  otherExplanations: undefined,
-  locationPlan: undefined,
-  expertOpinions: undefined,
-  meetingMaterials: undefined,
-  siteSelectionReport: undefined,
-  approvalDocuments: undefined,
-  projectRedLine: undefined,
-  redLineCoordinate: undefined,
-  threeDModel: undefined,
-  modelCoordinate: undefined,
-  modelPreview: undefined,
+  createTimeFrom: undefined,
+  createTimeTo: undefined,
   majorFlag: true,
-  approveRecord: {
-    gwhApprovalAttachment: undefined, // 管委会审批反馈文件
-    gwhApprovalReason: undefined,// 管委会审批反馈
-    gwhApproveResult: undefined,// 管委会审批状态
-    gwhApproveTime: undefined,// 管委会审批时间
-    lyjApprovalAttachment: undefined,// 市林业局审核反馈文件
-    lyjApprovalReason: undefined,// 市林业局审核反馈
-    lyjApproveResult: undefined,// 市林业局审核状态
-    lyjApproveTime: undefined,// 市林业局审核时间
-  },
-}
-const data = reactive<PageData<InfoForm, InfoQuery>>({
-  form: { ...initFormData },
-  queryParams: {
-    pageNum: 1,
-    pageSize: 10,
-    projectName: undefined,
-    projectCode: undefined,
-    administrativeRegion: undefined,
-    scenicArea: undefined,
-    applicantType: undefined,
-    constructionUnit: undefined,
-    organizationCode: undefined,
-    contactPerson: undefined,
-    contactPhone: undefined,
-    protectionLevel: undefined,
-    status: undefined,
-    projectType: undefined,
-    createTimeFrom: undefined,
-    createTimeTo: undefined,
-    majorFlag: true,
-    // params: {
-    // }
-  },
-  rules: {
-    projectName: [
-      { required: true, message: "建设项目名称不能为空", trigger: "blur" }
-    ],
-    administrativeRegion: [
-      { required: true, message: "所属行政区划不能为空", trigger: "blur" }
-    ],
-    scenicArea: [
-      { required: true, message: "涉及风景名胜区名称不能为空", trigger: "blur" }
-    ],
-  }
 });
-
-const { queryParams, form, rules } = toRefs(data);
 
 /** 查询【请填写功能名称】列表 */
 const getList = async () => {
   loading.value = true;
-  const res = await listInfo(queryParams.value);
-  infoList.value = res.rows;
-  total.value = res.total;
-  loading.value = false;
-}
+  try { // 新增 try-catch
+    const res = await listInfo(queryParams);
+    infoList.value = res.rows;
+    total.value = res.total;
+  } catch (err) {
+    proxy?.$modal.msgError('获取列表失败：' + (err as Error).message);
+    infoList.value = [];
+    total.value = 0;
+  } finally { // 无论成败，关闭loading
+    loading.value = false;
+  }
+};
 /** 搜索按钮操作 */
 const handleQuery = () => {
-  queryParams.value.pageNum = 1;
-  // 同步日期范围到查询参数
+  queryParams.pageNum = 1;
+  // 原代码仅判断是否有值，未校验是否成对
   if (dateRangeCreateTime.value[0] && dateRangeCreateTime.value[1]) {
-    queryParams.value.createTimeFrom = dateRangeCreateTime.value[0];
-    queryParams.value.createTimeTo = dateRangeCreateTime.value[1];
+    queryParams.createTimeFrom = dateRangeCreateTime.value[0];
+    queryParams.createTimeTo = dateRangeCreateTime.value[1];
   } else {
-    delete queryParams.value.createTimeFrom;
-    delete queryParams.value.createTimeTo;
+    delete queryParams.createTimeFrom;
+    delete queryParams.createTimeTo;
+    // 新增：提示用户选择完整日期范围
+    if (dateRangeCreateTime.value[0] || dateRangeCreateTime.value[1]) {
+      proxy?.$modal.msgWarning('请选择完整的创建时间范围');
+    }
   }
   getList();
 };
@@ -336,7 +251,6 @@ const handleSelectionChange = (selection: InfoVO[]) => {
   multiple.value = !selection.length;
 }
 const handleAdd = async (data: string) => {
-  form.value = { ...initFormData };
   await nextTick();
   router.push(`/project/major/${data}`);
 };
@@ -363,23 +277,21 @@ const handleDelete = async (row: InfoVO) => {
 };
 /** 导出按钮操作 */
 const handleExport = async () => {
-  const exportUrl = `project/download/${ids.value}`;
-  await proxy?.download(
-    exportUrl,
-    {},
-    `info_${new Date().getTime()}.zip`
-  );
-}
+  if (!ids.value) { // 新增：校验是否选中数据
+    proxy?.$modal.msgWarning('请选择要导出的项目');
+    return;
+  }
+  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
+  await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
+};
 const handleShare = async (row: InfoVO) => {
   router.push(`/project/major/major-share/${row.id}`);
 };
 onMounted(async () => { // 保留async关键字
   try {
-    getList();
+    await getList();
   } catch (err) {
-    console.error('获取用户信息失败：', err);
-    // 即使获取失败，仍尝试加载列表（可选）
-    getList();
+    console.error('加载列表失败：', err);
   }
 });
 </script>

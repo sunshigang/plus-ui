@@ -2,19 +2,19 @@
   <div class="add-content-container">
     <div v-if="showSuccessPopup" class="add-content-wrapper">
       <div class="add-content">
-        <div class="back-normal" @click="handleCancel"><img src="../../../assets/images/arrow-left.png" />审批</div>
+        <div class="back-normal" @click="handleCancel"><img src="@/assets/images/arrow-left.png" />审批</div>
         <div class="project-info-header">
           <h2 class="main-title">项目信息</h2>
           <el-button type="primary" @click="handleModelReview" class="modelReview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景方案审核
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景方案审核
           </el-button>
         </div>
 
         <!-- 基础信息（可折叠） -->
         <div class="basic-info-container">
           <div class="section-title-wrap" @click="toggleBasicInfo">
-            <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-            <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+            <img v-if="basicInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+            <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
             <div class="section-title-text">基础信息</div>
           </div>
           <div class="section-content" v-if="basicInfoVisible">
@@ -68,8 +68,8 @@
         <!-- 建设信息（可折叠） -->
         <div class="construction-info-container">
           <div class="section-title-wrap" @click="toggleConstructionInfo">
-            <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-            <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+            <img v-if="constructionInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+            <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
@@ -101,7 +101,7 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="保护区等级" prop="protectionLevel">
-                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple disabled>
+                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple >
                       <el-option label="一级保护区" value="一级保护区"></el-option>
                       <el-option label="二级保护区" value="二级保护区"></el-option>
                       <el-option label="三级保护区" value="三级保护区"></el-option>
@@ -317,22 +317,22 @@
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
-                  form.approveRecords[0].gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecords[0].gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  form.approveRecords[0]?.gwhApproveResult === '通过' ? 'success' :
+                    form.approveRecords[0]?.gwhApproveResult === '驳回' ? 'error' : 'pending'
                 ]">
                   {{
-                    form.approveRecords[0].gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecords[0].gwhApproveResult === '驳回' ? '✗' : '-'
+                    form.approveRecords[0]?.gwhApproveResult === '通过' ? '✓' :
+                      form.approveRecords[0]?.gwhApproveResult === '驳回' ? '✗' : '-'
                   }}
                 </span>
                 <span class="status-text">
-                  {{ form.approveRecords[0].gwhApproveResult || '待审批' }}
+                  {{ form.approveRecords[0]?.gwhApproveResult || '待审批' }}
                 </span>
               </div>
             </el-form-item>
 
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecords[0].gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ form.approveRecords[0]?.gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
 
             <el-form-item label="审批反馈">
@@ -362,12 +362,13 @@
         <div class="audit-section">
           <div class="audit-title">审核</div>
           <el-form ref="auditFormRef" :model="auditForm" label-width="230px">
-            <el-form-item label="反馈建议" prop="feedback"
-              :rules="[{ required: auditForm.auditResult === '驳回', message: '驳回必须填写反馈建议', trigger: 'blur' }]">
-              <el-input v-model="auditForm.approvalReason" type="textarea" :rows="4" placeholder="请输入审核建议（驳回时必须填写）" />
+            <el-form-item label="反馈建议" prop="approvalReason" :rules="approvalReasonRules">
+              <el-input ref="approvalReasonRef" v-model="auditForm.approvalReason" type="textarea" :rows="4"
+                placeholder="请输入审核建议（驳回时必须填写）" />
             </el-form-item>
             <el-form-item label="反馈文件">
-              <el-upload ref="feedbackFileUploadRef" multiple :action="uploadFileUrl"
+              <el-upload @progress="(event, file, fileList) => handleUploadProgress(event, file)"
+                ref="feedbackFileUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file)" :file-list="feedbackFileList" :limit="props.limit"
                 :accept="fileAccept" :on-error="handleUploadError" :on-exceed="handleExceed"
                 :on-success="handleUploadSuccess" :show-file-list="false" :headers="headers"
@@ -399,8 +400,8 @@
     <!-- 成功提交弹窗 -->
     <div v-else class="popup-content-wrapper">
       <div class="popup-content">
-        <img v-if="auditForm.auditResult === '通过'" src="../../../assets/images/tick.png" class="success-icon" />
-        <img v-else-if="auditForm.auditResult === '驳回'" src="../../../assets/images/no-tick.png" class="success-icon" />
+        <img v-if="auditForm.auditResult === '通过'" src="@/assets/images/tick.png" class="success-icon" />
+        <img v-else-if="auditForm.auditResult === '驳回'" src="@/assets/images/no-tick.png" class="success-icon" />
         <div class="success-text">
           <template v-if="auditForm.auditResult === '通过'">
             已通过《{{ form.projectName }}》的申报！
@@ -410,8 +411,8 @@
           </template>
         </div>
         <div class="button-group">
-          <el-button class="btn-back" @click="handleCancel">返回项目列表</el-button>
-          <el-button class="btn-view" @click="handleViewDetail">查看填报详情</el-button>
+          <el-button type="success" class="btn-back" @click="handleCancel">返回项目列表</el-button>
+          <el-button type="default" class="btn-view" @click="handleViewDetail">查看填报详情</el-button>
         </div>
       </div>
     </div>
@@ -435,7 +436,7 @@ const showSuccessPopup = ref(true)
 // 折叠状态控制
 const basicInfoVisible = ref(true)
 const constructionInfoVisible = ref(true)
-
+const approvalReasonRef = ref(null)
 // 项目信息表单
 const form = reactive({
   id: undefined,
@@ -533,7 +534,27 @@ const getFileName = (name) => {
   const separatorIndex = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'))
   return separatorIndex > -1 ? name.slice(separatorIndex + 1) : name
 }
-
+// script中新增计算属性
+const approvalReasonRules = computed(() => {
+  return [{
+    required: auditForm.auditResult === '驳回',
+    message: '驳回必须填写反馈建议',
+    trigger: ['blur', 'change'],
+    // 新增：去除首尾空格的自定义验证
+    validator: (rule, value, callback) => {
+      if (auditForm.auditResult === '驳回') {
+        const trimedValue = (value || '').trim()
+        if (!trimedValue) {
+          callback(new Error('驳回必须填写反馈建议'))
+        } else {
+          callback()
+        }
+      } else {
+        callback()
+      }
+    }
+  }]
+})
 // 三维场景方案审核
 const handleModelReview = () => {
   if (threeDModelFileList.value.length === 0) {
@@ -544,11 +565,13 @@ const handleModelReview = () => {
     path: '/screen/screen',
     query: {
       id: form.id,
-      type: 'normal-review'
     }
   })
 }
-
+const handleUploadProgress = (event, file) => {
+  const percent = Math.round(event.percent)
+  ElMessage.info(`${file.name} 上传中：${percent}%`)
+}
 // 文件上传相关方法（简化参数传递）
 const handleBeforeUpload = (file) => {
   const fileExt = file.name.split('.').pop()?.toLowerCase()
@@ -595,10 +618,12 @@ const auditFormRef = ref(null)
 
 // 审核操作
 const handleApprove = () => {
+  approvalReasonRef.value?.blur()
   submitAudit('通过')
 }
 
 const handleReject = () => {
+  approvalReasonRef.value?.blur()
   submitAudit('驳回')
 }
 
@@ -623,13 +648,31 @@ const submitAudit = async (result) => {
           approvalAttachment: JSON.stringify(feedbackFileList.value)
         }
         // 调用审核接口
-        await gwhApprove(auditData)
-        ElMessage.success(`审核${result}成功`)
+        const res = await gwhApprove(auditData)
+        if (res.code === 200) {
+          ElMessage.success(`审核${result}成功`)
+          showSuccessPopup.value = false
+        } else {
+          ElMessage.error(`审核${result}失败：${res.msg || '业务处理异常'}`)
+          // 重置审核状态和表单验证
+          auditForm.auditResult = ''
+          auditForm.approvalReason = ''
+          if (auditFormRef.value) {
+            auditFormRef.value.clearValidate('approvalReason')
+          }
+        }
         showSuccessPopup.value = false
-        // router.push('/project/normal')
       } catch (err) {
-        if (err !== 'cancel') {
+        if (err === 'cancel') {
+          auditForm.auditResult = ''
+          auditForm.approvalReason = ''
+          feedbackFileList.value = [] // 清空文件列表
+          if (auditFormRef.value) {
+            auditFormRef.value.clearValidate('approvalReason')
+          }
+        } else {
           ElMessage.error(`审核失败：${err.message || '未知错误'}`)
+          feedbackFileList.value = [] // 清空文件列表
         }
       }
     }
@@ -697,8 +740,12 @@ const parseApproveRecord = (approveRecordData) => {
 // 加载项目数据
 onMounted(async () => {
   const projectId = route.params.id
-  if (projectId) {
-    await loadProjectData(projectId)
+  // 校验：非空、非NaN、是字符串/数字
+  if (projectId && typeof projectId === 'string' && projectId.trim()) {
+    await loadProjectData(projectId.trim())
+  } else {
+    ElMessage.error('无效的项目ID')
+    router.push('/project/normal')
   }
 })
 const parseFileList = (fileData) => {
@@ -742,7 +789,7 @@ const loadProjectData = async (projectId) => {
     form.projectType = projectData.projectType
       ? projectData.projectType.split(',').filter(Boolean)
       : [];
-    form.approveRecords = parseApproveRecord(projectData.approveRecord);
+    form.approveRecords = parseApproveRecord(projectData.approveRecords);
     // 初始化文件列表 - 使用通用解析方法处理JSON字符串
     locationPlanFileList.value = parseFileList(projectData.locationPlan)
     expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
@@ -762,14 +809,26 @@ const loadProjectData = async (projectId) => {
     router.push('/project/normal')
   }
 }
-// 暴露接口供父组件调用
-defineExpose({
-  open: async (row) => {
-    if (row?.id) {
-      await loadProjectData(row.id)
-    }
+const handleDownloadTemplate = (type) => {
+  if (!proxy || !proxy.$download) {
+    ElMessage.error('下载功能初始化失败，请刷新页面重试');
+    return;
   }
-})
+  const ossMap = {
+    instructions: '1987829892356124674',
+    polylineTemplate: '1987829924379635713',
+    polygonTemplate: '1987829950501761026',
+    threeD: '1987830717459607554'
+  };
+  const ossId = ossMap[type];
+  if (ossId) {
+    proxy.$download.oss(ossId).catch(err => {
+      ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
+    });
+  } else {
+    ElMessage.warning('暂无对应模板可下载');
+  }
+}
 </script>
 <style scoped>
 .add-content-container {
@@ -779,6 +838,15 @@ defineExpose({
   box-sizing: border-box;
   position: relative;
   height: 91vh;
+  overflow: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.add-content-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .add-content-wrapper {
@@ -790,6 +858,14 @@ defineExpose({
   width: 100%;
   max-height: calc(91vh - 60px);
   overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.add-content::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .popup-content-wrapper {
@@ -807,9 +883,10 @@ defineExpose({
   gap: 27px;
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  height: 96%;
-  width: 97%;
-  position: absolute;
+  height: 100%;
+  width: 100%;
+  padding: 40px 60px;
+  border-radius: 8px;
 }
 
 .success-icon {
@@ -829,17 +906,8 @@ defineExpose({
   margin-top: 10px;
 }
 
-.btn-back {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 24px;
-}
-
+.btn-back,
 .btn-view {
-  background-color: white;
-  color: #333;
-  border: 1px solid #ddd;
   padding: 8px 24px;
 }
 
@@ -1087,30 +1155,5 @@ defineExpose({
   min-width: auto;
   white-space: nowrap;
   /* 按钮文字不换行 */
-}
-</style>
-<style>
-body {
-  overflow: auto;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-body::-webkit-scrollbar {
-  display: none !important;
-  /* Chrome/Safari */
-  width: 0 !important;
-  height: 0 !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 </style>

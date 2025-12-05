@@ -43,13 +43,12 @@ import { useRouter, useRoute } from 'vue-router'
 import messageHandler from '@/libs/messageHandler.js'
 
 // 基础配置
-const iframeUrl = ref('http://127.0.0.1:46150/')
+// const iframeUrl = ref('http://127.0.0.1:46150/')
+const iframeUrl = ref('http://frp5.ccszxc.site:38082/')
 const router = useRouter()
 const route = useRoute()
 const projectId = route.query.id
 const projectType = route.query.type
-console.log("🚀 ~ projectType:", projectType)
-
 const isRouteLeaving = ref(false)
 const isClicking = ref(false)
 const isDeletingModel = ref(false);

@@ -18,16 +18,12 @@
     <el-card shadow="hover">
       <template #header>
         <el-row :gutter="10" class="mb8">
-          <el-col :span="2">
             <el-button v-hasPermi="['document:planningFile:upload']" type="primary" plain icon="Upload"
               @click="handleFile">新增规划文件</el-button>
-          </el-col>
-          <el-col :span="2">
             <el-button v-hasPermi="['document:planningFile:download']" type="success" plain icon="Download"
               :disabled="multiple" @click="handleBatchDownload()">
               批量下载
             </el-button>
-          </el-col>
           <right-toolbar v-model:show-search="showSearch" @query-table="getList"></right-toolbar>
         </el-row>
       </template>

@@ -1,10 +1,10 @@
 <template>
   <div class="add-content-container" v-if="declartionInformation">
     <div class="add-content">
-      <div class="back-normal" @click="cancel"><img src="../../../assets/images/arrow-left.png" />信息填报</div>
+      <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />信息填报</div>
       <div class="project-basic-info">
         <h3 class="section-title">项目基础信息</h3>
-        <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="basicFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
           <!-- 基础信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -56,10 +56,10 @@
         <div class="section-header">
           <h3 class="section-title">建设信息</h3>
           <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
-        <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="buildFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
           <!-- 建设信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -415,7 +415,7 @@
   </div>
   <div class="add-content-container" v-else>
     <div class="popup-content">
-      <img src="../../../assets/images/tick.png" class="success-icon" />
+      <img src="@/assets/images/tick.png" class="success-icon" />
       <div class="success-text">申报信息已成功提交！</div>
       <div class="button-group">
         <el-button class="btn-back" @click="handleBackToList">返回项目列表</el-button>
@@ -429,7 +429,6 @@
 import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
-import { getInfo as getUserInfo } from '@/api/login';
 import { delOss, listByIds } from '@/api/system/oss';
 import { useUserStore } from '@/store/modules/user'
 import { propTypes } from '@/utils/propTypes';
@@ -463,9 +462,9 @@ const props = defineProps({
   }
 });
 
-const currentUserRole = ref('');
 // 表单引用（关键：确保是同一个表单实例）
-const infoFormRef = ref(null)
+const basicFormRef = ref(null);
+const buildFormRef = ref(null);
 // 按钮加载状态
 const buttonLoading = ref(false)
 const isTemporarilySaved = ref(false)
@@ -476,7 +475,7 @@ const form = reactive({
   projectCode: undefined,
   administrativeRegion: undefined,
   scenicArea: undefined,
-  applicantType: undefined,
+  applicantType: '单位',
   constructionUnit: undefined,
   organizationCode: undefined,
   contactPerson: undefined,
@@ -501,7 +500,6 @@ const form = reactive({
   redLineCoordinate: '',
   threeDModel: '',
   modelCoordinate: undefined,
-  modelPreview: undefined,
   majorFlag: true,
 })
 
@@ -526,7 +524,11 @@ const rules = reactive({
   contactPerson: [{ required: true, message: '请输入经办人', trigger: 'blur' }],
   contactPhone: [
     { required: true, message: '请输入经办人联系方式', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    {
+      pattern: /^(1[3-9]\d{9}|0\d{2,3}-\d{7,8})$/,
+      message: '请输入正确的手机号码或固话（如010-12345678）',
+      trigger: 'blur'
+    }
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
@@ -576,7 +578,7 @@ const rules = reactive({
           callback(new Error('请至少上传一个文件')) // 未上传，校验失败
         }
       },
-      trigger: ['change', 'blur', 'upload-success', 'upload-remove'] // 增加上传相关触发时机
+      trigger: ['change', 'blur']
     }
   ],
   siteSelectionReport: [
@@ -659,9 +661,6 @@ const getFileAccept = () => {
 
 // 生命周期：初始化时加载数据
 onMounted(async () => {
-  const res = await getUserInfo();
-  const userRoles = res.data?.roles || [];
-  currentUserRole.value = userRoles[0] || '';
   const projectId = route.params.id
   if (!projectId) {
     ElMessage.error('缺少项目ID，无法加载数据')
@@ -748,7 +747,7 @@ const handleBeforeUpload = (file, type) => {
       threeDModelUploadProgress.value.push({
         fileName,
         progress: 0,
-        status: '', // 上传中
+        status: undefined, // 上传中
         fileId: '',
         fileObj: file, // 保存文件对象，用于后续匹配
         progressText: '（上传中...）' // 初始化进度文本
@@ -788,7 +787,7 @@ const handleUploadProgress = (progressEvent, file, type) => {
     item => item.fileName === fileName
   )
   if (existingIndex > -1) {
-    const status = '' // 始终使用合法的空状态
+    const status = undefined
     const progressText = percent === 100
       ? '（服务器处理中...）'
       : '（上传中...）'
@@ -844,7 +843,9 @@ const handleUploadSuccess = (res, file, type) => {
         }
         break
     }
-    ElMessage.success('上传成功')
+    ElMessage.success(`${getFileName(file.name)} 上传成功`);
+    if (basicFormRef.value) basicFormRef.value.validateField(type);
+    if (buildFormRef.value) buildFormRef.value.validateField(type);
   } else {
     if (type === 'threeDModel') {
       const fileName = getFileName(file.name)
@@ -873,36 +874,36 @@ const handleDeleteUploadFile = async (index, type) => {
   switch (type) {
     case 'locationPlan':
       fileList = locationPlanFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'expertOpinions':
       fileList = expertOpinionsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'meetingMaterials':
       fileList = meetingMaterialsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'siteSelectionReport':
       fileList = siteSelectionReportFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'approvalDocuments':
       fileList = approvalDocumentsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'projectRedLine':
       fileList = projectRedLineFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'redLineCoordinate':
       fileList = redLineCoordinateFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'threeDModel':
       fileList = threeDModelFileList.value;
-      fileId = fileList[index].ossId;
-      fileName = getFileName(fileList[index].name);
+      fileId = fileList[index]?.ossId;
+      fileName = getFileName(fileList[index]?.name || '');
       // 移除对应的进度条（多重匹配确保准确）
       const progressIndex = threeDModelUploadProgress.value.findIndex(
         item => item.fileId === fileId || item.fileName === fileName
@@ -911,13 +912,6 @@ const handleDeleteUploadFile = async (index, type) => {
         threeDModelUploadProgress.value.splice(progressIndex, 1)
       }
       break
-  }
-
-  // 删除文件列表中的项
-  fileList.splice(index, 1)
-  // 更新三维模型URL
-  if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
-    form.threeDModel = ''
   }
   // 调用OSS删除接口
   if (fileId) {
@@ -928,11 +922,22 @@ const handleDeleteUploadFile = async (index, type) => {
       ElMessage.warning('文件删除请求失败，可能需要手动清理')
     }
   }
+  // 仅删除一次（判空避免索引越界）
+  if (fileList.length > index) {
+    fileList.splice(index, 1);
+  }
+  // 更新三维模型URL
+  if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
+    form.threeDModel = ''
+  }
+  if (basicFormRef.value) basicFormRef.value.validateField(type);
+  if (buildFormRef.value) buildFormRef.value.validateField(type);
 }
 
 // 文件删除时触发校验（用于ElUpload的on-remove事件）
 const handleFileRemove = (type) => {
-  infoFormRef.value.validateField(type)
+  basicFormRef.value?.validateField(type)
+  buildFormRef.value?.validateField(type)
 }
 
 // 下载模板
@@ -1001,7 +1006,8 @@ const resetForm = async () => {
       progressText: ''
     }))
     // 重置表单校验状态
-    infoFormRef.value.clearValidate()
+    basicFormRef.value?.clearValidate();
+    buildFormRef.value?.clearValidate();
     ElMessage.success('已重置为原始数据')
   } catch (err) {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
@@ -1023,40 +1029,49 @@ const temporarilyForm = async () => {
     threeDModel: JSON.stringify(threeDModelFileList.value),
   }
   await stageInfo(submitData)
-  proxy?.$modal.msgSuccess("暂存成功")
+  proxy?.$modal.msgSuccess("暂存成功") || ElMessage.success("暂存成功");
   isTemporarilySaved.value = true
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
-  infoFormRef.value.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          protectionLevel: form.protectionLevel.join(','),
-          projectType: form.projectType.join(','),
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        console.log("🚀 ~ submitForm ~ submitData:", submitData)
-        await submitInfo(submitData)
-        declartionInformation.value = false
-      } catch (err) {
-        proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
-      ElMessage.warning('基础信息填写不符合要求，请检查')
+  // 先校验基础信息表单
+  basicFormRef.value.validate(async (basicValid) => {
+    if (!basicValid) {
+      ElMessage.warning('基础信息填写不符合要求，请检查');
+      return;
     }
-  })
+    // 再校验建设信息表单
+    buildFormRef.value.validate(async (buildValid) => {
+      if (buildValid) {
+        buttonLoading.value = true;
+        try {
+          const submitData = {
+            ...form,
+            protectionLevel: form.protectionLevel.join(','),
+            projectType: form.projectType.join(','),
+            locationPlan: JSON.stringify(locationPlanFileList.value),
+            expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+            meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+            siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+            approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+            projectRedLine: JSON.stringify(projectRedLineFileList.value),
+            redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+            threeDModel: JSON.stringify(threeDModelFileList.value),
+          }
+          console.log("🚀 ~ submitForm ~ submitData:", submitData)
+          await submitInfo(submitData)
+          ElMessage.success('申报信息提交成功！');
+          declartionInformation.value = false
+        } catch (err) {
+          proxy?.$modal.msgError("提交失败：" + (err.message || "未知错误"));
+        } finally {
+          buttonLoading.value = false;
+        }
+      } else {
+        ElMessage.warning('建设信息填写不符合要求，请检查');
+      }
+    });
+  });
 }
 // 三维模型预览
 const handleModelPreview = () => {
@@ -1098,25 +1113,25 @@ const handleModelPreview = () => {
 </script>
 
 <style scoped>
-.add-content-container.v-else {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .add-content-container {
   width: 100%;
   padding: 20px;
   background-color: #f6f6f6;
   box-sizing: border-box;
   position: relative;
-  min-height: 100vh;
+  min-height: 91vh;
 }
 
 .add-content {
   width: 100%;
   max-height: calc(100vh - 60px);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.add-content::-webkit-scrollbar {
+  display: none;
 }
 
 .popup-content {
@@ -1218,13 +1233,13 @@ const handleModelPreview = () => {
 .modelPreview {
   display: flex;
   align-items: center;
+}
 
-  .imgModel {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
+.modelPreview .imgModel {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
 }
 
 .add-footer el-button+el-button {
@@ -1351,29 +1366,5 @@ const handleModelPreview = () => {
   min-width: auto;
   white-space: nowrap;
   font-size: 14px;
-}
-</style>
-<style>
-body {
-  overflow: auto;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-body::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 </style>

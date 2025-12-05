@@ -1,7 +1,7 @@
 <template>
   <div class="add-content-container" v-if="showSuccessPopup">
     <div class="add-content">
-      <div class="back-normal" @click="handleCancel"><img src="../../../assets/images/arrow-left.png" />二次填报</div>
+      <div class="back-normal" @click="handleCancel"><img src="@/assets/images/arrow-left.png" />二次填报</div>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <!-- 信息填报标签页（可编辑） -->
         <el-tab-pane label="信息填报" name="fill">
@@ -59,7 +59,7 @@
             <div class="section-header">
               <h3 class="section-title">建设信息</h3>
               <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-                <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
             <el-form ref="infoFormRef2" :model="form" label-width="230px" :rules="rules">
@@ -389,8 +389,8 @@
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleBasicInfo">
-                <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="basicInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
               <div class="custom-collapse-content" v-if="basicInfoVisible">
@@ -445,12 +445,12 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo">
-                <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="constructionInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
                 <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
-                  <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                  <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
               <div class="custom-collapse-content" v-if="constructionInfoVisible">
@@ -758,7 +758,7 @@
   </div>
   <div class="add-content-container" v-else>
     <div class="popup-content">
-      <img src="../../../assets/images/tick.png" class="success-icon" />
+      <img src="@/assets/images/tick.png" class="success-icon" />
       <div class="success-text">申报信息已成功提交！</div>
       <div class="button-group">
         <el-button class="btn-back" @click="handleCancel">返回项目列表</el-button>
@@ -774,6 +774,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
 import { useUserStore } from '@/store/modules/user'
 import { propTypes } from '@/utils/propTypes';
+import { delOss } from '@/api/system/oss';
 import { ElMessage } from 'element-plus'
 import { globalHeaders } from '@/utils/request';
 const { proxy } = getCurrentInstance() || {}
@@ -911,7 +912,7 @@ const rules = reactive({
           callback(new Error('请至少上传一个文件')) // 未上传，校验失败
         }
       },
-      trigger: ['change', 'blur', 'upload-success', 'upload-remove'] // 增加上传相关触发时机
+      trigger: ['change', 'blur'] // 增加上传相关触发时机
     }
   ],
   siteSelectionReport: [
@@ -1109,7 +1110,7 @@ const handleUploadSuccess = (res, file, type) => {
       case 'redLineCoordinate': redLineCoordinateFileList.value.push(fileItem); break
       case 'threeDModel':
         threeDModelFileList.value.push(fileItem);
-        form.threeDModel = res.data.url;
+        form.threeDModel = JSON.stringify(threeDModelFileList.value);
         break
     }
     ElMessage.success('上传成功')
@@ -1172,6 +1173,7 @@ const handleDeleteUploadFile = async (index, type) => {
     infoFormRef2.value.validateField(type)
   }
   // 调用OSS删除接口
+  console.log("🚀 ~ handleDeleteUploadFile ~ fileId:", fileId)
   if (fileId) {
     try {
       await delOss(fileId)
@@ -1271,7 +1273,8 @@ const resetForm = async () => {
   }
 }
 const temporarilyForm = async () => {
-  const submitData = {
+ try {
+    const submitData = {
     ...form,
     protectionLevel: form.protectionLevel.join(','),
     projectType: form.projectType.join(','),
@@ -1284,9 +1287,13 @@ const temporarilyForm = async () => {
     redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
     threeDModel: JSON.stringify(threeDModelFileList.value),
   }
-  await stageInfo(submitData)
-  proxy?.$modal.msgSuccess("暂存成功")
-  isTemporarilySaved.value = true // 标记已暂存
+    await stageInfo(submitData)
+    ElMessage.success("暂存成功") // 统一用 ElMessage，避免 proxy.$modal 依赖
+    // proxy?.$modal.msgSuccess("暂存成功")
+    isTemporarilySaved.value = true
+  } catch (err) {
+    ElMessage.error("暂存失败：" + (err.message || '未知错误'))
+  }
 }
 const submitForm = () => {
   infoFormRef.value.validate(async (valid1) => {
@@ -1345,7 +1352,7 @@ const submitForm = () => {
   overflow-y: auto;
 }
 
-::v-deep .el-tabs__item {
+:deep(.el-tabs__item) {
   font-size: 16px !important;
 }
 
@@ -1635,30 +1642,5 @@ const submitForm = () => {
 
 .float-right {
   float: right;
-}
-</style>
-<style>
-/* 全局滚动条隐藏（复用） */
-body {
-  overflow: auto;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-body::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 </style>

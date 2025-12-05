@@ -1,10 +1,10 @@
 <template>
   <div class="add-content-container" v-if="declartionInformation">
     <div class="add-content">
-      <div class="back-normal" @click="cancel"><img src="../../../assets/images/arrow-left.png" />信息填报</div>
+      <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />信息填报</div>
       <div class="project-basic-info">
         <h3 class="section-title">项目基础信息</h3>
-        <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="basicFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
           <!-- 基础信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -56,7 +56,7 @@
         <div class="section-header">
           <h3 class="section-title">建设信息</h3>
           <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
         <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
@@ -415,7 +415,7 @@
   </div>
   <div class="add-content-container" v-else>
     <div class="popup-content">
-      <img src="../../../assets/images/tick.png" class="success-icon" />
+      <img src="@/assets/images/tick.png" class="success-icon" />
       <div class="success-text">申报信息已成功提交！</div>
       <div class="button-group">
         <el-button class="btn-back" @click="handleBackToList">返回项目列表</el-button>
@@ -461,7 +461,7 @@ const props = defineProps({
   }
 });
 
-// 表单引用（关键：确保是同一个表单实例）
+const basicFormRef = ref(null)
 const infoFormRef = ref(null)
 // 按钮加载状态
 const buttonLoading = ref(false)
@@ -524,7 +524,11 @@ const rules = reactive({
   contactPerson: [{ required: true, message: '请输入经办人', trigger: 'blur' }],
   contactPhone: [
     { required: true, message: '请输入经办人联系方式', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    {
+      pattern: /^(1[3-9]\d{9}|0\d{2,3}-\d{7,8})$/,
+      message: '请输入正确的手机号码或固话（如010-12345678）',
+      trigger: 'blur'
+    }
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
@@ -574,7 +578,7 @@ const rules = reactive({
           callback(new Error('请至少上传一个文件')) // 未上传，校验失败
         }
       },
-      trigger: ['change', 'blur', 'upload-success', 'upload-remove'] // 增加上传相关触发时机
+      trigger: ['change', 'blur'] // 增加上传相关触发时机
     }
   ],
   siteSelectionReport: [
@@ -648,7 +652,7 @@ const getFileName = (name) => {
 
 // 上传相关配置
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
-const headers = ref(globalHeaders())
+const headers = computed(() => globalHeaders())
 
 // 获取文件接受类型
 const getFileAccept = () => {
@@ -904,10 +908,6 @@ const handleDeleteUploadFile = async (index, type) => {
 
   // 删除文件列表中的项
   fileList.splice(index, 1)
-  // 更新三维模型URL
-  if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
-    form.threeDModel = ''
-  }
   // 调用OSS删除接口
   if (fileId) {
     try {
@@ -916,6 +916,10 @@ const handleDeleteUploadFile = async (index, type) => {
     } catch (err) {
       ElMessage.warning('文件删除请求失败，可能需要手动清理')
     }
+  }
+  // 更新三维模型URL
+  if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
+    form.threeDModel = ''
   }
 }
 
@@ -989,7 +993,7 @@ const resetForm = async () => {
       fileId: file.ossId,
       progressText: ''
     }))
-    // 重置表单校验状态
+    basicFormRef.value?.clearValidate()
     infoFormRef.value.clearValidate()
     ElMessage.success('已重置为原始数据')
   } catch (err) {
@@ -1019,37 +1023,40 @@ const temporarilyForm = async () => {
 }
 /** 提交按钮（核心：先校验，后接口） */
 const submitForm = () => {
-  infoFormRef.value.validate(async (valid) => {
-    if (valid) {
-      buttonLoading.value = true
-      try {
-        const submitData = {
-          ...form,
-          protectionLevel: form.protectionLevel.join(','),
-          projectType: form.projectType.join(','),
-          protectionLevel: form.protectionLevel.join(','),
-          projectType: form.projectType.join(','),
-          locationPlan: JSON.stringify(locationPlanFileList.value),
-          expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-          meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-          siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-          approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-          projectRedLine: JSON.stringify(projectRedLineFileList.value),
-          redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-          threeDModel: JSON.stringify(threeDModelFileList.value),
-        }
-        console.log("🚀 ~ submitForm ~ submitData:", submitData)
-        await submitInfo(submitData)
-        declartionInformation.value = false
-      } catch (err) {
-        proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
-      } finally {
-        buttonLoading.value = false
-      }
-    } else {
-      ElMessage.warning('基础信息填写不符合要求，请检查')
+  basicFormRef.value.validate(async (basicValid) => {
+    if (!basicValid) {
+      ElMessage.warning('基础信息填写不符合要求，请检查');
+      return;
     }
-
+    infoFormRef.value.validate(async (valid) => {
+      if (valid) {
+        buttonLoading.value = true
+        try {
+          const submitData = {
+            ...form,
+            protectionLevel: form.protectionLevel.join(','),
+            projectType: form.projectType.join(','),
+            locationPlan: JSON.stringify(locationPlanFileList.value),
+            expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+            meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+            siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+            approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+            projectRedLine: JSON.stringify(projectRedLineFileList.value),
+            redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+            threeDModel: JSON.stringify(threeDModelFileList.value),
+          }
+          console.log("🚀 ~ submitForm ~ submitData:", submitData)
+          await submitInfo(submitData)
+          declartionInformation.value = false
+        } catch (err) {
+          proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
+        } finally {
+          buttonLoading.value = false
+        }
+      } else {
+        ElMessage.warning('建设信息填写不符合要求，请检查')
+      }
+    })
   })
 }
 // 三维模型预览
@@ -1094,19 +1101,13 @@ const handleModelPreview = () => {
 </script>
 
 <style scoped>
-.add-content-container.v-else {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .add-content-container {
   width: 100%;
   padding: 20px;
   background-color: #f6f6f6;
   box-sizing: border-box;
   position: relative;
-  min-height: 100vh;
+  min-height: 91vh;
 }
 
 .add-content {

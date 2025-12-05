@@ -1,7 +1,7 @@
 <template>
   <div class="add-content-container">
     <div class="add-content">
-      <div class="back-normal" @click="cancel"><img src="../../../assets/images/arrow-left.png" />数据共享</div>
+      <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />数据共享</div>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <!-- 信息填报标签页（可编辑） -->
         <el-tab-pane label="首次审批信息" name="fill">
@@ -12,8 +12,8 @@
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleBasicInfo()">
-                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
               <div class="custom-collapse-content" v-if="collapseVisible[activeTab].basic">
@@ -68,12 +68,12 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo()">
-                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
                 <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
-                  <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                  <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
               <div class="custom-collapse-content" v-if="collapseVisible[activeTab].construction">
@@ -354,8 +354,8 @@
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleBasicInfo()">
-                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="collapseVisible[activeTab].basic" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
               <div class="custom-collapse-content" v-if="collapseVisible[activeTab].basic">
@@ -410,12 +410,12 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo()">
-                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
                 <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
-                  <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                  <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
               <div class="custom-collapse-content" v-if="collapseVisible[activeTab].construction">
@@ -920,7 +920,7 @@ const cancel = () => {
 const clickDataDownload = async () => {
   try {
     proxy?.$modal.loading('正在打包下载数据，请稍候...');
-    const exportUrl = `project/download/${form.id}`;
+    const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${form.id}`;
     await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
     proxy?.$modal.closeLoading();
     proxy?.$modal.msgSuccess('数据下载成功');

@@ -2,19 +2,19 @@
   <div class="add-content-container">
     <div v-if="showSuccessPopup" class="add-content-wrapper">
       <div class="add-content">
-        <div class="back-normal" @click="handleCancel"><img src="../../../assets/images/arrow-left.png" />审批</div>
+        <div class="back-normal" @click="handleCancel"><img src="@/assets/images/arrow-left.png" />审批</div>
         <div class="project-info-header">
           <h2 class="main-title">项目信息</h2>
           <el-button type="primary" @click="handleModelReview" class="modelReview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景方案审核
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景方案审核
           </el-button>
         </div>
 
         <!-- 基础信息（可折叠） -->
         <div class="basic-info-container">
           <div class="section-title-wrap" @click="toggleBasicInfo">
-            <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-            <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+            <img v-if="basicInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+            <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
             <div class="section-title-text">基础信息</div>
           </div>
           <div class="section-content" v-if="basicInfoVisible">
@@ -68,8 +68,8 @@
         <!-- 建设信息（可折叠） -->
         <div class="construction-info-container">
           <div class="section-title-wrap" @click="toggleConstructionInfo">
-            <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-            <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+            <img v-if="constructionInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+            <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
@@ -411,12 +411,13 @@
         <div class="audit-section">
           <div class="audit-title">审核</div>
           <el-form ref="auditFormRef" :model="auditForm" label-width="230px">
-            <el-form-item label="反馈建议" prop="feedback"
-              :rules="[{ required: auditForm.auditResult === '驳回', message: '驳回必须填写反馈建议', trigger: 'blur' }]">
-              <el-input v-model="auditForm.approvalReason" type="textarea" :rows="4" placeholder="请输入审核建议（驳回时必须填写）" />
+            <el-form-item label="反馈建议" prop="approvalReason" :rules="approvalReasonRules">
+              <el-input ref="approvalReasonRef" v-model="auditForm.approvalReason" type="textarea" :rows="4"
+                placeholder="请输入审核建议（驳回时必须填写）" />
             </el-form-item>
             <el-form-item label="反馈文件">
-              <el-upload ref="feedbackFileUploadRef" multiple :action="uploadFileUrl"
+              <el-upload @progress="(event, file, fileList) => handleUploadProgress(event, file)"
+                ref="feedbackFileUploadRef" multiple :action="uploadFileUrl"
                 :before-upload="(file) => handleBeforeUpload(file)" :file-list="feedbackFileList" :limit="props.limit"
                 :accept="fileAccept" :on-error="handleUploadError" :on-exceed="handleExceed"
                 :on-success="handleUploadSuccess" :show-file-list="false" :headers="headers"
@@ -448,8 +449,8 @@
     <!-- 成功提交弹窗 -->
     <div v-else class="popup-content-wrapper">
       <div class="popup-content">
-        <img v-if="auditForm.auditResult === '通过'" src="../../../assets/images/tick.png" class="success-icon" />
-        <img v-else-if="auditForm.auditResult === '驳回'" src="../../../assets/images/no-tick.png" class="success-icon" />
+        <img v-if="auditForm.auditResult === '通过'" src="@/assets/images/tick.png" class="success-icon" />
+        <img v-else-if="auditForm.auditResult === '驳回'" src="@/assets/images/no-tick.png" class="success-icon" />
         <div class="success-text">
           <template v-if="auditForm.auditResult === '通过'">
             已通过《{{ form.projectName }}》的申报！
@@ -459,8 +460,8 @@
           </template>
         </div>
         <div class="button-group">
-          <el-button class="btn-back" @click="handleCancel">返回项目列表</el-button>
-          <el-button class="btn-view" @click="handleViewDetail">查看填报详情</el-button>
+          <el-button type="success" class="btn-back" @click="handleCancel">返回项目列表</el-button>
+          <el-button type="default" class="btn-view" @click="handleViewDetail">查看填报详情</el-button>
         </div>
       </div>
     </div>
@@ -476,6 +477,7 @@ import { useUserStore } from '@/store/modules/user'
 import { getCurrentInstance } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { globalHeaders } from '@/utils/request';
+import { propTypes } from '@/utils/propTypes';
 // 组件实例与路由
 const { proxy } = getCurrentInstance() || {}
 const router = useRouter()
@@ -485,7 +487,7 @@ const showSuccessPopup = ref(true)
 // 折叠状态控制
 const basicInfoVisible = ref(true)
 const constructionInfoVisible = ref(true)
-
+const approvalReasonRef = ref(null)
 // 项目信息表单
 const form = reactive({
   id: undefined,
@@ -520,19 +522,7 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecords: [{
-    projectId: '',
-    gwhApproveResult: '',
-    gwhApproverId: '',
-    gwhApproveTime: '',
-    gwhApprovalReason: '',
-    gwhApprovalAttachment: '',
-    lyjApproveResult: '',
-    lyjApproverId: '',
-    lyjApproveTime: '',
-    lyjApprovalReason: '',
-    lyjApprovalAttachment: '',
-  }]
+  approveRecords: []
 })
 
 // 文件列表（与viewProject保持一致）
@@ -550,18 +540,19 @@ const auditForm = reactive({
   approvalReason: ''     // 反馈意见
 })
 const showApprovalSection = computed(() => {
-  const currentStatus = (form.status || '').trim();
+  const currentStatus = typeof form.status === 'string' ? form.status.trim() : '';
   const validStatuses = ['管委会审批中', '管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
   return validStatuses.includes(currentStatus);
-})
+});
 // 审核文件上传配置
 const feedbackFileList = ref([])
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
-const headers = ref(globalHeaders())
-const props = {
-  limit: 5,
-  fileType: ['doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar']
-}
+const headers = computed(() => globalHeaders());
+const props = defineProps({
+  limit: propTypes.number.def(5),
+  fileSize: propTypes.number.def(500), // 新增文件大小配置，替代硬编码
+  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar'])
+});
 const fileAccept = props.fileType.map(type => `.${type}`).join(',')
 
 // 折叠/展开控制
@@ -580,7 +571,20 @@ const getFileName = (name) => {
   const separatorIndex = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'))
   return separatorIndex > -1 ? name.slice(separatorIndex + 1) : name
 }
-
+const approvalReasonRules = computed(() => {
+  return [{
+    required: auditForm.auditResult === '驳回',
+    message: '驳回必须填写反馈建议',
+    trigger: ['blur', 'change'],
+    validator: (rule, value, callback) => {
+      if (auditForm.auditResult === '驳回') {
+        const trimedValue = (value || '').trim()
+        if (!trimedValue) callback(new Error('驳回必须填写反馈建议'))
+        else callback()
+      } else callback()
+    }
+  }]
+})
 // 三维场景方案审核
 const handleModelReview = () => {
   if (threeDModelFileList.value.length === 0) {
@@ -591,11 +595,13 @@ const handleModelReview = () => {
     path: '/screen/screen',
     query: {
       id: form.id,
-      type: 'major-review'
     }
   })
 }
-
+const handleUploadProgress = (event, file) => {
+  const percent = Math.round(event.percent)
+  ElMessage.info(`${file.name} 上传中：${percent}%`)
+}
 // 文件上传相关方法（简化参数传递）
 const handleBeforeUpload = (file) => {
   const fileExt = file.name.split('.').pop()?.toLowerCase()
@@ -603,8 +609,8 @@ const handleBeforeUpload = (file) => {
     ElMessage.error(`仅支持${props.fileType.join('/')}格式文件`)
     return false
   }
-  const isLt500M = file.size / 1024 / 1024 < 500
-  if (!isLt500M) {
+  const isLtMaxSize = file.size / 1024 / 1024 < props.fileSize;
+  if (!isLtMaxSize) {
     ElMessage.error('文件大小不能超过500MB')
     return false
   }
@@ -642,10 +648,12 @@ const auditFormRef = ref(null)
 
 // 审核操作
 const handleApprove = () => {
+  approvalReasonRef.value?.blur()
   submitAudit('通过')
 }
 
 const handleReject = () => {
+  approvalReasonRef.value?.blur()
   submitAudit('驳回')
 }
 
@@ -668,15 +676,27 @@ const submitAudit = async (result) => {
           approvalReason: auditForm.approvalReason,
           approvalAttachment: JSON.stringify(feedbackFileList.value)
         }
-        console.log("🚀 ~ submitAudit ~ auditData:", auditData)
-        if (form.status == '管委会审批中') {
-          await gwhApprove(auditData)
-        } else if (form.status == '管委会通过') {
-          await lyjApprove(auditData)
+        const res = form.status === '管委会审批中'
+          ? await gwhApprove(auditData)
+          : await lyjApprove(auditData)
+
+        if (res.code === 200) {
+          ElMessage.success(`审核${result}成功`)
+          showSuccessPopup.value = false
+        } else {
+          ElMessage.error(`审核${result}失败：${res.msg || '业务处理异常'}`)
+          auditForm.auditResult = ''
+          if (auditFormRef.value) {
+            auditFormRef.value.clearValidate('approvalReason')
+          }
         }
-        showSuccessPopup.value = false
       } catch (err) {
-        if (err !== 'cancel') {
+        if (err === 'cancel') {
+          auditForm.auditResult = ''
+          if (auditFormRef.value) {
+            auditFormRef.value.clearValidate('approvalReason')
+          }
+        } else {
           ElMessage.error(`审核失败：${err.message || '未知错误'}`)
         }
       }
@@ -799,22 +819,39 @@ const loadProjectData = async (projectId) => {
     router.push('/project/major')
   }
 }
+const handleDownloadTemplate = (type) => {
+  if (!proxy || !proxy.$download) {
+    ElMessage.error('下载功能初始化失败，请刷新页面重试');
+    return;
+  }
+  const ossMap = {
+    instructions: '1987829892356124674',
+    polylineTemplate: '1987829924379635713',
+    polygonTemplate: '1987829950501761026',
+    threeD: '1987830717459607554'
+  };
+  const ossId = ossMap[type];
+  if (ossId) {
+    proxy.$download.oss(ossId).catch(err => {
+      ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
+    });
+  } else {
+    ElMessage.warning('暂无对应模板可下载');
+  }
+}
 // 加载项目数据
 onMounted(async () => {
   const projectId = route.params.id
-  if (projectId) {
-    await loadProjectData(projectId)
+  // 校验：非空、字符串、非空白字符
+  if (projectId && typeof projectId === 'string' && projectId.trim()) {
+    await loadProjectData(projectId.trim())
+  } else {
+    ElMessage.error('无效的项目ID')
+    router.push('/project/major')
   }
 })
 </script>
 <style scoped>
-/* 新增弹窗样式 */
-.add-content-container.v-else {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 .popup-content {
   display: flex;
   flex-direction: column;
@@ -823,9 +860,10 @@ onMounted(async () => {
   gap: 27px;
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  height: 96%;
-  width: 97%;
-  position: absolute;
+  padding: 40px 60px;
+  border-radius: 8px;
+  height: 100%;
+  width: 100%;
 }
 
 .success-icon {
@@ -852,6 +890,7 @@ onMounted(async () => {
   box-sizing: border-box;
   position: relative;
   height: 91vh;
+  overflow: hidden;
 }
 
 .add-content-wrapper {
@@ -862,21 +901,13 @@ onMounted(async () => {
 .popup-content-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
 }
 
-.btn-back {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 24px;
-}
-
+.btn-back,
 .btn-view {
-  background-color: white;
-  color: #333;
-  border: 1px solid #ddd;
   padding: 8px 24px;
 }
 
@@ -884,6 +915,14 @@ onMounted(async () => {
   width: 100%;
   max-height: calc(91vh - 60px);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.add-content::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .back-normal {
@@ -1133,30 +1172,5 @@ onMounted(async () => {
   height: 1px;
   background-color: #e5e7eb;
   margin: 20px 0;
-}
-</style>
-<style>
-body {
-  overflow: auto;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-body::-webkit-scrollbar {
-  display: none !important;
-  /* Chrome/Safari */
-  width: 0 !important;
-  height: 0 !important;
-}
-
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
 }
 </style>

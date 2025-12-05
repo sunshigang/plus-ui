@@ -14,8 +14,7 @@
             </el-form-item>
             <el-form-item label="创建时间" style="width: 420px">
               <el-date-picker v-model="dateRangeCreateTime" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
-                range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"
-                :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]"></el-date-picker>
+                range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
             </el-form-item>
             <el-form-item label="所属行政区划" prop="administrativeRegion">
               <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
@@ -112,7 +111,7 @@
             {{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" fixed="right"  width="280">
+        <el-table-column label="操作" fixed="right" width="280">
           <template #default="scope">
             <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
               v-if="scope.row.status === '填报中'">
@@ -150,7 +149,7 @@ import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
-import { getCurrentInstance } from 'vue';
+import { reactive, toRefs, getCurrentInstance } from 'vue';
 const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
@@ -358,7 +357,7 @@ const handleExport = () => {
     proxy?.$modal.msgWarning('请先选择要导出的项目');
     return;
   }
-  const exportUrl = `project/download/${ids.value}`;
+  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
   proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
 };
 
@@ -367,14 +366,11 @@ const handleAudit = (row: InfoVO) => {
   router.push(`/project/normal/normal-review/${row.id}`);
 };
 
-// 初始化
-onMounted(async () => { // 保留async关键字
+onMounted(async () => {
   try {
-    getList();
+    await getList(); // 加await确保loading状态正确
   } catch (err) {
-    console.error('获取用户信息失败：', err);
-    // 即使获取失败，仍尝试加载列表（可选）
-    getList();
+    console.error('获取项目列表失败：', err);
   }
 });
 </script>
@@ -394,7 +390,11 @@ onMounted(async () => { // 保留async关键字
 
 // 表格操作按钮间距
 :deep(.el-table-column__content .el-button) {
-  margin: 0 4px;
+  margin: 0 2px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 // 响应式布局调整

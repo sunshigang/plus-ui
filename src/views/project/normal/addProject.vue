@@ -1,7 +1,7 @@
 <template>
   <div class="add-content-container">
     <div class="add-content">
-      <div class="back-normal" @click="cancel"><img src="../../../assets/images/arrow-left.png" />创建项目</div>
+      <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />创建项目</div>
       <!-- 项目基础信息 -->
       <div class="project-basic-info">
         <h3 class="section-title">项目基础信息</h3>
@@ -56,7 +56,7 @@
         <div class="section-header">
           <h3 class="section-title">建设信息</h3>
           <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
         <el-form :model="form" label-width="230px">
@@ -405,9 +405,9 @@ const props = defineProps({
     'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx',
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
-
+  compDisabled: propTypes.bool.def(false)
 });
-
+const isTemporarilySaved = ref(false);
 // 表单引用
 const infoFormRef = ref(null)
 // 按钮加载状态
@@ -457,15 +457,6 @@ const rules = reactive({
   applicantType: [{ required: true, message: '请选择建设类型', trigger: 'change' }],
   constructionUnit: [{ required: true, message: '请输入建设单位名称', trigger: 'blur' }],
   contactPerson: [{ required: true, message: '请输入经办人', trigger: 'blur' }],
-  contactPhone: [{
-    required: true,
-    message: '请输入经办人联系方式',
-    trigger: 'blur'
-  }, {
-    pattern: /^1[3-9]\d{9}$/,
-    message: '请输入正确的手机号码',
-    trigger: 'blur'
-  }]
 })
 
 // 所有文件列表
@@ -480,7 +471,7 @@ const threeDModelFileList = ref([])
 
 // 上传相关配置
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
-const headers = ref(globalHeaders())
+const headers = computed(() => globalHeaders());
 
 // 获取文件接受类型
 const getFileAccept = () => {
@@ -571,51 +562,55 @@ const handleUploadSuccess = (res, file, type) => {
 }
 
 // 删除上传文件
-const handleDeleteUploadFile = (index, type) => {
+const handleDeleteUploadFile = async (index, type) => {
+  let fileList = []
   switch (type) {
-    case 'locationPlan':
-      locationPlanFileList.value.splice(index, 1)
-      break
-    case 'expertOpinions':
-      expertOpinionsFileList.value.splice(index, 1)
-      break
-    case 'meetingMaterials':
-      meetingMaterialsFileList.value.splice(index, 1)
-      break
-    case 'siteSelectionReport':
-      siteSelectionReportFileList.value.splice(index, 1)
-      break
-    case 'approvalDocuments':
-      approvalDocumentsFileList.value.splice(index, 1)
-      break
-    case 'projectRedLine':
-      projectRedLineFileList.value.splice(index, 1)
-      break
-    case 'redLineCoordinate':
-      redLineCoordinateFileList.value.splice(index, 1)
-      break
-    case 'threeDModel':
-      threeDModelFileList.value.splice(index, 1)
-      if (threeDModelFileList.value.length === 0) {
-        form.threeDModel = undefined
-      }
-      break
+    case 'locationPlan': fileList = locationPlanFileList.value; break
+    case 'expertOpinions': fileList = expertOpinionsFileList.value; break
+    case 'meetingMaterials': fileList = meetingMaterialsFileList.value; break
+    case 'siteSelectionReport': fileList = siteSelectionReportFileList.value; break
+    case 'approvalDocuments': fileList = approvalDocumentsFileList.value; break
+    case 'projectRedLine': fileList = projectRedLineFileList.value; break
+    case 'redLineCoordinate': fileList = redLineCoordinateFileList.value; break
+    case 'threeDModel': fileList = threeDModelFileList.value; break
+    default: return
+  }
+  // 获取要删除的文件ossId
+  const delFile = fileList[index]
+  if (delFile?.ossId) {
+    try {
+      await delOss(delFile.ossId) // 调用OSS删除接口
+    } catch (err) {
+      ElMessage.warning('文件删除失败（服务器端）：' + err.message)
+    }
+  }
+  // 移除前端列表项
+  fileList.splice(index, 1)
+  // 特殊处理三维模型
+  if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
+    form.threeDModel = undefined
   }
 }
 
-// 下载模板
 const handleDownloadTemplate = (type) => {
-  console.log("🚀 ~ handleDownloadTemplate ~ proxy:", proxy)
-  if (type === 'instructions') {
-    proxy?.$download.oss('1987829892356124674');
-  } else if (type === 'polylineTemplate') {
-    proxy?.$download.oss('1987829924379635713');
-  } else if (type === 'polygonTemplate') {
-    proxy?.$download.oss('1987829950501761026');
-  } else if (type === 'threeD') {
-    proxy?.$download.oss('1987830717459607554');
+  if (!proxy?.$download) {
+    ElMessage.error('下载功能初始化失败，请刷新页面重试');
+    return;
   }
-}
+  try {
+    let ossId = '';
+    switch (type) {
+      case 'instructions': ossId = '1987829892356124674'; break;
+      case 'polylineTemplate': ossId = '1987829924379635713'; break;
+      case 'polygonTemplate': ossId = '1987829950501761026'; break;
+      case 'threeD': ossId = '1987830717459607554'; break;
+      default: ElMessage.warning('无效的模板类型'); return;
+    }
+    proxy.$download.oss(ossId);
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+  }
+};
 /** 取消按钮 */
 const cancel = async () => {
   router.push('/project/normal')
@@ -640,26 +635,32 @@ const resetForm = () => {
       form[key] = undefined
     }
   })
+  isTemporarilySaved.value = false; // 重置暂存状态
 }
 /** 暂存按钮 */
 const temporarilyForm = async () => {
-  // 准备提交数据（包含文件信息）
-  const submitData = {
-    ...form,
-    protectionLevel: form.protectionLevel.join(','),
-    projectType: form.projectType.join(','),
-    // 附加文件列表
-    locationPlan: JSON.stringify(locationPlanFileList.value),
-    expertOpinions: JSON.stringify(expertOpinionsFileList.value),
-    meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
-    siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
-    approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
-    projectRedLine: JSON.stringify(projectRedLineFileList.value),
-    redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
-    threeDModel: JSON.stringify(threeDModelFileList.value),
+  try {
+    const submitData = {
+      ...form,
+      protectionLevel: form.protectionLevel.join(','),
+      projectType: form.projectType.join(','),
+      // 附加文件列表
+      locationPlan: JSON.stringify(locationPlanFileList.value),
+      expertOpinions: JSON.stringify(expertOpinionsFileList.value),
+      meetingMaterials: JSON.stringify(meetingMaterialsFileList.value),
+      siteSelectionReport: JSON.stringify(siteSelectionReportFileList.value),
+      approvalDocuments: JSON.stringify(approvalDocumentsFileList.value),
+      projectRedLine: JSON.stringify(projectRedLineFileList.value),
+      redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
+      threeDModel: JSON.stringify(threeDModelFileList.value),
+    }
+    await stageInfo(submitData)
+    proxy?.$modal.msgSuccess("暂存成功")
+    isTemporarilySaved.value = true; // 标记已暂存
+  } catch (err) {
+    proxy?.$modal.msgError("暂存失败：" + (err.message || "未知错误"));
   }
-  await stageInfo(submitData)
-  proxy?.$modal.msgSuccess("暂存成功")
+
 }
 
 /** 提交按钮 */
@@ -672,7 +673,7 @@ const submitForm = () => {
         const submitData = {
           ...form,
           protectionLevel: form.protectionLevel.join(','),
-    projectType: form.projectType.join(','),
+          projectType: form.projectType.join(','),
           // 附加文件列表
           locationPlan: JSON.stringify(locationPlanFileList.value),
           expertOpinions: JSON.stringify(expertOpinionsFileList.value),
@@ -735,12 +736,28 @@ const handleModelPreview = () => {
   position: relative;
   min-height: 100vh;
   padding-bottom: 80px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.add-content-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .add-content {
   width: 100%;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.add-content::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .back-normal {
@@ -843,7 +860,7 @@ const handleModelPreview = () => {
   font-size: 18px;
 }
 </style>
-<style>
+<!-- <style>
 body {
   overflow: auto;
   scrollbar-width: none !important;
@@ -867,4 +884,4 @@ body::-webkit-scrollbar {
   width: 0 !important;
   height: 0 !important;
 }
-</style>
+</style> -->

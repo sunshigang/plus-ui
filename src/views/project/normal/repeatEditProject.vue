@@ -1,7 +1,7 @@
 <template>
   <div class="add-content-container" v-if="showSuccessPopup">
     <div class="add-content">
-      <div class="back-normal" @click="handleCancel"><img src="../../../assets/images/arrow-left.png" />二次填报</div>
+      <div class="back-normal" @click="handleCancel"><img src="@/assets/images/arrow-left.png" />二次填报</div>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <!-- 信息填报标签页（可编辑） -->
         <el-tab-pane label="信息填报" name="fill">
@@ -59,7 +59,7 @@
             <div class="section-header">
               <h3 class="section-title">建设信息</h3>
               <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-                <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
             <el-form ref="infoFormRef1" :model="form" label-width="230px" :rules="rules">
@@ -389,8 +389,8 @@
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleBasicInfo">
-                <img v-if="basicInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="basicInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
               </div>
               <div class="custom-collapse-content" v-if="basicInfoVisible">
@@ -445,12 +445,12 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo">
-                <img v-if="constructionInfoVisible" class="arrow-icon" src="../../../assets/images/arrow-down.png" />
-                <img v-else class="arrow-icon" src="../../../assets/images/arrow-right.png" />
+                <img v-if="constructionInfoVisible" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
                 <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
-                  <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+                  <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
               <div class="custom-collapse-content" v-if="constructionInfoVisible">
@@ -735,7 +735,7 @@
   </div>
   <div class="add-content-container" v-else>
     <div class="popup-content">
-      <img src="../../../assets/images/tick.png" class="success-icon" />
+      <img src="@/assets/images/tick.png" class="success-icon" />
       <div class="success-text">申报信息已成功提交！</div>
       <div class="button-group">
         <el-button class="btn-back" @click="handleCancel">返回项目列表</el-button>
@@ -750,6 +750,7 @@ import { ref, reactive, onMounted, getCurrentInstance } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getInfo, stageInfo, submitInfo } from '@/api/project/normal/index';
 import { useUserStore } from '@/store/modules/user'
+import { delOss } from '@/api/system/oss';
 import { propTypes } from '@/utils/propTypes';
 import { ElMessage } from 'element-plus'
 import { globalHeaders } from '@/utils/request';
@@ -843,7 +844,11 @@ const rules = reactive({
   contactPerson: [{ required: true, message: '请输入经办人', trigger: 'blur' }],
   contactPhone: [
     { required: true, message: '请输入经办人联系方式', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    {
+      pattern: /^(1[3-9]\d{9}|0\d{2,3}-\d{7,8})$/,
+      message: '请输入正确的手机号码或固话（如010-12345678）',
+      trigger: 'blur'
+    }
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
@@ -893,7 +898,7 @@ const rules = reactive({
           callback(new Error('请至少上传一个文件')) // 未上传，校验失败
         }
       },
-      trigger: ['change', 'blur', 'upload-success', 'upload-remove'] // 增加上传相关触发时机
+      trigger: ['change', 'blur'] // 增加上传相关触发时机
     }
   ],
   siteSelectionReport: [
@@ -1154,7 +1159,9 @@ const handleDeleteUploadFile = async (index, type) => {
   }
 }
 const handleFileRemove = (type) => {
-  infoFormRef1.value.validateField(type)
+  if (infoFormRef1.value) {
+    infoFormRef1.value.validateField(type)
+  }
 }
 const handleDownloadTemplate = (type) => {
   if (type === 'instructions') proxy?.$download.oss('1987829892356124674');
@@ -1171,26 +1178,26 @@ const getFileName = (name) => {
 }
 // 三维模型预览（与editProject一致）
 const handleModelPreview = () => {
-  // if (threeDModelFileList.value.length === 0) {
-  //   ElMessage.warning('请先上传三维模型文件')
-  //   return
-  // }
-  // // 2. 校验模型坐标是否填写且格式正确
-  // if (!form.modelCoordinate) {
-  //   ElMessage.warning('请输入模型坐标')
-  //   return
-  // }
-  // // 复用 rules 中的坐标格式正则（避免重复写正则）
-  // const coordinateReg = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/
-  // if (!coordinateReg.test(form.modelCoordinate)) {
-  //   ElMessage.warning('模型坐标格式错误，请输入：经度,纬度,高度,旋转方向（支持正负小数）')
-  //   return
-  // }
-  // // 3. 校验是否已暂存
-  // if (!isTemporarilySaved.value) {
-  //   ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
-  //   return
-  // }
+  if (threeDModelFileList.value.length === 0) {
+    ElMessage.warning('请先上传三维模型文件')
+    return
+  }
+  // 2. 校验模型坐标是否填写且格式正确
+  if (!form.modelCoordinate) {
+    ElMessage.warning('请输入模型坐标')
+    return
+  }
+  // 复用 rules 中的坐标格式正则（避免重复写正则）
+  const coordinateReg = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/
+  if (!coordinateReg.test(form.modelCoordinate)) {
+    ElMessage.warning('模型坐标格式错误，请输入：经度,纬度,高度,旋转方向（支持正负小数）')
+    return
+  }
+  // 3. 校验是否已暂存
+  if (!isTemporarilySaved.value) {
+    ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
+    return
+  }
   router.push({
     path: '/screen/preview',
     query: {
@@ -1211,14 +1218,14 @@ const resetForm = async () => {
       ? projectData.projectType.split(',').filter(Boolean)
       : []
     // 重置文件列表
-    locationPlanFileList.value = projectData.locationPlan ? JSON.parse(projectData.locationPlan) : []
-    expertOpinionsFileList.value = projectData.expertOpinions ? JSON.parse(projectData.expertOpinions) : []
-    meetingMaterialsFileList.value = projectData.meetingMaterials ? JSON.parse(projectData.meetingMaterials) : []
-    siteSelectionReportFileList.value = projectData.siteSelectionReport ? JSON.parse(projectData.siteSelectionReport) : []
-    approvalDocumentsFileList.value = projectData.approvalDocuments ? JSON.parse(projectData.approvalDocuments) : []
-    projectRedLineFileList.value = projectData.projectRedLine ? JSON.parse(projectData.projectRedLine) : []
-    redLineCoordinateFileList.value = projectData.redLineCoordinate ? JSON.parse(projectData.redLineCoordinate) : []
-    threeDModelFileList.value = projectData.threeDModel ? JSON.parse(projectData.threeDModel) : []
+    locationPlanFileList.value = parseFileList(projectData.locationPlan)
+    expertOpinionsFileList.value = parseFileList(projectData.expertOpinions)
+    meetingMaterialsFileList.value = parseFileList(projectData.meetingMaterials)
+    siteSelectionReportFileList.value = parseFileList(projectData.siteSelectionReport)
+    approvalDocumentsFileList.value = parseFileList(projectData.approvalDocuments)
+    projectRedLineFileList.value = parseFileList(projectData.projectRedLine)
+    redLineCoordinateFileList.value = parseFileList(projectData.redLineCoordinate)
+    threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 重置三维模型URL
     form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
     // 重置表单校验状态

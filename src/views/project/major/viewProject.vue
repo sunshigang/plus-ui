@@ -1,7 +1,7 @@
 <template>
   <div class="add-content-container">
     <div class="add-content">
-      <div class="back-normal" @click="cancel"><img src="../../../assets/images/arrow-left.png" />查看</div>
+      <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />查看</div>
       <div class="project-basic-info">
         <h3 class="project-basic-info">项目基础信息</h3>
         <el-form :model="form" label-width="230px" disabled>
@@ -55,7 +55,7 @@
         <div class="section-header">
           <h3 class="section-title">建设信息</h3>
           <el-button type="primary" @click="handleModelPreview" class="modelPreview">
-            <img class="imgModel" src="../../../assets/images/model.png" />三维场景效果预览
+            <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
         <el-form :model="form" label-width="230px" disabled>
@@ -512,18 +512,27 @@ const handleModelPreview = () => {
   })
 }
 
-// 下载模板
-const handleDownloadTemplate = (type) => {
-  if (type === 'instructions') {
-    proxy?.$download.oss('1987829892356124674');
-  } else if (type === 'polylineTemplate') {
-    proxy?.$download.oss('1987829924379635713');
-  } else if (type === 'polygonTemplate') {
-    proxy?.$download.oss('1987829950501761026');
-  } else if (type === 'threeD') {
-    proxy?.$download.oss('1987830717459607554');
+// 新增下载前校验 + 错误处理
+const handleDownloadTemplate = async (type) => {
+  if (!proxy?.$download) {
+    ElMessage.error('下载功能初始化失败，请刷新页面重试');
+    return;
   }
-}
+  try {
+    let ossId = '';
+    switch (type) {
+      case 'instructions': ossId = '1987829892356124674'; break;
+      case 'polylineTemplate': ossId = '1987829924379635713'; break;
+      case 'polygonTemplate': ossId = '1987829950501761026'; break;
+      case 'threeD': ossId = '1987830717459607554'; break;
+      default: ElMessage.warning('无效的模板类型'); return;
+    }
+    await proxy.$download.oss(ossId);
+    ElMessage.success('模板下载成功');
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+  }
+};
 
 // 取消按钮
 const cancel = () => {

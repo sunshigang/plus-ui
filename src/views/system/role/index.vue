@@ -260,7 +260,6 @@ const getList = () => {
   loading.value = true;
   listRole(proxy?.addDateRange(queryParams.value, dateRange.value)).then((res) => {
     roleList.value = res.rows;
-    console.log("🚀 ~ getList ~ roleList.value:", roleList.value)
     total.value = res.total;
     loading.value = false;
   });

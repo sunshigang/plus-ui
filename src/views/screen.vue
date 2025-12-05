@@ -41,7 +41,8 @@ const projectmMdelCoordinate = ref('')
 const projectMajorFlag = ref(false)
 const projectThreeDModelList = ref([])
 const projectIds = ref('')
-const iframeUrl = "http://127.0.0.1:46150/";
+// const iframeUrl = "http://127.0.0.1:46150/";
+const iframeUrl = "http://frp5.ccszxc.site:38082/";
 const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
@@ -825,14 +826,11 @@ onUnmounted(() => {
 
 <template>
     <div class="screen-page">
-        <!-- 新增：模型加载提示（参考preview.vue） -->
         <div v-if="isIframeLoading" class="iframe-loading">加载 3D 模型中...</div>
-
         <iframe v-if="mapSwitch" id="iframe" ref="iframeRef" frameborder="0" :src="iframeUrl"
             style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"
             @error="handleIframeError"></iframe>
         <LeafletMap v-else></LeafletMap>
-
         <my-mask>
             <template v-slot:main>
                 <top-header></top-header>
@@ -843,7 +841,6 @@ onUnmounted(() => {
                 <mapTitle />
             </template>
         </my-mask>
-
         <div class="backButton">
             <div class="back-line left-line">
                 <div class="dash-line dash1"></div>
