@@ -301,9 +301,10 @@
             </el-col>
           </el-row>
           <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
-            <el-upload ref="redLineCoordinateUploadRef" multiple :action="uploadFileUrl"
+            <!-- 核心修改1：更换上传接口地址 + 限制仅zip格式 -->
+            <el-upload ref="redLineCoordinateUploadRef" multiple :action="redLineUploadUrl"
               :before-upload="(file) => handleBeforeUpload(file, 'redLineCoordinate')"
-              :file-list="redLineCoordinateFileList" :limit="props.limit" :accept="getFileAccept()"
+              :file-list="redLineCoordinateFileList" :limit="props.limit" accept=".zip"
               :on-error="(err, file) => handleUploadError(err, file, 'redLineCoordinate')" :on-exceed="handleExceed"
               :on-success="(res, file) => handleUploadSuccess(res, file, 'redLineCoordinate')" :show-file-list="false"
               :headers="headers" class="upload-file-uploader" :disabled="props.compDisabled">
@@ -313,7 +314,7 @@
               <el-button link type="primary" @click="handleDownloadTemplate('instructions')">填写说明</el-button>
               <el-button link type="primary" @click="handleDownloadTemplate('polygonTemplate')">面模板下载</el-button>
               <el-button link type="primary" @click="handleDownloadTemplate('polylineTemplate')">线模板下载</el-button>
-              <div>（使用前，请删除模板中的实例数据）</div>
+              <div class="operation-group-data">（使用前，请删除模板中的实例数据）</div>
             </div>
             <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
               tag="ul">
@@ -370,6 +371,21 @@
         </el-form>
       </div>
     </div>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px" center class="validation-dialog"
+      destroy-on-close>
+      <div class="validation-content">
+        <!-- 验证通过提示 -->
+        <div v-if="dialogErrors.length === 0" class="success-tip">
+          ✅ 数据验证通过，无错误信息
+        </div>
+        <!-- 验证失败错误列表 -->
+        <div v-else class="error-list">
+          <div v-for="(error, index) in dialogErrors" :key="index" class="error-item">
+            {{ index + 1 }}. 报错字段【{{ error.fieldName || '未知字段' }}】报错信息：{{ error.errorMessage }}
+          </div>
+        </div>
+      </div>
+    </el-dialog>
     <div class="add-footer">
       <el-button @click="cancel">取消</el-button>
       <el-button type="warning" @click="resetForm">重置</el-button>
@@ -408,6 +424,11 @@ const props = defineProps({
   ]),
   compDisabled: propTypes.bool.def(false)
 });
+// ========== 新增：SHP验证弹窗相关数据 ==========
+const dialogVisible = ref(false) // 弹窗显隐
+const dialogTitle = ref('')      // 弹窗标题
+const dialogErrors = ref([])     // 验证错误列表
+// ==============================================
 const isTemporarilySaved = ref(false)
 // 表单引用
 const infoFormRef = ref(null)
@@ -471,7 +492,9 @@ const threeDModelFileList = ref([])
 
 // 上传相关配置
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
-const headers = ref(globalHeaders())
+// 核心修改2：定义项目红线矢量数据专属上传地址
+const redLineUploadUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/uploadShp'
+const headers = computed(() => globalHeaders());
 
 // 获取文件接受类型
 const getFileAccept = () => {
@@ -492,7 +515,17 @@ const handleBeforeUpload = (file, type) => {
     return false
   }
 
-  // 验证文件类型
+  // 核心修改3：单独校验项目红线矢量数据仅允许zip格式
+  if (type === 'redLineCoordinate') {
+    const fileExt = file.name.split('.').pop()?.toLowerCase()
+    if (fileExt !== 'zip') {
+      ElMessage.error('项目红线矢量数据仅支持上传ZIP格式文件！')
+      return false
+    }
+    return true // 跳过通用类型校验
+  }
+
+  // 验证文件类型（通用逻辑）
   const fileExt = file.name.split('.').pop()?.toLowerCase()
   if (!props.fileType.includes(fileExt)) {
     ElMessage.error(`不支持的文件类型，请上传${props.fileType.join(',')}格式的文件`)
@@ -510,6 +543,12 @@ const getFileName = (name) => {
 }
 // 上传错误处理
 const handleUploadError = (err, file, type) => {
+  // 针对SHP上传的错误弹窗处理
+  if (type === 'redLineCoordinate') {
+    dialogTitle.value = 'SHP数据上传失败'
+    dialogErrors.value = [{ fieldName: '上传流程', errorMessage: err.message || '上传过程中发生网络/服务器错误' }]
+    dialogVisible.value = true // 强制显示弹窗
+  }
   ElMessage.error(`上传失败: ${err.message || '未知错误'}`)
 }
 
@@ -520,6 +559,37 @@ const handleExceed = (files, fileList) => {
 
 // 上传成功处理
 const handleUploadSuccess = (res, file, type) => {
+  // 优先处理SHP（redLineCoordinate）类型的验证逻辑
+  if (type === 'redLineCoordinate') {
+    try {
+      const validationResult = res.data?.validationResult || {}
+      dialogTitle.value = validationResult.message || 'SHP数据验证结果'
+      dialogErrors.value = validationResult.fieldErrors || []
+      dialogVisible.value = true
+      // 只有验证通过（无错误）且后端返回了资源信息，才添加到文件列表
+      if (res.code === 200 && dialogErrors.value.length === 0) {
+        const fileItem = {
+          // 兜底：后端未返回fileName时用前端上传的文件名
+          name: res.data.fileName || file.name,
+          url: res.data.url || '',
+          ossId: res.data.ossId || ''
+        }
+        redLineCoordinateFileList.value.push(fileItem)
+        ElMessage.success('SHP文件上传并验证通过')
+      } else {
+        // 验证失败：不添加到文件列表，仅提示
+        ElMessage.warning('SHP数据验证失败，请查看弹窗详情')
+      }
+    } catch (err) { // 捕获解析错误
+      console.error('redLineCoordinate上传解析失败：', err);
+      ElMessage.error('SHP数据解析失败：' + err.message);
+      dialogTitle.value = '解析失败';
+      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message }];
+      dialogVisible.value = true;
+    }
+    return // 终止后续通用逻辑
+  }
+  // 通用上传成功逻辑（其他文件类型）
   if (res.code === 200) {
     // 根据类型更新对应文件列表
     const fileItem = {
@@ -591,22 +661,75 @@ const handleDeleteUploadFile = async (index, type) => {
     form.threeDModel = undefined
   }
 }
-
-// 下载模板
 const handleDownloadTemplate = (type) => {
-  if (!proxy || !proxy.$download) {
-    ElMessage.error('下载功能初始化失败，请刷新页面重试')
-    return
+  try {
+    // 1. 定义模板文件映射：type -> { fileName: 下载后的文件名, filePath: assets内的路径 }
+    const templateMap = {
+      instructions: {
+        fileName: '风景名胜区质检数据填写规则.xlsx',
+        filePath: '/风景名胜区质检数据填写规则.xlsx' // 请根据实际文件路径调整
+      },
+      polylineTemplate: {
+        fileName: '线模板.zip',
+        filePath: '/线模板.zip' // 请根据实际文件路径调整
+      },
+      polygonTemplate: {
+        fileName: '面模板.zip',
+        filePath: '/面模板.zip' // 请根据实际文件路径调整
+      },
+      threeD: {
+        fileName: '方岩景区模型制作标准和案例参考.doc',
+        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+      }
+    };
+
+    // 2. 校验模板类型
+    const template = templateMap[type];
+    if (!template) {
+      ElMessage.warning('无效的模板类型');
+      return;
+    }
+
+    // 3. Vite中获取assets文件的正确URL（关键：兼容开发/生产环境）
+    const fileUrl = new URL(template.filePath, import.meta.url).href;
+
+    // 4. 创建临时a标签触发下载
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = template.fileName; // 设置下载后的文件名
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); // 触发点击下载
+
+    // 5. 清理临时标签
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // 释放URL对象
+    ElMessage.success(`「${template.fileName}」下载成功`);
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+    console.error('下载模板异常：', err);
   }
-  const ossMap = {
-    instructions: '1987829892356124674',
-    polylineTemplate: '1987829924379635713',
-    polygonTemplate: '1987829950501761026',
-    threeD: '1987830717459607554'
-  }
-  const ossId = ossMap[type]
-  if (ossId) proxy.$download.oss(ossId)
-}
+};
+// 下载模板
+// const handleDownloadTemplate = (type) => {
+//   if (!proxy?.$download) {
+//     ElMessage.error('下载功能初始化失败，请刷新页面重试');
+//     return;
+//   }
+//   try {
+//     let ossId = '';
+//     switch (type) {
+//       case 'instructions': ossId = '1987829892356124674'; break;
+//       case 'polylineTemplate': ossId = '1987829924379635713'; break;
+//       case 'polygonTemplate': ossId = '1987829950501761026'; break;
+//       case 'threeD': ossId = '1987830717459607554'; break;
+//       default: ElMessage.warning('无效的模板类型'); return;
+//     }
+//     proxy.$download.oss(ossId);
+//   } catch (err) {
+//     ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+//   }
+// };
 /** 取消按钮 */
 const cancel = async () => {
   router.push('/project/major')
@@ -651,14 +774,9 @@ const temporarilyForm = async () => {
       redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
       threeDModel: JSON.stringify(threeDModelFileList.value),
     }
-    const res = await stageInfo(submitData)
-    if (res.code === 200) {
-      form.id = res.data.id // 假设接口返回data.id为项目ID，需按实际接口调整
-      proxy?.$modal.msgSuccess("暂存成功")
-      isTemporarilySaved.value = true
-    } else {
-      throw new Error(res.msg || "暂存失败")
-    }
+    await stageInfo(submitData)
+    proxy?.$modal.msgSuccess("暂存成功")
+    isTemporarilySaved.value = true; // 标记已暂存
   } catch (err) {
     proxy?.$modal.msgError("暂存失败：" + (err.message || "未知错误"))
     isTemporarilySaved.value = false
@@ -744,6 +862,14 @@ const handleModelPreview = () => {
   position: relative;
   min-height: 100vh;
   padding-bottom: 80px;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.add-content-container::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .add-content {
@@ -755,7 +881,9 @@ const handleModelPreview = () => {
 }
 
 .add-content::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .back-normal {
@@ -832,7 +960,6 @@ const handleModelPreview = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 10px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   margin-bottom: 5px;
@@ -843,16 +970,66 @@ const handleModelPreview = () => {
 }
 
 .operation-group {
-  margin-top: 10px;
-  margin-bottom: 15px;
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  flex-wrap: wrap;
+  position: absolute;
+  left: 109px;
+  width: 522px;
 }
 
-.operation-group div {
-  color: #666;
-  font-size: 18px;
+.operation-group-data {
+  position: absolute;
+  left: 282px;
+  top: 0px;
 }
+/* ========== 新增：SHP验证弹窗样式 ========== */
+.validation-dialog {
+  --el-dialog-width: 800px !important;
+}
+
+/* 弹窗主体高度控制（总高600px = 标题栏~100px + 内容区500px） */
+.validation-dialog :deep(.el-dialog__body) {
+  height: 500px;
+  padding: 24px;
+  overflow-y: auto;
+  /* 错误多的时候滚动 */
+  box-sizing: border-box;
+}
+
+.validation-content {
+  width: 100%;
+  height: 100%;
+}
+
+.success-tip {
+  font-size: 16px;
+  color: #67c23a;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.error-list {
+  width: 100%;
+}
+
+.error-item {
+  font-size: 14px;
+  color: #f56c6c;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background-color: #fef0f0;
+  border-radius: 4px;
+  border-left: 4px solid #f56c6c;
+}
+
+.error-item .field-name {
+  font-weight: bold;
+  color: #e64942;
+}
+:deep(.el-form-item__content) {
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 32px;
+  min-width: 0;
+  flex-direction: column;
+}
+
 </style>

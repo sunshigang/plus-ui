@@ -11,7 +11,7 @@
 
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleBasicInfo">
+              <div class="custom-collapse-header" @click.stop="toggleBasicInfo('fill')">
                 <img v-if="collapseVisible.fill.basic" class="arrow-icon" src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
@@ -67,12 +67,12 @@
 
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleConstructionInfo">
+              <div class="custom-collapse-header" @click.stop="toggleConstructionInfo('fill')">
                 <img v-if="collapseVisible.fill.construction" class="arrow-icon" src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
-                <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
+                <el-button type="primary" @click.stop="handleModelPreview" class="modelPreview">
                   <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
@@ -383,7 +383,7 @@
 
             <!-- 基础信息（自定义折叠） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleBasicInfo">
+              <div class="custom-collapse-header" @click.stop="toggleBasicInfo('feedback')">
                 <img v-if="collapseVisible.feedback.basic" class="arrow-icon" src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">基础信息</span>
@@ -439,13 +439,13 @@
 
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
-              <div class="custom-collapse-header" @click="toggleConstructionInfo">
+              <div class="custom-collapse-header" @click.stop="toggleConstructionInfo('feedback')">
                 <img v-if="collapseVisible.feedback.construction" class="arrow-icon"
                   src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
-                <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
+                <el-button type="primary" @click="handleModelPreview" class="modelPreview">
                   <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
                 </el-button>
               </div>
@@ -860,13 +860,23 @@ const dialog = reactive({
 });
 
 // 核心修改：切换折叠状态时，只修改当前激活标签页的状态
-const toggleBasicInfo = (tab = activeTab.value) => {
+const toggleBasicInfo = (tab) => {
+  // 容错：防止传入无效tab
+  if (!tab || !collapseVisible.value[tab]) {
+    console.warn('无效的标签页标识:', tab);
+    return;
+  }
   collapseVisible.value[tab].basic = !collapseVisible.value[tab].basic
 }
-const toggleConstructionInfo = (tab = activeTab.value) => {
+
+const toggleConstructionInfo = (tab) => {
+  // 容错：防止传入无效tab
+  if (!tab || !collapseVisible.value[tab]) {
+    console.warn('无效的标签页标识:', tab);
+    return;
+  }
   collapseVisible.value[tab].construction = !collapseVisible.value[tab].construction
 }
-
 const parseFileList = (fileData) => {
   if (!fileData) return [];
   try {
@@ -936,12 +946,12 @@ const cancel = () => {
 const clickDataDownload = async () => {
   try {
     proxy?.$modal.loading('正在打包下载数据，请稍候...');
-    const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${form.id}`;
+    const exportUrl = `/project/download/${form.id}`;
     await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
     proxy?.$modal.closeLoading();
     proxy?.$modal.msgSuccess('数据下载成功');
   } catch (err) {
-    ElMessage.error('重置失败：' + (err.message || '未知错误'))
+    ElMessage.error('下载失败：' + (err.message || '未知错误'))
   }
 }
 const clickDataShare = async () => {
@@ -1121,6 +1131,7 @@ onMounted(async () => {
   align-items: center;
   padding: 12px 15px;
   cursor: pointer;
+  justify-content: space-between;
 }
 
 .arrow-icon {

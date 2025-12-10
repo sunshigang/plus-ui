@@ -820,25 +820,74 @@ const loadProjectData = async (projectId) => {
   }
 }
 const handleDownloadTemplate = (type) => {
-  if (!proxy || !proxy.$download) {
-    ElMessage.error('下载功能初始化失败，请刷新页面重试');
-    return;
+  try {
+    // 1. 定义模板文件映射：type -> { fileName: 下载后的文件名, filePath: assets内的路径 }
+    const templateMap = {
+      instructions: {
+        fileName: '风景名胜区质检数据填写规则.xlsx',
+        filePath: '/风景名胜区质检数据填写规则.xlsx' // 请根据实际文件路径调整
+      },
+      polylineTemplate: {
+        fileName: '线模板.zip',
+        filePath: '/线模板.zip' // 请根据实际文件路径调整
+      },
+      polygonTemplate: {
+        fileName: '面模板.zip',
+        filePath: '/面模板.zip' // 请根据实际文件路径调整
+      },
+      threeD: {
+        fileName: '方岩景区模型制作标准和案例参考.doc',
+        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+      }
+    };
+
+    // 2. 校验模板类型
+    const template = templateMap[type];
+    if (!template) {
+      ElMessage.warning('无效的模板类型');
+      return;
+    }
+
+    // 3. Vite中获取assets文件的正确URL（关键：兼容开发/生产环境）
+    const fileUrl = new URL(template.filePath, import.meta.url).href;
+
+    // 4. 创建临时a标签触发下载
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = template.fileName; // 设置下载后的文件名
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); // 触发点击下载
+
+    // 5. 清理临时标签
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // 释放URL对象
+    ElMessage.success(`「${template.fileName}」下载成功`);
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+    console.error('下载模板异常：', err);
   }
-  const ossMap = {
-    instructions: '1987829892356124674',
-    polylineTemplate: '1987829924379635713',
-    polygonTemplate: '1987829950501761026',
-    threeD: '1987830717459607554'
-  };
-  const ossId = ossMap[type];
-  if (ossId) {
-    proxy.$download.oss(ossId).catch(err => {
-      ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
-    });
-  } else {
-    ElMessage.warning('暂无对应模板可下载');
-  }
-}
+};
+// const handleDownloadTemplate = (type) => {
+//   if (!proxy || !proxy.$download) {
+//     ElMessage.error('下载功能初始化失败，请刷新页面重试');
+//     return;
+//   }
+//   const ossMap = {
+//     instructions: '1987829892356124674',
+//     polylineTemplate: '1987829924379635713',
+//     polygonTemplate: '1987829950501761026',
+//     threeD: '1987830717459607554'
+//   };
+//   const ossId = ossMap[type];
+//   if (ossId) {
+//     proxy.$download.oss(ossId).catch(err => {
+//       ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
+//     });
+//   } else {
+//     ElMessage.warning('暂无对应模板可下载');
+//   }
+// }
 // 加载项目数据
 onMounted(async () => {
   const projectId = route.params.id

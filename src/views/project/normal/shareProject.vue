@@ -920,7 +920,7 @@ const cancel = () => {
 const clickDataDownload = async () => {
   try {
     proxy?.$modal.loading('正在打包下载数据，请稍候...');
-    const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${form.id}`;
+    const exportUrl = `/project/download/${form.id}`;
     await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
     proxy?.$modal.closeLoading();
     proxy?.$modal.msgSuccess('数据下载成功');

@@ -281,7 +281,7 @@ const handleExport = async () => {
     proxy?.$modal.msgWarning('请选择要导出的项目');
     return;
   }
-  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
+  const exportUrl = `/project/download/${ids.value}`;
   await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
 };
 const handleShare = async (row: InfoVO) => {

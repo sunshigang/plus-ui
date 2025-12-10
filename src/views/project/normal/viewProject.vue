@@ -463,31 +463,79 @@ const handleModelPreview = () => {
     }
   })
 }
-
-// 下载模板
-const handleDownloadTemplate = async (type) => {
-  let ossId = '';
-  switch (type) {
-    case 'instructions': ossId = '1987829892356124674'; break;
-    case 'polylineTemplate': ossId = '1987829924379635713'; break;
-    case 'polygonTemplate': ossId = '1987829950501761026'; break;
-    case 'threeD': ossId = '1987830717459607554'; break;
-    default: return;
-  }
+const handleDownloadTemplate = (type) => {
   try {
-    // 若项目有封装的下载方法，直接导入使用，替代proxy
-    // import { downloadOssFile } from '@/utils/download';
-    // await downloadOssFile(ossId);
-    // 临时兼容：若必须用proxy，增加兜底
-    if (!proxy?.$download) {
-      ElMessage.error('下载功能暂不可用，请稍后重试');
+    // 1. 定义模板文件映射：type -> { fileName: 下载后的文件名, filePath: assets内的路径 }
+    const templateMap = {
+      instructions: {
+        fileName: '风景名胜区质检数据填写规则.xlsx',
+        filePath: '/风景名胜区质检数据填写规则.xlsx' // 请根据实际文件路径调整
+      },
+      polylineTemplate: {
+        fileName: '线模板.zip',
+        filePath: '/线模板.zip' // 请根据实际文件路径调整
+      },
+      polygonTemplate: {
+        fileName: '面模板.zip',
+        filePath: '/面模板.zip' // 请根据实际文件路径调整
+      },
+      threeD: {
+        fileName: '方岩景区模型制作标准和案例参考.doc',
+        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+      }
+    };
+
+    // 2. 校验模板类型
+    const template = templateMap[type];
+    if (!template) {
+      ElMessage.warning('无效的模板类型');
       return;
     }
-    proxy.$download.oss(ossId);
+
+    // 3. Vite中获取assets文件的正确URL（关键：兼容开发/生产环境）
+    const fileUrl = new URL(template.filePath, import.meta.url).href;
+
+    // 4. 创建临时a标签触发下载
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = template.fileName; // 设置下载后的文件名
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); // 触发点击下载
+
+    // 5. 清理临时标签
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // 释放URL对象
+    ElMessage.success(`「${template.fileName}」下载成功`);
   } catch (err) {
     ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+    console.error('下载模板异常：', err);
   }
-}
+};
+// 下载模板
+// const handleDownloadTemplate = async (type) => {
+//   let ossId = '';
+//   switch (type) {
+//     case 'instructions': ossId = '1987829892356124674'; break;
+//     case 'polylineTemplate': ossId = '1987829924379635713'; break;
+//     case 'polygonTemplate': ossId = '1987829950501761026'; break;
+//     case 'threeD': ossId = '1987830717459607554'; break;
+//     default: return;
+//   }
+//   try {
+//     // 若项目有封装的下载方法，直接导入使用，替代proxy
+//     // import { downloadOssFile } from '@/utils/download';
+//     // await downloadOssFile(ossId);
+//     // 临时兼容：若必须用proxy，增加兜底
+//     if (!proxy?.$download) {
+//       ElMessage.error('下载功能暂不可用，请稍后重试');
+//       return;
+//     }
+//     proxy.$download.oss(ossId);
+//   } catch (err) {
+//     ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+//   }
+// }
 
 // 取消按钮
 const cancel = () => {

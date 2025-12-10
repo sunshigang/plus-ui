@@ -357,7 +357,7 @@ const handleExport = () => {
     proxy?.$modal.msgWarning('请先选择要导出的项目');
     return;
   }
-  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
+  const exportUrl = `/project/download/${ids.value}`;
   proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
 };
 
