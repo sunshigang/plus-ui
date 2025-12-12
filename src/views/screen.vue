@@ -34,7 +34,7 @@ const projectThreeDModelOssId = ref('') // 存储模型OSS ID（用于删除）
 const isLeaving = ref(false) // 新增：离开页面标记（修复未定义问题）
 // ========== 核心新增：模型ID防重集合 ==========
 const loadedModelIds = ref(new Set()); // 存储已加载的模型ID，避免重复加载
-const projectShareFlag = ref(false)
+
 // ===================== 原有状态保留 =====================
 const projectIdCheck = ref('')
 const projectmMdelCoordinate = ref('')
@@ -236,11 +236,15 @@ const loadThreeDModel = async () => {
         }
 
         // 处理模型URL
-        if (model?.name) {
+        if (projectIdCheck.value === '0') {
+            // projectId为0时，固定使用public文件夹的gelou.pak
             resultModel.value = 'gelou.pak';
-            isIframeLoading.value = false;
+        } else if (model?.url) {
+            // 其他情况仍解析URL
+            const path = model.url.replace(/^https?:\/\/[^\/]+\//, '');
+            resultModel.value = path.replace(/^fangyan\//, '');
         } else {
-            console.warn('模型数据缺少name字段');
+            console.warn('模型数据缺少url字段');
             isIframeLoading.value = false;
             return;
         }
@@ -409,24 +413,20 @@ bus.on('function-panel-clicked', data => {
 const clickBack = () => {
     if (isLeaving.value) return; // 防止重复点击
     isLeaving.value = true;
-    if (!projectShareFlag.value) {
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": "1991914379260149762" }
+    });
+    // 核心：删除加载的模型（使用存储的OSS ID）
+    if (projectThreeDModelOssId.value) {
         sendMsgUE({
             "Command": "DeleteAssets",
-            "Args": { "ID": "1991914379260149762" }
+            "Args": { "ID": projectThreeDModelOssId.value }
         });
-        // 核心：删除加载的模型（使用存储的OSS ID）
-        if (projectThreeDModelOssId.value) {
-            sendMsgUE({
-                "Command": "DeleteAssets",
-                "Args": { "ID": projectThreeDModelOssId.value }
-            });
-            // 清空该ID的去重缓存
-            completedModelIds.value.delete(projectThreeDModelOssId.value);
-            processedAssetStates.value.delete(`${projectThreeDModelOssId.value}_*`);
-            loadedModelIds.value.delete(projectThreeDModelOssId.value);
-        }
-    } else {
-        console.log('📌 分享模式，跳过模型删除指令');
+        // 清空该ID的去重缓存
+        completedModelIds.value.delete(projectThreeDModelOssId.value);
+        processedAssetStates.value.clear();
+        loadedModelIds.value.delete(projectThreeDModelOssId.value);
     }
     // 原有逻辑保留
     sendMsgUE({
@@ -738,7 +738,7 @@ onMounted(async () => {
         projectmMdelCoordinate.value = projectData.modelCoordinate || '';
         projectMajorFlag.value = projectData.majorFlag;
         projectThreeDModelList.value = JSON.parse(projectData.threeDModel || '[]');
-        projectShareFlag.value = projectData.shareFlag;
+
         // 处理坐标
         if (projectmMdelCoordinate.value) {
             coords.value = projectmMdelCoordinate.value.split(',').map(coord => {
@@ -751,7 +751,13 @@ onMounted(async () => {
         // 初始化模型数据
         if (projectThreeDModelList.value.length > 0) {
             modelData.value = projectThreeDModelList.value[0];
-            resultModel.value = 'gelou.pak';
+            if (modelData.value?.url) {
+                const path = modelData.value.url.replace(/^https?:\/\/[^\/]+\//, '');
+                resultModel.value = path.replace(/^fangyan\//, '');
+            } else {
+                console.warn('模型数据缺少url字段');
+                resultModel.value = '';
+            }
         } else {
             console.warn('暂无三维模型数据');
             modelData.value = null;
@@ -767,7 +773,7 @@ onMounted(async () => {
         });
         [x.value, y.value, z.value, angle.value = 0] = coords.value;
         projectMajorFlag.value = false;
-        projectThreeDModelList.value = JSON.parse('[{"name":"gelou.pak","ossId":"1991914379260149762"}]');
+        projectThreeDModelList.value = JSON.parse('[{"name":"gelou.pak","url":"http://47.96.251.128:9000/fangyan/2025/11/22/f45e982131be4c84a3b0cef8e2eedb67.pak","ossId":"1991914379260149762","uid":1763946397744,"status":"success"}]');
         modelData.value = projectThreeDModelList.value[0];
         resultModel.value = 'gelou.pak';
     }

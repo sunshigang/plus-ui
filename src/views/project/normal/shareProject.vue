@@ -68,7 +68,8 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo()">
-                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon"
+                  src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
@@ -306,7 +307,8 @@
             <div v-if="form.approveRecords && form.approveRecords.length" class="approval-item">
               <div class="approval-header"
                 style="padding: 10px 15px; background: #f9f9f9; display: flex; align-items: center;">
-                <span :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : (form.approveRecords[0].gwhApproveResult ? 'error' : 'pending')]">
+                <span
+                  :class="['status-icon', form.approveRecords[0].gwhApproveResult === '通过' ? 'success' : (form.approveRecords[0].gwhApproveResult ? 'error' : 'pending')]">
                   {{ form.approveRecords[0].gwhApproveResult === '通过' ? '✓' : (form.approveRecords[0].gwhApproveResult ? '✗' : '—') }}
                 </span>
                 <span class="approval-title">管委会审核</span>
@@ -410,7 +412,8 @@
             <!-- 建设信息（自定义折叠 + 三维预览按钮） -->
             <div class="custom-collapse-item">
               <div class="custom-collapse-header" @click="toggleConstructionInfo()">
-                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon" src="@/assets/images/arrow-down.png" />
+                <img v-if="collapseVisible[activeTab].construction" class="arrow-icon"
+                  src="@/assets/images/arrow-down.png" />
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
@@ -650,7 +653,8 @@
               <div v-for="(record, index) in form.approveRecords.slice(1)" :key="record.id || index"
                 class="approval-item">
                 <div class="approval-header">
-                  <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : (record.gwhApproveResult ? 'error' : 'pending')]">
+                  <span
+                    :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : (record.gwhApproveResult ? 'error' : 'pending')]">
                     {{ record.gwhApproveResult === '通过' ? '✓' : (record.gwhApproveResult ? '✗' : '—') }}
                   </span>
                   <span class="approval-title">管委会审核（第{{ index + 2 }}次）</span>
@@ -700,8 +704,12 @@
     <div class="add-footer">
       <el-button @click="cancel">取消</el-button>
       <el-button type="warning" v-hasPermi="['project:project:share']" @click="clickDataDownload">数据下载</el-button>
-      <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare" :disabled="shareFlag"
+      <!-- <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare" :disabled="shareFlag"
         :class="{ 'disabled-btn': shareFlag }">
+        {{ shareFlag ? '已共享' : '数据共享' }}
+      </el-button> -->
+      <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare"
+        :disabled="shareFlag || buttonLoading" :loading="buttonLoading" class="share-btn">
         {{ shareFlag ? '已共享' : '数据共享' }}
       </el-button>
     </div>
@@ -928,26 +936,51 @@ const clickDataDownload = async () => {
     ElMessage.error('下载失败：' + (err.message || '未知错误'))
   }
 }
+// const clickDataShare = async () => {
+//   try {
+//     await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
+//     buttonLoading.value = true;
+//     await shareInfo(form.id);
+//     proxy?.$modal.msgSuccess('数据共享成功');
+//     shareFlag.value = true; // 共享成功后更新状态
+//     dialog.visible = false;
+//   } catch (err) {
+//     if (err !== 'cancel') {
+//       proxy?.$modal.msgError('数据共享失败：' + (err.message || '未知错误'));
+//     }
+//   } finally {
+//     buttonLoading.value = false;
+//   }
+// }
 const clickDataShare = async () => {
+  // 前置判断：已共享则直接返回，阻止后续逻辑
+  if (shareFlag.value) {
+    ElMessage.info('该项目数据已共享，无需重复操作');
+    return;
+  }
+  // 加载中+防重复点击
+  if (buttonLoading.value) return;
+
   try {
     await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
-    buttonLoading.value = true;
-    await shareInfo(form.id);
-    proxy?.$modal.msgSuccess('数据共享成功');
-    shareFlag.value = true; // 共享成功后更新状态
-    dialog.visible = false;
+    buttonLoading.value = true; // 加载中，按钮禁用
+    const res = await shareInfo(form.id);
+    // 接口返回成功后，永久标记为已共享
+    if (res.code === 200 || res.success) { // 根据实际接口返回调整判断条件
+      proxy?.$modal.msgSuccess('数据共享成功');
+      shareFlag.value = true; // 永久禁用按钮
+    }
   } catch (err) {
     if (err !== 'cancel') {
       proxy?.$modal.msgError('数据共享失败：' + (err.message || '未知错误'));
     }
   } finally {
-    buttonLoading.value = false;
+    buttonLoading.value = false; // 无论成败，关闭加载状态
   }
 }
 </script>
 
 <style scoped>
-/* 复用editProject的基础样式，新增审批反馈相关样式 */
 :deep(.disabled-btn) {
   background-color: #e6f7ef !important;
   color: #52c41a !important;
@@ -956,7 +989,6 @@ const clickDataShare = async () => {
   opacity: 0.8;
 }
 
-/* 移除禁用按钮的hover效果 */
 :deep(.el-button--success.is-disabled:hover) {
   background-color: #e6f7ef !important;
   color: #52c41a !important;
@@ -1043,7 +1075,6 @@ const clickDataShare = async () => {
   }
 }
 
-/* 自定义折叠面板样式 */
 .custom-collapse-item {
   background-color: #fff;
   border: 1px solid #e5e7eb;
@@ -1067,9 +1098,7 @@ const clickDataShare = async () => {
 
 .collapse-title {
   font-size: 18px;
-  /* 标题字体18px */
   font-weight: 500;
-  /* 确保标题靠左，不被其他元素挤压 */
   flex-grow: 1;
   text-align: left;
 }
@@ -1082,7 +1111,6 @@ const clickDataShare = async () => {
   float: right;
 }
 
-/* 审批反馈-项目信息样式 */
 .info-content {
   padding: 10px 0;
 }
@@ -1111,18 +1139,14 @@ const clickDataShare = async () => {
   flex-wrap: wrap;
 }
 
-/* 关键修改3：新增行内文件列表样式 */
 .inline-file-list {
   flex: 1;
   display: inline-flex;
-  /* 行内flex布局 */
   align-items: center;
-  /* 垂直居中对齐 */
   gap: 10px;
   flex-wrap: wrap;
 }
 
-/* 审批反馈-审批信息样式 */
 .approval-info {
   background-color: #ffffff;
   padding: 20px;
@@ -1172,7 +1196,6 @@ const clickDataShare = async () => {
   background-color: #f5222d;
 }
 
-/* 新增：暂无审核状态样式 */
 .status-icon.pending {
   background-color: #faad14;
 }
@@ -1191,7 +1214,6 @@ const clickDataShare = async () => {
   padding: 15px;
 }
 
-/* 其他复用样式（与editProject一致） */
 .upload-file-list {
   margin-top: 10px;
 }
@@ -1224,7 +1246,6 @@ const clickDataShare = async () => {
   font-size: 14px;
 }
 
-/* 审批信息样式调整 */
 .approval-header .approval-time {
   color: #666;
   font-size: 16px;
@@ -1235,11 +1256,8 @@ const clickDataShare = async () => {
   padding: 8px 12px;
   border-radius: 4px;
   display: flex;
-  /* 改为flex布局 */
   align-items: center;
-  /* 垂直居中 */
   margin-bottom: 8px;
-  /* 增加间距 */
 }
 
 .feedback-item .label {
@@ -1247,16 +1265,31 @@ const clickDataShare = async () => {
   font-weight: 500;
   color: #666;
   flex-shrink: 0;
-  /* 防止标签被压缩 */
 }
 
 .feedback-item .value {
   flex: 1;
   color: #333;
 }
+
+:deep(.share-btn) {
+  transition: all 0.3s;
+}
+
+:deep(.share-btn.is-disabled) {
+  background-color: #e6f7ef !important;
+  color: #52c41a !important;
+  border-color: #b7eb8f !important;
+  cursor: not-allowed !important;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+:deep(.share-btn.is-loading) {
+  cursor: wait !important;
+}
 </style>
 <style>
-/* 全局滚动条隐藏（复用） */
 body {
   overflow: auto;
   scrollbar-width: none !important;

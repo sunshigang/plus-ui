@@ -41,7 +41,7 @@ import { ElMessage, ElAlert } from 'element-plus'
 import { getInfo } from '@/api/project/normal/index'
 import { useRouter, useRoute } from 'vue-router'
 import messageHandler from '@/libs/messageHandler.js'
-const projectShareFlag = ref(false);
+
 // 基础配置
 // const iframeUrl = ref('http://127.0.0.1:46150/')
 const iframeUrl = ref('http://frp5.ccszxc.site:38082/')
@@ -138,20 +138,9 @@ const clickBack = async () => {
     isClicking.value = true;
     isDeletingModel.value = true;
     try {
-        if (!projectShareFlag.value) {
-            isDeletingModel.value = true;
-            // 有模型ID才执行删除
-            if (projectThreeDModelOssId.value) {
-                console.log('📌 非分享模式，执行模型删除指令');
-                await sendDeleteAssets(projectThreeDModelOssId.value);
-            }
-        } else {
-            // 🚨 2.2 shareFlag为true时，跳过删除，直接打印日志
-            console.log('📌 分享模式，跳过模型删除指令');
-            isDeletingModel.value = false; // 确保不显示删除加载
-            // 清理可能残留的删除定时器（避免内存泄漏）
-            clearTimeout(deleteAssetsTimer.value);
-            deleteAssetsResolve.value = null;
+        // ========== 改造：先执行DeleteAssets并等待回调/超时 ==========
+        if (projectThreeDModelOssId.value) {
+            await sendDeleteAssets(projectThreeDModelOssId.value);
         }
         sendMsgUE({
             "Command": "SwitchCamera",
@@ -323,7 +312,7 @@ const loadThreeDModel = async () => {
             ElMessage.warning('模型ID重复，已加载现有模型！');
             return; // 终止加载逻辑
         }
-        projectShareFlag.value = projectData.shareFlag;
+
         projectThreeDModelOssId.value = currentModelId;
         let modelUrl = model.url;
         if (modelUrl) {
