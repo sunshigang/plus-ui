@@ -799,62 +799,9 @@ bus.on('search-relic', data => {
 });
 
 // ===================== 11. 生命周期处理（核心：优先执行Token校验） =====================
-onMounted(async () => {
-    // ========== 第一步：Token提取与校验（核心迁移逻辑） ==========
-    const userStore = useUserStore();
-    const permissionStore = usePermissionStore();
-    // 提取token并立即移除URL中的token（核心：防止重复读取）
-    const urlToken = extractTokenFromUrl(true);
+onMounted(async () => { 
 
     try {
-        // 1. URL中有Token时优先校验
-        if (urlToken) {
-            const { isValid, isExpired } = await validateToken(urlToken);
-
-            // Token过期：提示+跳登录
-            if (isExpired) {
-                ElMessage.error('Token已过期，请重新替换有效Token后访问！');
-                setToken('');
-                router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`);
-                return;
-            }
-
-            // Token无效：提示+跳登录
-            if (!isValid) {
-                ElMessage.error('Token无效，请检查Token是否正确！');
-                setToken('');
-                router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`);
-                return;
-            }
-
-            // Token有效：存入本地
-            setToken(urlToken);
-            ElMessage.success('Token验证通过，正在进入页面...');
-        }
-
-        // 2. 验证本地Token是否存在
-        if (!getToken()) {
-            ElMessage.error('未检测到有效Token，请通过合法链接访问！');
-            router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`);
-            return;
-        }
-
-        // 3. 加载用户信息+动态路由（确保权限正常）
-        if (!userStore.userId) {
-            await userStore.getInfo();
-            const accessRoutes = await permissionStore.generateRoutes();
-            accessRoutes.forEach(route => router.addRoute(route));
-            permissionStore.setRoutes(accessRoutes);
-        }
-
-        // ========== 第二步：提取并存储URL中的clientId ==========
-        const clientId = extractClientIdFromUrl();
-        if (clientId) {
-            const appStore = useAppStore();
-            appStore.setUrlClientId(clientId);
-            console.log('✅ 已存储URL中的clientId：', clientId);
-        }
-
         // ========== 第三步：原有业务逻辑执行 ==========
         // 注册OnLoadAssets监听（控制加载提示）
         messageHandler.onCommand('OnLoadAssets', handleOnLoadAssets);

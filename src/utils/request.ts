@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useUserStore } from '@/store/modules/user';
 import { useAppStore } from '@/store/modules/app'; // 导入app store
-import { getToken } from '@/utils/auth';
+import { getToken ,getClientId} from '@/utils/auth';
 import { tansParams, blobValidate } from '@/utils/ruoyi';
 import cache from '@/plugins/cache';
 import { HttpStatus } from '@/enums/RespEnum';
@@ -12,6 +12,7 @@ import { getLanguage } from '@/lang';
 import { encryptBase64, encryptWithAes, generateAesKey, decryptWithAes, decryptBase64 } from '@/utils/crypto';
 import { encrypt, decrypt } from '@/utils/jsencrypt';
 import router from '@/router';
+import { get } from 'http';
 
 const encryptHeader = 'encrypt-key';
 let downloadLoadingInstance: LoadingInstance;
@@ -24,7 +25,7 @@ export const isRelogin = { show: false };
 export const globalHeaders = () => {
   const appStore = useAppStore();
   // 优先级：Pinia存储的URL clientId > 环境变量
-  const clientId = appStore.urlClientId || import.meta.env.VITE_APP_CLIENT_ID;
+  const clientId = getClientId() || import.meta.env.VITE_APP_CLIENT_ID;
   return {
     Authorization: 'Bearer ' + getToken(),
     clientid: clientId,
@@ -47,19 +48,18 @@ service.interceptors.request.use(
     // 对应国际化资源文件后缀
     config.headers['Content-Language'] = getLanguage();
 
-    // 核心：每次请求实时读取Pinia中的clientId，覆盖请求头
-    const appStore = useAppStore();
-    const clientId = appStore.urlClientId || import.meta.env.VITE_APP_CLIENT_ID;
-    config.headers['clientid'] = clientId;
-
     const isToken = config.headers?.isToken === false;
     // 是否需要防止数据重复提交
     const isRepeatSubmit = config.headers?.repeatSubmit === false;
     // 是否需要加密
     const isEncrypt = config.headers?.isEncrypt === 'true';
 
+    const clientId = getClientId() || import.meta.env.VITE_APP_CLIENT_ID;
+
+    console.log('Request Interceptor - clientId:', getClientId());
     if (getToken() && !isToken) {
       config.headers['Authorization'] = 'Bearer ' + getToken(); // 自定义token
+      config.headers['ClientId'] = clientId; // 自定义clientId
     }
     // get请求映射params参数
     if (config.method === 'get' && config.params) {
