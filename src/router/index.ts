@@ -114,7 +114,7 @@ const router = createRouter({
 
 
 // 动态添加路由（保留原有逻辑，但改为从permissionStore读取，避免重复）
-// dynamicRoutes.forEach(route => { router.addRoute(route); }); // 注释掉，改为在generateRoutes中处理
+dynamicRoutes.forEach(route => { router.addRoute(route); }); // 注释掉，改为在generateRoutes中处理
 
 /**
  * 优化：从URL直接提取token（适配 http://xxx/screen/screen?id=xxx&clientId=xxx&token=xxx 格式）
