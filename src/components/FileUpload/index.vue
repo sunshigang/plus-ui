@@ -23,10 +23,10 @@
     <div v-if="showTip && !disabled" class="el-upload__tip">
       请上传
       <template v-if="fileSize">
-        大小不超过 <b style="color: #f56c6c">{{ fileSize }}MB</b>
+        大小不超过 <b style="color: #409eff">{{ fileSize }}MB</b>
       </template>
       <template v-if="fileType">
-        格式为 <b style="color: #f56c6c">{{ fileType.join('/') }}</b>
+        格式为 <b style="color: #409eff">{{ fileType.join('/') }}</b>
       </template>
       的文件
     </div>
@@ -59,7 +59,11 @@ const props = defineProps({
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型, 例如['png', 'jpg', 'jpeg']
-  fileType: propTypes.array.def(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar', 'dwg', 'DWG','dxf', 'jpg', 'jpeg', 'png', 'cpg','CPG', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xml','xml', 'shx', 'FBX', 'obj']),
+  fileType: propTypes.array.def([
+    'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'pdf', 'zip', 'rar',
+    'dwg', 'DWG', 'dxf', 'DXF', 'jpg', 'jpeg', 'png', 'cpg', 'CPG', 'dbf',
+    'prj', 'sbn', 'sbx', 'shp', 'shp.xml', 'xml', 'shx', 'FBX', 'fbx', 'obj'
+  ]),
   // 是否显示提示
   isShowTip: propTypes.bool.def(true),
   // 禁用组件（仅查看文件）

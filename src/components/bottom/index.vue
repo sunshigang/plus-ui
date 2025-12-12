@@ -15,31 +15,16 @@
             </div>
         </div>
     </div>
-    <div class="backButton">
-        <!-- 左侧线条区域 -->
-        <div class="back-line left-line">
-            <div class="dash-line dash1"></div>
-            <div class="solid-circle"></div>
-            <div class="dash-line dash2"></div>
-            <div class="hollow-circle"></div>
-            <div class="dash-line dash3"></div>
-        </div>
-        <!-- 返回按钮 -->
-        <div class="backImg" @click="clickBack"></div>
-        <!-- 右侧线条区域 -->
-        <div class="back-line right-line">
-            <div class="dash-line dash1"></div>
-            <div class="solid-circle"></div>
-            <div class="dash-line dash2"></div>
-            <div class="hollow-circle"></div>
-            <div class="dash-line dash3"></div>
-        </div>
-    </div>
-    <div class="legend" v-if="legendShowHide">
-        <div class="legendBody">
-            <div class="legendTitle" v-for="item in legendItems" :key="item.id">
-                <div class="legendRect"
-                    :style="{ background: item.rgb, border: item.id <= 26 ? '2px solid #25A239' : 'none' }"></div>
+
+    <!-- 动态绑定图例容器高度 + 背景图 -->
+    <div class="legend" v-if="legendVisible" :style="legendContainerStyle">
+        <div class="legendBody" :style="legendBodyStyle">
+            <div class="legendTitle" v-for="item in filteredLegendItems" :key="item.id">
+                <div class="legendRect" :style="{
+                    borderColor: item.rgb,
+                    background: convertRgbToRgba(item.rgb, 0.2),
+                    border: '2px solid ' + item.rgb
+                }"></div>
                 <div class="legendText">{{ item.name }}</div>
             </div>
         </div>
@@ -48,18 +33,21 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, computed } from 'vue'
+import { ref, reactive, toRefs, onMounted, onUnmounted, watch, computed } from 'vue'
 import bus from '../../libs/eventbus'
 const route = useRoute()
+const legendVisible = ref(false)
+const filteredLegendItems = ref([]);
 const timeIsShow = ref(false)
-const projectType = ref(''); // 初始为空
-const years = ref([2022,2023, 2024, 2025]) // 年份数组
-const currentYear = ref(2025) // 默认选中 2023
+const years = ref([2022, 2023, 2024, 2025]) // 年份数组
+const currentYear = ref(2025) // 默认选中 2025
 const router = useRouter()
-const legendShowHide = ref(false) // 图例显示隐藏状态
-const legendItems = ref([
+const selectedLayerNames = ref([]);
+
+// 静态图例数据（保留原有RGB）
+const staticLegendItems = ref([
     { id: 1, name: '一级保护区', rgb: 'rgb(213, 133, 146)' },
-    { id: 2, name: '二级保护区', rgb: 'rgb(229, 227, 108) ' },
+    { id: 2, name: '二级保护区', rgb: 'rgb(229, 227, 108)' },
     { id: 3, name: '三级保护区', rgb: 'rgb(145, 149, 194)' },
     { id: 4, name: '灵岩山湖景区', rgb: 'rgb(87, 116, 115)' },
     { id: 5, name: '方山山林景区', rgb: 'rgb(130, 145, 143)' },
@@ -69,7 +57,7 @@ const legendItems = ref([
     { id: 9, name: '居民社会用地', rgb: 'rgb(255, 166, 78)' },
     { id: 10, name: '交通与功能用地', rgb: 'rgb(255, 255, 255)' },
     { id: 11, name: '林地', rgb: 'rgb(81, 137, 14)' },
-    { id: 12, name: '园地', rgb: 'rgb(94, 182, 60,0.2) ' },
+    { id: 12, name: '园地', rgb: 'rgb(94, 182, 60)' },
     { id: 13, name: '耕地', rgb: 'rgb(187, 186, 34)' },
     { id: 14, name: '草地', rgb: 'rgb(128, 160, 93)' },
     { id: 15, name: '水域', rgb: 'rgb(32, 227, 255)' },
@@ -84,15 +72,98 @@ const legendItems = ref([
     { id: 24, name: '方岩风景名胜区范围_16版', rgb: 'rgb(197, 229, 252)' },
     { id: 25, name: '方岩风景名胜区总体规划范围', rgb: 'rgb(204, 252, 228)' },
     { id: 26, name: '在编方岩风景名胜区范围', rgb: 'rgb(255, 190, 190)' },
-])
-// 滑块移动方法（向右/向左切换年份）
+    { id: 27, name: '生态保护红线', rgb: 'rgb(255, 0, 0)' },
+    { id: 28, name: '一级人文景源', rgb: 'rgb(255, 102, 102)' },
+    { id: 29, name: '二级人文景源', rgb: 'rgb(255, 153, 102)' },
+    { id: 30, name: '三级人文景源', rgb: 'rgb(255, 204, 102)' },
+    { id: 31, name: '一级自然景源', rgb: 'rgb(102, 255, 102)' },
+    { id: 32, name: '二级自然景源', rgb: 'rgb(102, 255, 153)' },
+    { id: 33, name: '三级自然景源', rgb: 'rgb(102, 255, 204)' },
+    { id: 34, name: '行政村', rgb: 'rgb(102, 153, 255)' },
+    { id: 35, name: '停车场', rgb: 'rgb(204, 102, 255)' },
+    { id: 36, name: '岩洞寺庙文化景源', rgb: 'rgb(153, 102, 255)' },
+    { id: 37, name: '胡公文化景源', rgb: 'rgb(204, 102, 153)' },
+    { id: 38, name: '书院文化景源', rgb: 'rgb(102, 204, 153)' },
+    { id: 39, name: '抗战历史文化景源', rgb: 'rgb(255, 102, 153)' },
+    { id: 40, name: '对外交通', rgb: 'rgb(255, 204, 0)' },
+    { id: 41, name: '机动车道', rgb: 'rgb(204, 204, 0)' },
+    { id: 42, name: '一级车行道', rgb: 'rgb(153, 204, 0)' },
+    { id: 43, name: '一级游步道', rgb: 'rgb(102, 204, 0)' },
+    { id: 44, name: '二级游步道', rgb: 'rgb(51, 204, 0)' },
+    { id: 45, name: '客运索道', rgb: 'rgb(0, 204, 51)' },
+    { id: 46, name: '主要景观游赏线', rgb: 'rgb(0, 204, 102)' },
+]);
+
+// 动态备注图例项
+const dynamicRemarkLegendItems = ref([]);
+
+// 合并静态+动态图例
+const legendItems = computed(() => {
+    const remarkItems = dynamicRemarkLegendItems.value.map((item, index) => ({
+        id: 47 + index,
+        // 🔥 修复：优先用 item.layerName（和图层管理统一），无则用 item.name
+        name: item.layerName || item.name || `未命名备注${index + 1}`,
+        rgb: item.rgb || 'rgb(252, 218, 78)',
+        isRemark: true
+    }));
+    return [...staticLegendItems.value, ...remarkItems];
+});
+
+// 核心：RGB转RGBA（添加0.2透明度）
+const convertRgbToRgba = (rgbStr, opacity = 0.2) => {
+    // 匹配rgb(xxx, xxx, xxx)格式，提取数字
+    const match = rgbStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (match) {
+        const [, r, g, b] = match;
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    // 兼容已有带透明度的RGB（兜底）
+    return rgbStr;
+};
+
+// 核心：动态计算图例容器样式（含高度、背景图）
+const legendContainerStyle = computed(() => {
+    const len = filteredLegendItems.value.length;
+    // 动态高度：1个=100px / 2个=120px / ≥3个=156px
+    let height = len === 1 ? '100px' : len === 2 ? '120px' : '156px';
+
+    return {
+        zIndex: 2,
+        pointerEvents: 'auto',
+        position: 'absolute',
+        left: '11%',
+        bottom: '4%',
+        width: '330px',
+        height: height,
+        // 背景图随容器尺寸自适应
+        background: 'url(/legend.png) no-repeat center center',
+        backgroundSize: '100% 100%', // 关键：背景图拉伸适配容器高度
+        backgroundPosition: '0 0', // 确保背景图从左上角开始显示
+    };
+});
+
+// 核心：动态计算图例内容区高度
+const legendBodyStyle = computed(() => {
+    const len = filteredLegendItems.value.length;
+    let height = len === 1 ? '40%' : len === 2 ? '55%' : '61%';
+    return {
+        marginLeft: '30px',
+        marginTop: '34px',
+        width: '80%',
+        height: height,
+        overflowY: 'auto', // 超过3个时显示滚动条
+        overflowX: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start'
+    };
+});
+
+// 滑块移动方法
 const moveSlider = direction => {
     const currentIndex = years.value.findIndex(item => item === currentYear.value)
     let newIndex = currentIndex + direction
-    // 边界处理
     newIndex = Math.max(0, Math.min(newIndex, years.value.length - 1))
-    currentYear.value = years.value[newIndex]
-
     currentYear.value = years.value[newIndex]
 }
 const clickLeftArrow = () => {
@@ -101,91 +172,138 @@ const clickLeftArrow = () => {
 const clickRightArrow = () => {
     moveSlider(1)
 }
-onMounted(() => {
-    bus.on('previewModel', data => {
-        projectType.value = data.type;
+
+// ========== 提取所有Bus回调为命名函数（关键：确保off能精准销毁） ==========
+// 1. 备注图例更新回调
+const handleUpdateRemarkLegend = (remarkList) => {
+    if (!remarkList || !Array.isArray(remarkList) || remarkList.length === 0) {
+        dynamicRemarkLegendItems.value = [];
+        filteredLegendItems.value = [];
+        return;
+    }
+    dynamicRemarkLegendItems.value = remarkList.map((item, index) => ({
+        id: 47 + index,
+        name: item.layerName || `未命名备注${index + 1}`,
+        rgb: item.rgb || 'rgb(252, 218, 78)',
+        isRemark: true
+    }));
+    bus.emit('layerNamesSelected', selectedLayerNames.value || []);
+};
+
+// 2. 选中图层名称过滤图例回调
+const handleLayerNamesSelected = (selectedNames) => {
+    if (!selectedNames || selectedNames.length === 0) {
+        filteredLegendItems.value = [];
+        legendVisible.value = false;
+        return;
+    }
+    // 过滤图例（匹配名称）
+    filteredLegendItems.value = legendItems.value.filter(item => {
+        return selectedNames.includes(item.name);
     });
-    bus.on('function-panel-clicked', index => {
-        console.log('🚀 ~ index:', index)
-        if (index.index === 0) {
-            legendShowHide.value = true
-        } else if (index.index === 1) {
-            // legendShowHide.value = !legendShowHide.value
-            timeIsShow.value = false
-            legendShowHide.value = false
-        } else if (index.index === 2) {
-            legendShowHide.value = false
-            timeIsShow.value = index.isSelected // 切换时间轴显示状态
-            if (!index.isSelected) {
-                // 如果时间轴被隐藏，重置为默认年份
-                currentYear.value = 2025
-            }
+    // 去重
+    filteredLegendItems.value = [...new Map(
+        filteredLegendItems.value.map(item => [item.name, item])
+    ).values()];
+    legendVisible.value = true;
+};
+
+// 3. 图例显隐回调
+const handleLegendVisibility = (isVisible) => {
+    legendVisible.value = isVisible;
+};
+
+// 4. 功能面板点击回调
+const handleFunctionPanelClicked = (index) => {
+    if (index.index === 2) {
+        timeIsShow.value = index.isSelected
+        if (!index.isSelected) {
+            currentYear.value = 2025
         }
-    })
-    bus.on('scheme-review-clicked', data => {
-        legendShowHide.value = data
-    })
-    bus.on('vector-layer-clicked', data => {
-        if (data) {
-            legendShowHide.value = false
-        }
-    })
-    bus.on('planning-achievement-clicked', data => {
-        legendShowHide.value = false
-    })
-})
-// 监听currentYear变化，自动触发事件
-watch(currentYear, newYear => {
-    console.log('🚀 ~ newYear:', newYear)
-    bus.emit('time-change', newYear)
-})
-const clickBack = () => {
-    if (route.path == '/screen/screen') {
-        router.push('/');
     } else {
-        // 新增：根据存储的项目类型跳转对应页面
-        if (projectType.value === '重大项目') {
-            router.push('/project/major');
-        } else if (projectType.value === '一般项目') {
-            router.push('/project/normal');
-        } else {
-            // 默认跳转（防止无类型时异常）
-            router.push('/project/major');
-        }
+        timeIsShow.value = false
     }
 };
+
+// 5. 方案审查回调
+const handleSchemeReviewClicked = (data) => {
+    if (!data.isShow) filteredLegendItems.value = [];
+};
+
+// 6. 矢量图层点击回调（空函数，保留）
+const handleVectorLayerClicked = (data) => {
+    // 无操作，仅保留监听
+};
+
+// 7. 规划成果点击回调（空函数，保留）
+const handlePlanningAchievementClicked = (data) => {
+    // 无操作，仅保留监听
+};
+
+onMounted(() => {
+    // 监听备注图例更新
+    bus.on('updateRemarkLegend', handleUpdateRemarkLegend);
+
+    // 监听选中的图层名称，过滤图例
+    bus.on('layerNamesSelected', handleLayerNamesSelected);
+
+    // 监听图例显隐事件
+    bus.on('legend-visibility', handleLegendVisibility);
+
+    // 监听功能面板点击
+    bus.on('function-panel-clicked', handleFunctionPanelClicked);
+
+    // 监听方案审查
+    bus.on('scheme-review-clicked', handleSchemeReviewClicked);
+
+    // 监听矢量图层
+    bus.on('vector-layer-clicked', handleVectorLayerClicked);
+
+    // 监听规划成果
+    bus.on('planning-achievement-clicked', handlePlanningAchievementClicked);
+})
+
+// ========== 补全所有Bus监听销毁 ==========
+onUnmounted(() => {
+    // 1. 销毁备注图例更新监听
+    bus.off('updateRemarkLegend', handleUpdateRemarkLegend);
+    // 2. 销毁选中图层名称监听
+    bus.off('layerNamesSelected', handleLayerNamesSelected);
+    // 3. 销毁图例显隐监听
+    bus.off('legend-visibility', handleLegendVisibility);
+    // 4. 销毁功能面板点击监听
+    bus.off('function-panel-clicked', handleFunctionPanelClicked);
+    // 5. 销毁方案审查监听
+    bus.off('scheme-review-clicked', handleSchemeReviewClicked);
+    // 6. 销毁矢量图层点击监听
+    bus.off('vector-layer-clicked', handleVectorLayerClicked);
+    // 7. 销毁规划成果点击监听
+    bus.off('planning-achievement-clicked', handlePlanningAchievementClicked);
+
+    // 可选：清理其他可能的定时器/监听（如果有）
+    // 例如：如果有手动创建的setTimeout/setInterval，需在此clear
+});
+
+// 监听年份变化
+watch(currentYear, newYear => {
+    console.log("🚀 ~ newYear:", newYear)
+    bus.emit('time-change', newYear)
+})
 </script>
 
 <style lang="scss" scoped>
+// 仅保留基础样式，动态属性全部移到JS的computed中
 .legend {
-    z-index: 2;
-    pointer-events: auto;
-    position: absolute;
-    width: 300px;
-    height: 156px;
-    left: 11%;
-    bottom: 4%;
-    background: url(../../static/image/bottom/legend.png) no-repeat;
-    background-size: 100% 100%;
-    .legendBody {
-        margin-left: 30px;
-        margin-top: 34px;
-        width: 80%;
-        height: 61%;
-        overflow-y: auto;
-        /* 超出高度出现垂直滚动条 */
-        display: flex;
-        flex-direction: column;
-        /* 移除水平居中，让内容从顶部开始 */
-        justify-content: flex-start;
+    // 清空固定属性，由legendContainerStyle动态绑定覆盖
 
+    .legendBody {
         &::-webkit-scrollbar {
             width: 6px; // 滚动条宽度
         }
 
         &::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-            border-radius: 3px; // 滚动条圆角
+            background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块透明
+            border-radius: 3px;
         }
 
         &::-webkit-scrollbar-track {
@@ -195,15 +313,11 @@ const clickBack = () => {
         .legendTitle {
             display: flex;
             align-items: center;
-            /* 垂直居中 */
-            margin-bottom: 15px;
-            /* 每个标题间距 */
+            margin-bottom: 15px; // 每个图例项间距
 
             .legendRect {
                 width: 32px;
                 height: 16px;
-                background: rgba(55, 72, 35, 0.6);
-                border: 2px solid #25a239;
                 margin-right: 16px;
                 margin-left: 5px;
             }
@@ -215,10 +329,7 @@ const clickBack = () => {
                 font-size: 16px;
                 color: #ffffff;
                 line-height: 16px;
-                /* 与文字高度一致，垂直居中 */
                 text-align: left;
-                font-style: normal;
-                text-transform: none;
             }
         }
     }
@@ -228,8 +339,8 @@ const clickBack = () => {
     z-index: 2;
     pointer-events: auto;
     position: absolute;
-    left: 50%; // 先让元素左边缘对齐屏幕50%处
-    transform: translateX(-490px); // 再向左移动半个宽度490px，实现水平居中
+    left: 50%;
+    transform: translateX(-490px);
     bottom: 190px;
     width: 980px;
     height: 108px;
@@ -303,23 +414,14 @@ const clickBack = () => {
     .time-unit {
         display: flex;
         flex-direction: column;
-        /* 子元素垂直排列 */
         align-items: center;
-        /* 水平居中 */
         justify-content: center;
-        /* 垂直居中 */
-
         position: relative;
         width: 82px;
         height: 100%;
-        /* 占满父容器高度，确保垂直居中 */
-        /* 移除旧的 margin，避免干扰 */
-        margin-left: 0;
-        margin-top: 0;
 
         .star-icon-container {
             width: 38px;
-            /* 与选中星星的最大宽度一致 */
             height: 38px;
             display: flex;
             justify-content: center;
@@ -346,7 +448,6 @@ const clickBack = () => {
 
         .year-text {
             margin: 5px 0 0 0;
-            /* 仅保留与星星的垂直间距 */
             color: #fff;
             font-family: 'DINPro';
             font-weight: 400;
@@ -356,126 +457,6 @@ const clickBack = () => {
         .year-text.active {
             font-weight: 500;
         }
-    }
-}
-
-.backButton {
-    z-index: 2;
-    pointer-events: auto;
-    position: absolute;
-    left: 50%; // 与time-column一致，左边缘先对齐屏幕50%处
-    transform: translateX(-180px); // 再向左移动半个宽度180px，实现水平居中
-    bottom: 40px;
-    width: 360px;
-    height: 99px;
-    display: flex;
-    justify-content: center;
-    align-content: center;
-
-    /* 通用线条样式 */
-    .back-line {
-        display: flex;
-        align-items: center;
-        height: 100%;
-    }
-
-    /* 左侧线条：从右向左排列 */
-    .left-line {
-        flex-direction: row-reverse;
-        margin-right: 60px;
-        /* 与按钮间距 */
-
-        /* 虚线通用样式 */
-        .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
-            height: 1px;
-        }
-
-        /* 实心圆 */
-        .solid-circle {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ffd700;
-            margin: 0 3px;
-        }
-
-        /* 空心圆 */
-        .hollow-circle {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            border: 2px solid #ffd700;
-            background-color: transparent;
-            margin: 0 3px;
-        }
-
-        /* 左侧各段虚线长度 */
-        .dash1 {
-            width: 22px;
-        }
-
-        .dash2 {
-            width: 29px;
-        }
-
-        .dash3 {
-            width: 52px;
-        }
-    }
-
-    /* 右侧线条：从左向右排列 */
-    .right-line {
-        flex-direction: row;
-        margin-left: 10px;
-        /* 与按钮间距 */
-
-        /* 虚线通用样式（与左侧一致） */
-        .dash-line {
-            background: repeating-linear-gradient(to right, #ffd700, #ffd700 2px, transparent 2px, transparent 3px);
-            height: 1px;
-        }
-
-        /* 实心圆（与左侧一致） */
-        .solid-circle {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #ffd700;
-            margin: 0 3px;
-        }
-
-        /* 空心圆（与左侧一致） */
-        .hollow-circle {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            border: 2px solid #ffd700;
-            background-color: transparent;
-            margin: 0 3px;
-        }
-
-        /* 右侧各段虚线长度（与左侧对称） */
-        .dash1 {
-            width: 22px;
-        }
-
-        .dash2 {
-            width: 29px;
-        }
-
-        .dash3 {
-            width: 52px;
-        }
-    }
-
-    .backImg {
-        position: absolute;
-        width: 101px;
-        height: 99px;
-        background: url(../../static/image/bottom/back1.png) no-repeat;
-        background-size: 100% 100%;
-        cursor: pointer;
     }
 }
 </style>

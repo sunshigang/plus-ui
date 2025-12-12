@@ -11,7 +11,6 @@
                         @change="handleAllCheckA"></el-checkbox>
                     <div :class="layerContentStyleA == true ? 'layerContentShow' : 'layerContentHide'"
                         @click="clickLayerContentA"></div>
-
                 </div>
                 <transition name="fade">
                     <div v-if="layerContentStyleA" class="contentBodyA">
@@ -225,7 +224,7 @@
                     </div>
                 </transition>
             </div>
-            <div class="layerContentA">
+            <div class="layerContentA" v-show="showRemarkColumn">
                 <div class="layerContentTitle">
                     <div class="layerContentLabel">备注信息</div>
                     <el-checkbox v-model="isAllCheckedRemark" class="scroll-custom-checkbox"
@@ -237,7 +236,7 @@
                     <div v-if="layerContentStyleRemark" class="contentBodyA">
                         <div class="scrollContentA">
                             <div class="scrollDetailA" v-for="item in checkItemsRemark" :key="item.id">
-                                <div class="scrollDetailFontA">{{ item.type }}：{{ item.layerName }}</div>
+                                <div class="scrollDetailFontA">{{ item.layerName }}</div>
                                 <el-checkbox v-model="item.checked" class="scroll-custom-checkbox"
                                     @change="handleCheckChangeRemark(item)" />
                             </div>
@@ -248,10 +247,7 @@
         </div>
     </div>
     <div class="functionPanel" v-show="functionPanelShowHide" v-hasPermi="['screen:function:review']">
-        <!-- 箭头部分：根据当前选中的按钮动态调整位置（若多个选中，默认优先显示最后一个选中的） -->
         <div class="arrow" :style="arrowStyle"></div>
-
-        <!-- 文字区域：点击切换自身选中状态 -->
         <div class="text-container">
             <div class="text-item" @click="selectItem(0)" :class="{ active: isSelected[0] }"
                 v-hasPermi="['screen:function:redline']">
@@ -266,16 +262,10 @@
                 时空分析
             </div>
         </div>
-
-        <!-- 圆圈区域：根据按钮选中状态动态切换实心/空心（与文字按钮对应） -->
         <div class="circle-container">
             <div class="circle" :class="{ solid: isSelected[0] }" v-hasPermi="['screen:function:redline']"></div>
-            <!-- 对应“红线叠加对比” -->
             <div class="circle" :class="{ solid: isSelected[1] }" v-hasPermi="['screen:function:splitscreen']"></div>
-            <!-- 对应“分屏比对” -->
             <div class="circle" :class="{ solid: isSelected[2] }" v-hasPermi="['screen:function:analysis']"></div>
-            <!-- 对应“时空分析” -->
-            <!-- 移除原有的固定实心圆圈，改为与按钮状态联动 -->
         </div>
     </div>
     <div class="drawFunctionBody" v-if="drawFunctionShowHide" v-hasPermi="['screen:function:vector']">
@@ -298,9 +288,49 @@
 </template>
 
 <script setup>
-import { toRefs, reactive, ref, onMounted, computed, watch } from 'vue'
+import { toRefs, reactive, ref, onMounted, onUnmounted, computed, watch } from 'vue' // 新增 onUnmounted
 import bus from '../../libs/eventbus'
 import { getMarkList } from "./remark.js";
+
+// 存储所有选中的图层名称（去重）
+const selectedLayerNames = ref([]);
+const currentModule = ref('')
+const showRemarkColumn = ref(false)
+
+// 核心方法：更新选中的图层名称列表并发送事件
+const updateSelectedLayerNames = () => {
+    selectedLayerNames.value = [];
+    const allCheckGroups = [
+        checkItemsA, checkItemsB, checkItemsC, checkItemsD, checkItemsE,
+        checkItemsF, checkItemsG, checkItemsH, checkItemsI, checkItemsJ,
+        checkItemsK
+    ];
+    if (showRemarkColumn.value) {
+        allCheckGroups.push(checkItemsRemark);
+    }
+    allCheckGroups.forEach(group => {
+        group.value.forEach(item => {
+            if (item.checked) {
+                let displayName = '';
+                if (item.isRemark || checkItemsRemark.value.includes(item)) {
+                    displayName = item.layerName || item.name || item.label;
+                } else {
+                    displayName = item.label || item.name;
+                }
+                if (displayName) {
+                    selectedLayerNames.value.push(displayName);
+                }
+            }
+        });
+    });
+    selectedLayerNames.value = [...new Set(selectedLayerNames.value)];
+    bus.emit('layerNamesSelected', selectedLayerNames.value);
+    bus.emit('legend-visibility', selectedLayerNames.value.length > 0);
+    console.log('当前选中的图层名称：', selectedLayerNames.value);
+    console.log('备注项选中情况：', checkItemsRemark.value.filter(item => item.checked));
+};
+
+// 全选框状态
 const isAllCheckedA = ref(false);
 const isAllCheckedB = ref(false);
 const isAllCheckedC = ref(false);
@@ -313,79 +343,95 @@ const isAllCheckedI = ref(false);
 const isAllCheckedJ = ref(false);
 const isAllCheckedK = ref(false);
 const isAllCheckedRemark = ref(false);
+
+// 全选框事件处理
 const handleAllCheckA = (isChecked) => {
     checkItemsA.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeA(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckB = (isChecked) => {
     checkItemsB.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeB(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckC = (isChecked) => {
     checkItemsC.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeC(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckD = (isChecked) => {
     checkItemsD.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeD(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckE = (isChecked) => {
     checkItemsE.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeE(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckF = (isChecked) => {
     checkItemsF.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeF(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckG = (isChecked) => {
     checkItemsG.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeG(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckH = (isChecked) => {
     checkItemsH.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeH(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckI = (isChecked) => {
     checkItemsI.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeI(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckJ = (isChecked) => {
     checkItemsJ.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeJ(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckK = (isChecked) => {
     checkItemsK.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeK(item);
     });
+    updateSelectedLayerNames();
 };
 const handleAllCheckRemark = (isChecked) => {
     checkItemsRemark.value.forEach(item => {
         item.checked = isChecked;
         handleCheckChangeRemark(item);
     });
+    updateSelectedLayerNames();
+    bus.emit('layerNamesSelected', selectedLayerNames.value);
 };
 
+// 图层选项数据
 const checkItemsA = ref([
     { id: 1, name: '一级人文景源', relicType: '自然风景', checked: false },
     { id: 2, name: '二级人文景源', relicType: '人文景观', checked: false },
@@ -445,104 +491,73 @@ const checkItemsK = ref([
     { id: 1, name: '方岩风景名胜区范围_16版', checked: false },
     { id: 2, name: '方岩风景名胜区总体规划范围', checked: false },
 ])
-const checkItemsRemark = ref([
-    // { id: 1, name: '方岩风景区总体规划范围', checked: false },
-    // { id: 2, name: '方岩风景区划范围_16版', checked: false },
-    // { id: 3, name: '在编方岩风景名胜区范围', checked: false },
-])
-const allCheckItems = ref([
-    checkItemsA,
-    checkItemsB,
-    checkItemsC,
-    checkItemsD,
-    checkItemsE,
-    checkItemsF,
-    checkItemsG,
-    checkItemsH,
-    checkItemsI,
-    checkItemsJ,
-    checkItemsK,
-])
-const layerManagementShowHide = ref(false)
-const functionPanelShowHide = ref(false)
-const layerContentStyleA = ref(true)
-const layerContentStyleB = ref(false)
-const layerContentStyleC = ref(false)
-const layerContentStyleD = ref(false)
-const layerContentStyleE = ref(false)
-const layerContentStyleF = ref(false)
-const layerContentStyleG = ref(false)
-const layerContentStyleH = ref(false)
-const layerContentStyleI = ref(false)
-const layerContentStyleJ = ref(false)
-const layerContentStyleK = ref(false)
-const layerContentStyleRemark = ref(false)
-const drawFunctionShowHide = ref(false)
-const drawPloygonBodyStyle = ref(false) // 面功能选中状态
-const drawPloylineBodyStyle = ref(false) // 线功能选中状态
-const drawPointBodyStyle = ref(false) // 点功能选中状态
-const clickDrawPloygon = () => {
-    // 切换面功能选中状态
-    drawPloygonBodyStyle.value = !drawPloygonBodyStyle.value
-    // 关闭其他绘制状态
-    if (drawPloygonBodyStyle.value) {
-        drawPointBodyStyle.value = false
-        drawPloylineBodyStyle.value = false
-    }
-    bus.emit('draw-polygon-clicked', drawPloygonBodyStyle.value)
-}
-const clickDrawPloyline = () => {
-    // 切换线功能选中状态
-    drawPloylineBodyStyle.value = !drawPloylineBodyStyle.value
-    if (drawPloylineBodyStyle.value) {
-        drawPointBodyStyle.value = false
-        drawPloygonBodyStyle.value = false
-    }
-    bus.emit('draw-polyline-clicked', drawPloylineBodyStyle.value)
-}
-const clickDrawPoint = () => {
-    // 切换点功能选中状态
-    drawPointBodyStyle.value = !drawPointBodyStyle.value
-    if (drawPointBodyStyle.value) {
-        drawPloylineBodyStyle.value = false
-        drawPloygonBodyStyle.value = false
-    }
-    bus.emit('draw-point-clicked', drawPointBodyStyle.value)
-}
+const checkItemsRemark = ref([])
+
+// 通用复选框事件处理
 const handleCheckChangeCommon = (item, layerType) => {
     console.log(`Item ${item.id} (${layerType}) checked: ${item.checked}`);
     bus.emit('layerCheckMessage', {
         id: item.id,
-        name: item.name,        // 对应 UE 命令的 Tag
-        checked: item.checked,  // 显示/隐藏状态
-        layerType: layerType    // 图层类型：line/area
+        name: item.name,
+        checked: item.checked,
+        layerType: layerType
     });
 };
 
+// 单个复选框事件处理
 const handleCheckChangeA = item => {
-    // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('attractionTypeMessage', item)
+    updateSelectedLayerNames();
 }
 const handleCheckChangeB = item => {
-    // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('cultureTypeMessage', item)
+    updateSelectedLayerNames();
 }
-const handleCheckChangeC = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeD = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeE = (item) => handleCheckChangeCommon(item, 'Line');
-const handleCheckChangeF = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeG = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeH = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeI = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeJ = (item) => handleCheckChangeCommon(item, 'Area');
-const handleCheckChangeK = (item) => handleCheckChangeCommon(item, 'Area');
+const handleCheckChangeC = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames();
+};
+const handleCheckChangeD = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames();
+};
+const handleCheckChangeE = (item) => {
+    handleCheckChangeCommon(item, 'Line')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeF = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeG = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeH = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeI = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeJ = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
+const handleCheckChangeK = (item) => {
+    handleCheckChangeCommon(item, 'Area')
+    updateSelectedLayerNames()
+};
 const handleCheckChangeRemark = item => {
-    // 处理复选框状态变化
     console.log(`Item ${item.id} checked: ${item.checked}`)
     bus.emit('remarkMessage', item)
+    updateSelectedLayerNames()
 }
+
+// 图层展开/折叠事件
 const clickLayerContentA = () => {
     layerContentStyleA.value = !layerContentStyleA.value
 }
@@ -579,16 +594,16 @@ const clickLayerContentK = () => {
 const clickLayerContentRemark = () => {
     layerContentStyleRemark.value = !layerContentStyleRemark.value
 }
+
+// 生态保护红线单独选中逻辑
 const setOnlyEcoRedlineChecked = (isChecked) => {
     checkItemsJ.value.forEach((item) => {
         item.checked = isChecked;
         handleCheckChangeJ(item);
     });
-    // 核心同步：生态保护红线的全选框、子项、数据框状态完全一致
-    isAllCheckedJ.value = isChecked; // 全选框勾选/取消
-    layerContentStyleJ.value = isChecked; // 数据框展开/折叠（true=展开，false=折叠）
+    isAllCheckedJ.value = isChecked;
+    layerContentStyleJ.value = isChecked;
 
-    // 其他分类状态重置
     [isAllCheckedA, isAllCheckedB, isAllCheckedC, isAllCheckedD, isAllCheckedE,
         isAllCheckedF, isAllCheckedG, isAllCheckedH, isAllCheckedI, isAllCheckedK].forEach(checkedRef => {
             checkedRef.value = false;
@@ -598,46 +613,40 @@ const setOnlyEcoRedlineChecked = (isChecked) => {
             styleRef.value = false;
         });
 
-    // 备注信息图层隐藏
     checkItemsRemark.value.forEach(item => item.checked = false);
     isAllCheckedRemark.value = false;
     layerContentStyleRemark.value = false;
+    updateSelectedLayerNames();
 };
-// 1. 修复：用对象存储每个按钮的独立选中状态（默认全未选中）
+
+// 功能面板选中状态
 const isSelected = ref({
-    0: false, // 0: 红线叠加对比
-    1: false, // 1: 分屏比对
-    2: false  // 2: 时空分析
+    0: false,
+    1: false,
+    2: false
 })
 
-// 2. 修复：点击按钮切换自身选中状态（不影响其他按钮）
+// 功能面板按钮点击事件
 const selectItem = (index) => {
-    // 切换当前按钮的选中状态（true ↔ false）
     isSelected.value[index] = !isSelected.value[index]
-    // 关键联动：仅当点击“红线叠加对比”（索引0）时，同步图层状态
     if (index === 0) {
         layerManagementShowHide.value = true
-        // 按钮选中 → 图层全选；按钮未选中 → 图层取消全选
         setOnlyEcoRedlineChecked(isSelected.value[index]);
     } else if (index === 1) {
         layerManagementShowHide.value = false
     } else {
         layerManagementShowHide.value = true
     }
-    // 通知其他组件：传递“按钮索引”和“当前选中状态”（便于后续业务逻辑扩展）
     bus.emit('function-panel-clicked', { index, isSelected: isSelected.value[index] })
 }
 
-// 3. 修复：箭头位置逻辑（若多个按钮选中，默认指向最后一个选中的按钮；无选中时隐藏或默认位置）
+// 箭头样式计算
 const arrowStyle = computed(() => {
-    // 定义每个按钮对应的箭头 top 值（与原逻辑一致）
     const topValues = [
-        '2px',  // 0: 红线叠加对比
-        '43px',  // 1: 分屏比对
-        '83px'   // 2: 时空分析
+        '2px',
+        '43px',
+        '83px'
     ]
-
-    // 找到最后一个被选中的按钮索引（优先级：2 → 1 → 0）
     let lastSelectedIndex = -1
     for (let i = 2; i >= 0; i--) {
         if (isSelected.value[i]) {
@@ -646,166 +655,314 @@ const arrowStyle = computed(() => {
         }
     }
     return {
-        // 有选中按钮：箭头指向最后一个选中的；无选中：箭头隐藏（或设为默认位置）
         top: lastSelectedIndex > -1 ? topValues[lastSelectedIndex] : '2px',
-        display: lastSelectedIndex > -1 ? 'block' : 'none', // 无选中时隐藏箭头
+        display: lastSelectedIndex > -1 ? 'block' : 'none',
         transition: 'top 0.3s ease, display 0.3s ease'
     }
 })
 
+// 绘制功能状态
+const layerManagementShowHide = ref(false)
+const functionPanelShowHide = ref(false)
+const layerContentStyleA = ref(true)
+const layerContentStyleB = ref(false)
+const layerContentStyleC = ref(false)
+const layerContentStyleD = ref(false)
+const layerContentStyleE = ref(false)
+const layerContentStyleF = ref(false)
+const layerContentStyleG = ref(false)
+const layerContentStyleH = ref(false)
+const layerContentStyleI = ref(false)
+const layerContentStyleJ = ref(false)
+const layerContentStyleK = ref(false)
+const layerContentStyleRemark = ref(false)
+const drawFunctionShowHide = ref(false)
+const drawPloygonBodyStyle = ref(false)
+const drawPloylineBodyStyle = ref(false)
+const drawPointBodyStyle = ref(false)
+
+// 绘制功能点击事件
+const clickDrawPloygon = () => {
+    drawPloygonBodyStyle.value = !drawPloygonBodyStyle.value
+    if (drawPloygonBodyStyle.value) {
+        drawPointBodyStyle.value = false
+        drawPloylineBodyStyle.value = false
+    }
+    bus.emit('draw-polygon-clicked', drawPloygonBodyStyle.value)
+}
+const clickDrawPloyline = () => {
+    drawPloylineBodyStyle.value = !drawPloylineBodyStyle.value
+    if (drawPloylineBodyStyle.value) {
+        drawPointBodyStyle.value = false
+        drawPloygonBodyStyle.value = false
+    }
+    bus.emit('draw-polyline-clicked', drawPloylineBodyStyle.value)
+}
+const clickDrawPoint = () => {
+    drawPointBodyStyle.value = !drawPointBodyStyle.value
+    if (drawPointBodyStyle.value) {
+        drawPloylineBodyStyle.value = false
+        drawPloygonBodyStyle.value = false
+    }
+    bus.emit('draw-point-clicked', drawPointBodyStyle.value)
+}
+
+// 监听子项变化同步全选框
 watch(
     () => checkItemsA.value.map(item => item.checked),
     (checkedList) => {
-        // 所有子项都选中时，全选框勾选；否则取消
         isAllCheckedA.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
-    { deep: true } // 深度监听数组内元素变化
+    { deep: true }
 );
 watch(
     () => checkItemsB.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedB.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 C 分类子项变化
 watch(
     () => checkItemsC.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedC.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 D 分类子项变化
 watch(
     () => checkItemsD.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedD.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 E 分类子项变化
 watch(
     () => checkItemsE.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedE.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 F 分类子项变化
 watch(
     () => checkItemsF.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedF.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 G 分类子项变化
 watch(
     () => checkItemsG.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedG.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 H 分类子项变化
 watch(
     () => checkItemsH.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedH.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 I 分类子项变化
 watch(
     () => checkItemsI.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedI.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 J 分类子项变化
-// watch(
-//     () => checkItemsJ.value.map(item => item.checked),
-//     (checkedList) => {
-//         isAllCheckedJ.value = checkedList.every(checked => checked);
-//     },
-//     { deep: true }
-// );
 watch(
-    () => checkItemsJ.value[0]?.checked, // 监听唯一子项的checked状态
+    () => checkItemsJ.value[0]?.checked,
     (isChecked) => {
         if (isChecked !== undefined) {
-            isSelected.value[0] = isChecked; // 子项勾选 → 按钮激活；子项取消 → 按钮取消
+            isSelected.value[0] = isChecked;
         }
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
-
-// 监听 K 分类子项变化
 watch(
     () => checkItemsK.value.map(item => item.checked),
     (checkedList) => {
         isAllCheckedK.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
     { deep: true }
 );
 watch(
     () => checkItemsRemark.value.map(item => item.checked),
     (checkedList) => {
-        // 所有备注子项都选中时，全选框勾选；否则取消
         isAllCheckedRemark.value = checkedList.every(checked => checked);
+        updateSelectedLayerNames();
     },
-    { deep: true } // 深度监听数组内元素变化
+    { deep: true }
 );
 
+// ========== 提取Bus回调为命名函数（精准解绑） ==========
+const handleSchemeReviewClicked = (data) => {
+    console.log('方案审查可见性:', data)
+    const { isShow, module } = data
+    currentModule.value = module
+    layerManagementShowHide.value = isShow
+    functionPanelShowHide.value = isShow
+    showRemarkColumn.value = false
+    if (!isShow) {
+        drawFunctionShowHide.value = isShow
+    } else {
+        drawFunctionShowHide.value = false
+    }
+    getMarkList().then((res) => {
+        checkItemsRemark.value = res.rows
+        bus.emit('updateRemarkLegend', res.rows);
+        checkItemsRemark.value.forEach(item => item.checked = false);
+        isAllCheckedRemark.value = false;
+        layerContentStyleRemark.value = false;
+        updateSelectedLayerNames();
+    }).catch((error) => {
+        console.error('获取标注信息失败', error);
+    });
+}
+
+const handlePlanningAchievementClicked = (data) => {
+    const { isShow, module } = data
+    console.log("🚀 ~ handlePlanningAchievementClicked ~ isShow:", isShow)
+    currentModule.value = module
+    layerManagementShowHide.value = isShow
+    functionPanelShowHide.value = false
+    showRemarkColumn.value = true
+    if (isShow) {
+        // 避免重复切换：仅当未选中时才触发选中
+        if (!isSelected.value[2]) {
+            isSelected.value[2] = true // 直接设置选中状态（避免toggle反转）
+            // 触发时空分析选中的业务逻辑
+            layerManagementShowHide.value = true
+            bus.emit('function-panel-clicked', { index: 2, isSelected: true })
+        }
+    } else {
+        // 规划成果隐藏时，取消时空分析选中
+        if (isSelected.value[2]) {
+            isSelected.value[2] = false
+            bus.emit('function-panel-clicked', { index: 2, isSelected: false })
+        }
+    }
+    getMarkList().then((res) => {
+        const formattedRemark = res.rows.map(item => ({
+            ...item,
+            layerName: item.layerName || item.name || `未命名备注${item.id}`,
+            checked: item.checked || false,
+            rgb: item.rgb || 'rgb(252, 218, 78)'
+        }));
+        checkItemsRemark.value = formattedRemark;
+        bus.emit('updateRemarkLegend', formattedRemark);
+        updateSelectedLayerNames();
+    }).catch((error) => {
+        console.error('获取标注信息失败', error);
+    });
+}
+
+const handleVectorLayerClicked = (isVisible) => {
+    drawFunctionShowHide.value = isVisible
+    if (isVisible == false) {
+        layerManagementShowHide.value = false
+        functionPanelShowHide.value = false
+    } else {
+        layerManagementShowHide.value = false
+        functionPanelShowHide.value = false
+    }
+}
+
+// ========== 挂载/卸载生命周期 ==========
 onMounted(() => {
+    updateSelectedLayerNames();
     setOnlyEcoRedlineChecked(isSelected.value[0]);
     isAllCheckedRemark.value = false;
-    bus.on('scheme-review-clicked', data => {
-        console.log('方案审查可见性:', data)
-        layerManagementShowHide.value = data
-        functionPanelShowHide.value = data
-        // drawFunctionShowHide.value = !data
-        if (!data) {
-            drawFunctionShowHide.value = data
-        } else {
-            drawFunctionShowHide.value = false
-        }
-        getMarkList().then((res) => {
-            checkItemsRemark.value = res.rows
-            if (isSelected.value[0]) {
-                checkItemsRemark.value.forEach(item => item.checked = true);
-                isAllCheckedRemark.value = true;
-            }
-        }).catch((error) => {
-            console.error('获取标注信息失败', error);
-        });
-    })
-    bus.on('planning-achievement-clicked', data => {
-        layerManagementShowHide.value = data
-        functionPanelShowHide.value = false
-    })
-    bus.on('vector-layer-clicked', isVisible => {
-        drawFunctionShowHide.value = isVisible
-        if (isVisible == false) {
-            layerManagementShowHide.value = false
-            functionPanelShowHide.value = false
-        } else {
-            layerManagementShowHide.value = false
-            functionPanelShowHide.value = false
-        }
-    })
+    // 绑定Bus事件（命名函数）
+    bus.on('scheme-review-clicked', handleSchemeReviewClicked);
+    bus.on('planning-achievement-clicked', handlePlanningAchievementClicked);
+    bus.on('vector-layer-clicked', handleVectorLayerClicked);
+})
 
+onUnmounted(() => {
+    // ========== 1. 精准解绑所有Bus事件 ==========
+    bus.off('scheme-review-clicked', handleSchemeReviewClicked);
+    bus.off('planning-achievement-clicked', handlePlanningAchievementClicked);
+    bus.off('vector-layer-clicked', handleVectorLayerClicked);
 
+    // ========== 2. 重置所有响应式状态 ==========
+    // 基础状态
+    selectedLayerNames.value = [];
+    currentModule.value = '';
+    showRemarkColumn.value = false;
+
+    // 全选框状态
+    isAllCheckedA.value = false;
+    isAllCheckedB.value = false;
+    isAllCheckedC.value = false;
+    isAllCheckedD.value = false;
+    isAllCheckedE.value = false;
+    isAllCheckedF.value = false;
+    isAllCheckedG.value = false;
+    isAllCheckedH.value = false;
+    isAllCheckedI.value = false;
+    isAllCheckedJ.value = false;
+    isAllCheckedK.value = false;
+    isAllCheckedRemark.value = false;
+
+    // 图层展开/折叠状态
+    layerContentStyleA.value = false;
+    layerContentStyleB.value = false;
+    layerContentStyleC.value = false;
+    layerContentStyleD.value = false;
+    layerContentStyleE.value = false;
+    layerContentStyleF.value = false;
+    layerContentStyleG.value = false;
+    layerContentStyleH.value = false;
+    layerContentStyleI.value = false;
+    layerContentStyleJ.value = false;
+    layerContentStyleK.value = false;
+    layerContentStyleRemark.value = false;
+
+    // 绘制功能状态
+    drawFunctionShowHide.value = false;
+    drawPloygonBodyStyle.value = false;
+    drawPloylineBodyStyle.value = false;
+    drawPointBodyStyle.value = false;
+
+    // 功能面板状态
+    layerManagementShowHide.value = false;
+    functionPanelShowHide.value = false;
+    isSelected.value = { 0: false, 1: false, 2: false };
+
+    // 清空所有复选框选中状态
+    [
+        checkItemsA, checkItemsB, checkItemsC, checkItemsD, checkItemsE,
+        checkItemsF, checkItemsG, checkItemsH, checkItemsI, checkItemsJ,
+        checkItemsK, checkItemsRemark
+    ].forEach(group => {
+        group.value.forEach(item => item.checked = false);
+    });
+
+    // ========== 3. 兜底清理DOM事件 ==========
+    const rightSidebar = document.querySelector('.rightSidebar');
+    const functionPanel = document.querySelector('.functionPanel');
+    const drawFunctionBody = document.querySelector('.drawFunctionBody');
+    if (rightSidebar) rightSidebar.onclick = null;
+    if (functionPanel) functionPanel.onclick = null;
+    if (drawFunctionBody) drawFunctionBody.onclick = null;
+
+    // ========== 4. 通知其他组件重置状态 ==========
+    bus.emit('layerNamesSelected', []);
+    bus.emit('legend-visibility', false);
+    bus.emit('function-panel-clicked', { index: -1, isSelected: false });
 })
 </script>
 
@@ -851,20 +1008,20 @@ onMounted(() => {
         height: 410px;
         display: flex;
         flex-direction: column;
-        overflow-y: auto; // 核心：超出高度时显示垂直滚动条
-        padding: 0 5px; // 可选：左右留小间距，避免滚动条与内容贴边
+        overflow-y: auto;
+        padding: 0 5px;
 
         &::-webkit-scrollbar {
-            width: 6px; // 滚动条宽度
+            width: 6px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-            border-radius: 3px; // 滚动条圆角
+            background-color: rgba(255, 207, 112, 0.01);
+            border-radius: 3px;
         }
 
         &::-webkit-scrollbar-track {
-            background-color: transparent; // 滚动条轨道透明
+            background-color: transparent;
         }
 
         .layerContentA {
@@ -874,19 +1031,19 @@ onMounted(() => {
                 position: relative;
                 display: flex;
                 flex-direction: row;
-                justify-content: space-between; // 保留左右布局，用于图标定位
-                align-items: center; // 确保内部元素垂直居中
+                justify-content: space-between;
+                align-items: center;
                 width: 85%;
                 height: 34px;
                 margin-left: 18px;
 
                 .scroll-custom-checkbox {
                     position: absolute;
-                    right: 35px; 
-                    top: 50%; // 垂直居中第一步：顶部对齐50%
-                    transform: translateY(-50%); // 垂直居中第二步：向上偏移自身50%，实现完全居中
-                    margin: 0; // 清除原有margin，避免干扰
-                    z-index: 1; // 确保在文字上方，不被遮挡
+                    right: 35px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    margin: 0;
+                    z-index: 1;
 
                     :deep(.el-checkbox__inner) {
                         width: 17px;
@@ -940,29 +1097,26 @@ onMounted(() => {
 
             .contentBodyA {
                 overflow: hidden;
-                /* 确保内容不超过父盒子 */
             }
 
             .scrollContentA {
                 width: 77%;
                 max-height: 110px;
-                /* 设置最大高度 */
                 overflow-y: auto;
 
                 &::-webkit-scrollbar {
-                    width: 6px; // 滚动条宽度
+                    width: 6px;
                 }
 
                 &::-webkit-scrollbar-thumb {
-                    background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块颜色（与文字渐变呼应）
-                    border-radius: 3px; // 滚动条圆角
+                    background-color: rgba(255, 207, 112, 0.01);
+                    border-radius: 3px;
                 }
 
                 &::-webkit-scrollbar-track {
-                    background-color: transparent; // 滚动条轨道透明
+                    background-color: transparent;
                 }
 
-                /* 允许上下滚动 */
                 font-family: 'SourceHanSansCN-Medium';
                 font-weight: 400;
                 font-size: 15px;
@@ -972,7 +1126,6 @@ onMounted(() => {
                 flex-direction: column;
                 margin-left: 40px;
 
-                // background-color: red;
                 .scrollDetailA {
                     width: 100%;
                     height: 30px;
@@ -1016,34 +1169,26 @@ onMounted(() => {
     top: 82.04%;
     right: 6.25%;
     z-index: 2;
-    // background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: row;
     align-items: center;
-    /* 垂直居中对齐 */
 
-    /* 第一部分：箭头 */
     .arrow {
         width: 42px;
         height: 44px;
         background: url(../../static/image/right/arrow.png) no-repeat;
         background-size: 100% 100%;
         position: absolute;
-        /* 绝对定位以便动态调整位置 */
         left: 0;
-        /* 固定在左侧 */
         transition: top 0.3s ease;
-        /* 平滑过渡动画 */
     }
 
-    /* 第二部分：文字容器 */
     .text-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
         margin-right: 20px;
         margin-left: 40px;
-        /* 给箭头留出位置 */
 
         .text-item {
             width: 147px;
@@ -1051,7 +1196,6 @@ onMounted(() => {
             font-family: 'xianglifang';
             font-weight: 400;
             font-size: 24px;
-            /* 默认字体大小 */
             color: #f5e4c4;
             text-align: right;
             font-style: italic;
@@ -1061,10 +1205,10 @@ onMounted(() => {
             margin-bottom: 15px;
             cursor: pointer;
             transition: font-size 0.3s ease;
+
             &.active {
                 font-size: 30px;
                 color: #ffa621;
-                /* 可选：选中时变色 */
             }
         }
 
@@ -1089,15 +1233,12 @@ onMounted(() => {
             margin-top: 20px;
         }
 
-        /* 仅当按钮选中时，圆圈变为实心（与文字按钮的 active 状态同步） */
         .circle.solid {
             background-color: #ffa621;
-            border: none; // 实心时移除边框
+            border: none;
             width: 10px;
             height: 10px;
         }
-
-        /* 移除原有的固定 .solid 类圆圈 */
     }
 }
 
@@ -1112,7 +1253,6 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
 
-    /* 1. 点模块：选中/未选中样式 */
     .drawPointBodySelect,
     .drawPointBodySelected {
         cursor: pointer;
@@ -1133,18 +1273,14 @@ onMounted(() => {
             font-weight: 400;
             font-size: 24px;
             margin-top: 5px;
-            /* 统一：图标到文字的间距 */
             width: 71px;
-            /* 统一：文字容器宽度（与选中状态背景图一致） */
             height: 20px;
-            /* 关键统一：文字容器高度（与选中状态背景图高度一致） */
             display: flex;
             justify-content: center;
             align-items: center;
         }
     }
 
-    /* 点-未选中 */
     .drawPointBodySelect .drawPointImg {
         background: url(../../static/image/right/draw-select.png) no-repeat;
         background-size: 100% 100%;
@@ -1154,7 +1290,6 @@ onMounted(() => {
         color: #35803b;
     }
 
-    /* 点-选中 */
     .drawPointBodySelected .drawPointImg {
         background: url(../../static/image/right/draw-selected.png) no-repeat;
         background-size: 100% 100%;
@@ -1166,7 +1301,6 @@ onMounted(() => {
         background-size: 100% 100%;
     }
 
-    /* 2. 线模块：选中/未选中样式（与点模块逻辑完全一致） */
     .drawPloylineBodySelect,
     .drawPloylineBodySelected {
         cursor: pointer;
@@ -1187,18 +1321,14 @@ onMounted(() => {
             font-weight: 400;
             font-size: 24px;
             margin-top: 5px;
-            /* 统一：图标到文字的间距 */
             width: 71px;
-            /* 统一：文字容器宽度 */
             height: 20px;
-            /* 统一：文字容器高度 */
             display: flex;
             justify-content: center;
             align-items: center;
         }
     }
 
-    /* 线-未选中 */
     .drawPloylineBodySelect .drawPolylineImg {
         background: url(../../static/image/right/draw-select.png) no-repeat;
         background-size: 100% 100%;
@@ -1208,7 +1338,6 @@ onMounted(() => {
         color: #35803b;
     }
 
-    /* 线-选中 */
     .drawPloylineBodySelected .drawPolylineImg {
         background: url(../../static/image/right/draw-selected.png) no-repeat;
         background-size: 100% 100%;
@@ -1220,7 +1349,6 @@ onMounted(() => {
         background-size: 100% 100%;
     }
 
-    /* 3. 面模块：选中/未选中样式（与点、线模块逻辑完全一致） */
     .drawPloygonBodySelect,
     .drawPloygonBodySelected {
         cursor: pointer;
@@ -1241,18 +1369,14 @@ onMounted(() => {
             font-weight: 400;
             font-size: 24px;
             margin-top: 5px;
-            /* 统一：图标到文字的间距 */
             width: 71px;
-            /* 统一：文字容器宽度 */
             height: 20px;
-            /* 统一：文字容器高度 */
             display: flex;
             justify-content: center;
             align-items: center;
         }
     }
 
-    /* 面-未选中 */
     .drawPloygonBodySelect .drawPloygonImg {
         background: url(../../static/image/right/draw-select.png) no-repeat;
         background-size: 100% 100%;
@@ -1262,7 +1386,6 @@ onMounted(() => {
         color: #35803b;
     }
 
-    /* 面-选中 */
     .drawPloygonBodySelected .drawPloygonImg {
         background: url(../../static/image/right/draw-selected.png) no-repeat;
         background-size: 100% 100%;

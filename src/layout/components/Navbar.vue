@@ -7,14 +7,15 @@
 
     <div class="right-menu flex align-center">
       <template v-if="appStore.device !== 'mobile'">
-        <el-select v-if="userId === 1 && tenantEnabled" v-model="companyName" class="min-w-244px" clearable filterable
+        <!-- <el-select v-if="userId === 1 && tenantEnabled" v-model="companyName" class="min-w-244px" clearable filterable
           reserve-keyword :placeholder="proxy.$t('navbar.selectTenant')" @change="dynamicTenantEvent"
           @clear="dynamicClearEvent">
           <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId">
           </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select>
-
+        </el-select> -->
+        <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']" v-if="showScreen"
+          class="screen-link-btn">可视化大屏</el-button>
         <search-menu ref="searchMenuRef" />
         <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
@@ -90,6 +91,7 @@ import { TenantVO } from '@/api/types';
 import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBox, ElMessageBoxOptions } from 'element-plus';
+import { getInfo as getUserInfo } from '@/api/login';
 // 声明自定义 proxy 类型
 interface CustomProxy {
   $router: {
@@ -107,6 +109,7 @@ interface CustomProxy {
   };
   $t: (key: string) => string; // 国际化方法
 }
+const showScreen = ref(false)
 const noticeStore = useNoticeStore();
 const appStore = useAppStore();
 const userStore = useUserStore();
@@ -128,7 +131,12 @@ const searchMenuRef = ref<InstanceType<typeof SearchMenu>>();
 const openSearchMenu = () => {
   searchMenuRef.value?.openSearch();
 };
-
+//跳转可视化大屏
+const handle3DScreen = () => {
+  router.push({
+    path: '/screen/screen',
+  })
+}
 // 动态切换
 const dynamicTenantEvent = async (tenantId: string) => {
   if (companyName.value != null && companyName.value !== '') {
@@ -214,13 +222,35 @@ watch(
   },
   { deep: true }
 );
-onMounted(() => {
+onMounted(async () => {
   noticeStore.fetchUnreadCount();
   // 原有 initTenantList 等逻辑保留
+  const res = await getUserInfo();
+  if (res.data.roles[0] == 'sysadmin'||res.data.roles[0] == 'superadmin') {
+    showScreen.value = true
+  } else {
+    showScreen.value = false
+  }
 });
 </script>
 
 <style lang="scss" scoped>
+:deep(.screen-link-btn) {
+  // 蓝色横线（可替换为你需要的蓝色值，如 #1890ff 是 Element 主色）
+  border-bottom: 2px solid #1890ff !important;
+  padding-bottom: 2px !important; // 文字与横线的间距，避免过于拥挤
+  text-decoration: none !important; // 清除 link 类型默认下划线（若有）
+  margin-right: 10px;
+
+  // hover 状态优化（可选，保持样式一致性）
+  &:hover,
+  &:focus,
+  &:active {
+    border-bottom-color: #40a9ff !important; // hover 时浅化蓝色
+    text-decoration: none !important;
+  }
+}
+
 :deep(.el-select .el-input__wrapper) {
   height: 30px;
 }

@@ -1,6 +1,6 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
-import { InfoVO, InfoForm, InfoQuery ,AuditData} from '@/api/project/normal/types';
+import { InfoVO, InfoForm, InfoQuery, AuditData } from '@/api/project/normal/types';
 
 /**
  * 查询【请填写功能名称】列表
@@ -39,17 +39,6 @@ export const addInfo = (data: InfoForm) => {
   });
 };
 
-/**
- * 修改【请填写功能名称】
- * @param data
- */
-export const updateInfo = (data: InfoForm) => {
-  return request({
-    url: '/project',
-    method: 'put',
-    data: data
-  });
-};
 export const submitInfo = (data: InfoForm) => {
   return request({
     url: '/project/submit',
@@ -99,5 +88,15 @@ export const lyjApprove = (data: AuditData) => {
     url: '/project/lyjApprove',
     method: 'post',
     data: data
+  });
+};
+/**
+ * 数据共享
+ * @param data
+ */
+export const shareInfo = (projectIds: string) => {
+  return request({
+    url: `/project/share/${projectIds}`,
+    method: 'post',
   });
 };

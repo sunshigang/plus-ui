@@ -190,6 +190,7 @@ const getList = async () => {
   loading.value = true;
   const res = await listNotice(queryParams.value);
   noticeList.value = res.rows;
+  console.log("🚀 ~ getList ~ noticeList.value:", noticeList.value)
   total.value = res.total;
   loading.value = false;
 };

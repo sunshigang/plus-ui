@@ -45,16 +45,17 @@
                     <div class="confirmButton" @click="confirmPopup">确定</div>
                 </div>
             </div>
-
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, toRefs, onMounted, getCurrentInstance, watch, nextTick } from 'vue'
+import { ref, reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, watch, nextTick } from 'vue' // 新增 onUnmounted
 import { addMarks } from "./draw.js";
 import bus from '../../libs/eventbus'
 import { ElMessage } from 'element-plus';
+
+// 响应式数据
 const layerName = ref(null)
 const remarkContents = ref(null)
 const popupIsShow = ref(false)
@@ -64,7 +65,14 @@ const popupData = reactive({
     area: '',
     length: '',
 })
-//取消弹窗
+// 存储拖动相关事件（用于解绑）
+const dragEventRefs = ref({
+    mouseDown: null,
+    mouseMove: null,
+    mouseUp: null
+})
+
+// 取消弹窗（重置状态）
 const cleanPopup = () => {
     popupIsShow.value = false
     layerName.value = null
@@ -74,71 +82,142 @@ const cleanPopup = () => {
     popupData.area = ''
     popupData.length = ''
 }
+
+// 确认弹窗（保存数据）
 const confirmPopup = () => {
     if (!layerName.value) {
         ElMessage.warning('请输入名称');
         return; // 阻止后续执行
+    }
+    addMarks({
+        layerName: layerName.value,
+        remarkcontents: remarkContents.value,
+        wkt: popupData.wkt.join(','),
+        type: popupData.type,
+        area: popupData.area,
+        length: popupData.length,
+        checked: false
+    }).then((res) => {
+        console.log('标注信息保存成功', res);
+        ElMessage.success('保存成功');
+        cleanPopup() // 保存成功后关闭弹窗
+    }).catch((error) => {
+        console.error('标注信息保存失败', error);
+        ElMessage.error('保存失败，请重试');
+    });
+}
+
+// ========== 1. 提取Bus回调为命名函数（精准解绑） ==========
+const handleDrawResult = (data) => {
+    console.log('draw-result', data)
+    popupIsShow.value = data.status
+    if (data.type == 'polygon') {
+        popupData.type = data.type
+        popupData.wkt = data.coordinates
+        popupData.area = data.area
+    } else if (data.type == 'polyline') {
+        popupData.type = data.type
+        popupData.wkt = data.coordinates
+        popupData.length = data.length
     } else {
-        addMarks({
-            layerName: layerName.value,
-            remarkcontents: remarkContents.value,
-            wkt: popupData.wkt.join(','),
-            type: popupData.type,
-            area: popupData.area,
-            length: popupData.length,
-            checked:false
-        }).then((res) => {
-            console.log('标注信息保存成功', res);
-            // 新增：显示保存成功提示
-            ElMessage.success('保存成功');
-            cleanPopup() // 保存成功后关闭弹窗
-        }).catch((error) => {
-            console.error('标注信息保存失败', error);
-            // 优化：失败时也显示提示
-            ElMessage.error('保存失败，请重试');
-        });
+        popupData.type = data.type
+        popupData.wkt = data.coordinates
     }
 }
-//弹窗单元数据
-const attributeUnitList = ref([])
-const { proxy } = getCurrentInstance()
+
+// ========== 2. 自定义拖动指令（优化事件存储，支持解绑） ==========
 const vDrag = {
     mounted: (el, bindings) => {
-        el.onmousedown = function (e) {
+        // 存储mousedown事件引用
+        dragEventRefs.value.mouseDown = function (e) {
             let id = (e.target || e.srcElement).id
             if (id == 'popupBody') {
                 var disx = e.pageX - el.offsetLeft
                 var disy = e.pageY - el.offsetTop
-                document.onmousemove = function (e) {
+
+                // 存储mousemove事件引用
+                dragEventRefs.value.mouseMove = function (e) {
                     el.style.left = e.pageX - disx + 'px'
                     el.style.top = e.pageY - disy + 'px'
                 }
-                document.onmouseup = function () {
-                    document.onmousemove = document.onmouseup = null
+
+                // 存储mouseup事件引用
+                dragEventRefs.value.mouseUp = function () {
+                    document.removeEventListener('mousemove', dragEventRefs.value.mouseMove)
+                    document.removeEventListener('mouseup', dragEventRefs.value.mouseUp)
+                    // 清空事件引用
+                    dragEventRefs.value.mouseMove = null
+                    dragEventRefs.value.mouseUp = null
                 }
+
+                // 使用addEventListener绑定（便于后续解绑）
+                document.addEventListener('mousemove', dragEventRefs.value.mouseMove)
+                document.addEventListener('mouseup', dragEventRefs.value.mouseUp)
             }
         }
+        // 绑定mousedown事件
+        el.addEventListener('mousedown', dragEventRefs.value.mouseDown)
     },
+    unmounted: (el) => {
+        // 指令卸载时解绑所有拖动事件
+        if (dragEventRefs.value.mouseDown) {
+            el.removeEventListener('mousedown', dragEventRefs.value.mouseDown)
+            dragEventRefs.value.mouseDown = null
+        }
+        if (dragEventRefs.value.mouseMove) {
+            document.removeEventListener('mousemove', dragEventRefs.value.mouseMove)
+            dragEventRefs.value.mouseMove = null
+        }
+        if (dragEventRefs.value.mouseUp) {
+            document.removeEventListener('mouseup', dragEventRefs.value.mouseUp)
+            dragEventRefs.value.mouseUp = null
+        }
+    }
 }
 
+// ========== 3. 生命周期：挂载/卸载逻辑 ==========
 onMounted(() => {
-    bus.on('draw-result', data => {
-        console.log('draw-result', data)
-        popupIsShow.value = data.status
-        if (data.type == 'polygon') {
-            popupData.type = data.type
-            popupData.wkt = data.coordinates
-            popupData.area = data.area
-        } else if (data.type == 'polyline') {
-            popupData.type = data.type
-            popupData.wkt = data.coordinates
-            popupData.length = data.length
-        } else {
-            popupData.type = data.type
-            popupData.wkt = data.coordinates
-        }
-    })
+    // 绑定Bus事件（命名函数）
+    bus.on('draw-result', handleDrawResult);
+})
 
+onUnmounted(() => {
+    // ========== 核心：销毁所有监听/事件 ==========
+    // 1. 解绑Bus事件（精准解绑）
+    bus.off('draw-result', handleDrawResult);
+
+    // 2. 解绑拖动指令的所有事件（兜底）
+    const popupEl = document.getElementById('popup-column');
+    if (popupEl && dragEventRefs.value.mouseDown) {
+        popupEl.removeEventListener('mousedown', dragEventRefs.value.mouseDown);
+    }
+    if (dragEventRefs.value.mouseMove) {
+        document.removeEventListener('mousemove', dragEventRefs.value.mouseMove);
+    }
+    if (dragEventRefs.value.mouseUp) {
+        document.removeEventListener('mouseup', dragEventRefs.value.mouseUp);
+    }
+
+    // ========== 兜底：清理所有状态 ==========
+    // 强制关闭弹窗
+    popupIsShow.value = false;
+    // 重置所有响应式数据
+    layerName.value = null;
+    remarkContents.value = null;
+    popupData.type = '';
+    popupData.wkt = '';
+    popupData.area = '';
+    popupData.length = '';
+    // 清空事件引用
+    dragEventRefs.value = {
+        mouseDown: null,
+        mouseMove: null,
+        mouseUp: null
+    };
+
+    // 3. 清理Element Plus的tooltip（避免残留）
+    const tooltips = document.querySelectorAll('.el-tooltip__popper');
+    tooltips.forEach(tooltip => tooltip.remove());
 })
 </script>
 
@@ -202,7 +281,6 @@ onMounted(() => {
 
                     .memoFieldValue {
                         color: #ffffff !important;
-                        /* !important 确保覆盖父类颜色（若有冲突） */
                     }
 
                     .memoFieldValueType {
@@ -283,10 +361,7 @@ onMounted(() => {
                     cursor: pointer;
                 }
             }
-
         }
-
-
     }
 }
 
