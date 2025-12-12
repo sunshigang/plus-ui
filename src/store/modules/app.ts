@@ -24,6 +24,19 @@ export const useAppStore = defineStore('app', () => {
     return languageObj[language.value];
   });
 
+  // ========== 新增：URL传入的clientId存储（持久化到sessionStorage） ==========
+  // 存储URL中的clientId，默认null，刷新不丢失
+  const urlClientId = useStorage('urlClientId', null as string | null, sessionStorage);
+
+  // 设置URL传入的clientId
+  const setUrlClientId = (clientId: string | null) => {
+    urlClientId.value = clientId;
+  };
+
+  // 清空URL传入的clientId（登录/退出时调用）
+  const clearUrlClientId = () => {
+    urlClientId.value = null;
+  };
   const toggleSideBar = (withoutAnimation: boolean) => {
     if (sidebar.hide) {
       return false;
@@ -68,6 +81,9 @@ export const useAppStore = defineStore('app', () => {
     closeSideBar,
     toggleDevice,
     setSize,
-    toggleSideBarHide
+    toggleSideBarHide,
+    urlClientId,
+    setUrlClientId,
+    clearUrlClientId
   };
 });

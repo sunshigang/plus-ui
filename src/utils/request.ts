@@ -1,5 +1,6 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useUserStore } from '@/store/modules/user';
+import { useAppStore } from '@/store/modules/app'; // 导入app store
 import { getToken } from '@/utils/auth';
 import { tansParams, blobValidate } from '@/utils/ruoyi';
 import cache from '@/plugins/cache';
@@ -16,19 +17,28 @@ const encryptHeader = 'encrypt-key';
 let downloadLoadingInstance: LoadingInstance;
 // 是否显示重新登录
 export const isRelogin = { show: false };
+
+/**
+ * 修改：优先读取Pinia中的clientId，无则用环境变量
+ */
 export const globalHeaders = () => {
+  const appStore = useAppStore();
+  // 优先级：Pinia存储的URL clientId > 环境变量
+  const clientId = appStore.urlClientId || import.meta.env.VITE_APP_CLIENT_ID;
   return {
     Authorization: 'Bearer ' + getToken(),
-    clientid: import.meta.env.VITE_APP_CLIENT_ID
+    clientid: clientId,
   };
 };
 
+// 修改：默认clientid初始值（请求拦截器会实时覆盖）
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8';
 axios.defaults.headers['clientid'] = import.meta.env.VITE_APP_CLIENT_ID;
+
 // 创建 axios 实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
-  timeout: 50000
+  timeout: 50000,
 });
 
 // 请求拦截器
@@ -37,6 +47,11 @@ service.interceptors.request.use(
     // 对应国际化资源文件后缀
     config.headers['Content-Language'] = getLanguage();
 
+    // 核心：每次请求实时读取Pinia中的clientId，覆盖请求头
+    const appStore = useAppStore();
+    const clientId = appStore.urlClientId || import.meta.env.VITE_APP_CLIENT_ID;
+    config.headers['clientid'] = clientId;
+
     const isToken = config.headers?.isToken === false;
     // 是否需要防止数据重复提交
     const isRepeatSubmit = config.headers?.repeatSubmit === false;
@@ -44,7 +59,7 @@ service.interceptors.request.use(
     const isEncrypt = config.headers?.isEncrypt === 'true';
 
     if (getToken() && !isToken) {
-      config.headers['Authorization'] = 'Bearer ' + getToken(); // 让每个请求携带自定义token 请根据实际情况自行修改
+      config.headers['Authorization'] = 'Bearer ' + getToken(); // 自定义token
     }
     // get请求映射params参数
     if (config.method === 'get' && config.params) {
@@ -58,16 +73,16 @@ service.interceptors.request.use(
       const requestObj = {
         url: config.url,
         data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
-        time: new Date().getTime()
+        time: new Date().getTime(),
       };
       const sessionObj = cache.session.getJSON('sessionObj');
       if (sessionObj === undefined || sessionObj === null || sessionObj === '') {
         cache.session.setJSON('sessionObj', requestObj);
       } else {
-        const s_url = sessionObj.url; // 请求地址
-        const s_data = sessionObj.data; // 请求数据
-        const s_time = sessionObj.time; // 请求时间
-        const interval = 500; // 间隔时间(ms)，小于此时间视为重复提交
+        const s_url = sessionObj.url;
+        const s_data = sessionObj.data;
+        const s_time = sessionObj.time;
+        const interval = 500; // 防重复提交间隔
         if (s_data === requestObj.data && requestObj.time - s_time < interval && s_url === requestObj.url) {
           const message = '数据正在处理，请勿重复提交';
           console.warn(`[${s_url}]: ` + message);
@@ -78,15 +93,13 @@ service.interceptors.request.use(
       }
     }
     if (import.meta.env.VITE_APP_ENCRYPT === 'true') {
-      // 当开启参数加密
       if (isEncrypt && (config.method === 'post' || config.method === 'put')) {
-        // 生成一个 AES 密钥
         const aesKey = generateAesKey();
         config.headers[encryptHeader] = encrypt(encryptBase64(aesKey));
         config.data = typeof config.data === 'object' ? encryptWithAes(JSON.stringify(config.data), aesKey) : encryptWithAes(config.data, aesKey);
       }
     }
-    // FormData数据去请求头Content-Type
+    // FormData去Content-Type
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
@@ -94,38 +107,28 @@ service.interceptors.request.use(
   },
   (error: any) => {
     return Promise.reject(error);
-  }
+  },
 );
 
-// 响应拦截器
+// 响应拦截器（原有逻辑不变）
 service.interceptors.response.use(
   (res: AxiosResponse) => {
     if (import.meta.env.VITE_APP_ENCRYPT === 'true') {
-      // 加密后的 AES 秘钥
       const keyStr = res.headers[encryptHeader];
-      // 加密
       if (keyStr != null && keyStr != '') {
         const data = res.data;
-        // 请求体 AES 解密
         const base64Str = decrypt(keyStr);
-        // base64 解码 得到请求头的 AES 秘钥
         const aesKey = decryptBase64(base64Str.toString());
-        // aesKey 解码 data
         const decryptData = decryptWithAes(data, aesKey);
-        // 将结果 (得到的是 JSON 字符串) 转为 JSON
         res.data = JSON.parse(decryptData);
       }
     }
-    // 未设置状态码则默认成功状态
     const code = res.data.code || HttpStatus.SUCCESS;
-    // 获取错误信息
     const msg = errorCode[code] || res.data.msg || errorCode['default'];
-    // 二进制数据则直接返回
     if (res.request.responseType === 'blob' || res.request.responseType === 'arraybuffer') {
       return res.data;
     }
     if (code === 401) {
-      // prettier-ignore
       if (!isRelogin.show) {
         isRelogin.show = true;
         ElMessageBox.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', '系统提示', {
@@ -171,18 +174,14 @@ service.interceptors.response.use(
     }
     ElMessage({ message: message, type: 'error', duration: 5 * 1000 });
     return Promise.reject(error);
-  }
+  },
 );
-// 通用下载方法
+
+// 通用下载方法（原有逻辑不变）
 export function download(url: string, params: any, fileName: string) {
   downloadLoadingInstance = ElLoading.service({ text: '正在下载数据，请稍候', background: 'rgba(0, 0, 0, 0.7)' });
-  // prettier-ignore
   return service.post(url, params, {
-      transformRequest: [
-        (params: any) => {
-          return tansParams(params);
-        }
-      ],
+      transformRequest: [(params: any) => tansParams(params)],
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       responseType: 'blob'
     }).then(async (resp: any) => {
@@ -204,5 +203,5 @@ export function download(url: string, params: any, fileName: string) {
       downloadLoadingInstance.close();
     });
 }
-// 导出 axios 实例
+
 export default service;

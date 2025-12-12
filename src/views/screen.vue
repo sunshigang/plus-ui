@@ -13,6 +13,8 @@ import mapTitle from '@/components/mapTitle'
 import { ElMessage } from 'element-plus'
 import { getInfo } from '@/api/project/normal/index'
 import messageHandler from '@/libs/messageHandler.js' // 引入消息处理器（同preview.vue）
+// ========== 新增：导入Pinia的appStore ==========
+import { useAppStore } from '@/store/modules/app';
 
 const router = useRouter()
 const route = useRoute()
@@ -74,6 +76,19 @@ const attractionTypeMap = {
     8: "Parking"
 };
 const msgQueue = ref([]);
+
+// ===================== 新增：提取URL中的clientId工具函数 =====================
+const extractClientIdFromUrl = () => {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        // 兼容clientId（大写I）和clientid（全小写）两种参数名
+        const clientId = urlParams.get('clientId') || urlParams.get('clientid');
+        return clientId ? decodeURIComponent(clientId) : null;
+    } catch (e) {
+        console.error('提取URL中clientId失败：', e);
+        return null;
+    }
+};
 
 // ===================== 1. 修复sendMsgUE（兼容WebRTC状态） =====================
 const sendMsgUE = (data) => {
@@ -720,7 +735,15 @@ bus.on('search-relic', data => {
 
 // ===================== 8. 生命周期处理 =====================
 onMounted(async () => {
-    // 注册OnLoadAssets监听（控制加载提示）
+    // ========== 新增核心逻辑：提取并存储URL中的clientId ==========
+    const clientId = extractClientIdFromUrl();
+    if (clientId) {
+        const appStore = useAppStore();
+        appStore.setUrlClientId(clientId);
+        console.log('✅ 已存储URL中的clientId：', clientId);
+    }
+
+    // 原有逻辑：注册OnLoadAssets监听（控制加载提示）
     messageHandler.onCommand('OnLoadAssets', handleOnLoadAssets);
 
     // 捕获WebRTC连接状态
