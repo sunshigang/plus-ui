@@ -107,6 +107,18 @@
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
+              <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicGroundArea">
+                <el-input v-model="form.scenicGroundArea" placeholder="请输入风景区地上建筑面积" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicUndergroundArea">
+                <el-input v-model="form.scenicUndergroundArea" placeholder="请输入风景区地上建筑面积" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
               <el-form-item label="项目用途" prop="projectUsage">
                 <el-input v-model="form.projectUsage"
                   placeholder="请输入项目用途，例如：旅游开发、公路、铁路、机场、水利水电、电力通讯、防灾减灾、公用设施、其他......" />
@@ -465,7 +477,8 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: false,
-
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 表单验证规则

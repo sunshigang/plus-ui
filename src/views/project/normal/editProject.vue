@@ -4,7 +4,7 @@
       <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />信息填报</div>
       <div class="project-basic-info">
         <h3 class="section-title">项目基础信息</h3>
-        <el-form ref="basicFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="basicFormRef" :model="form" label-width="240px" :rules="rules" status-icon>
           <!-- 基础信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -59,7 +59,7 @@
             <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
-        <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="infoFormRef" :model="form" label-width="240px" :rules="rules" status-icon>
           <!-- 建设信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -102,6 +102,18 @@
                   <el-option label="长期" value="长期"></el-option>
                   <el-option label="临时" value="临时"></el-option>
                 </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicGroundArea">
+                <el-input v-model="form.scenicGroundArea" placeholder="请输入风景区地上建筑面积" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="涉及风景区地下建筑面积(㎡)" prop="scenicUndergroundArea">
+                <el-input v-model="form.scenicUndergroundArea" placeholder="请输入风景区地下建筑面积" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -518,7 +530,8 @@ const form = reactive({
   threeDModel: '',
   modelCoordinate: undefined,
   majorFlag: false,
-
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 文件列表（用于校验是否上传）
@@ -530,7 +543,13 @@ const approvalDocumentsFileList = ref([])
 const projectRedLineFileList = ref([])
 const redLineCoordinateFileList = ref([])
 const threeDModelFileList = ref([])
-
+// 项目用途白名单（严格匹配你的要求）
+const projectUsageWhiteList = [
+  '公路', '铁路', '机场', '水利水电', '电力通讯', '油气管网',
+  '科技、教育', '公用设施', '乡村道路', '保障性住房或移民搬迁',
+  '农民自建基本生产生活房舍', '商业服务业', '物流仓储', '旅游开发',
+  '养殖', '滑雪场', '林业生产经营、科研科普服务设施', '其他'
+]
 // 表单验证规则（核心：添加文件上传自定义校验）
 const rules = reactive({
   projectName: [{ required: true, message: '请输入建设项目名称', trigger: 'blur' }],
@@ -550,11 +569,42 @@ const rules = reactive({
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
-  projectUsage: [{ required: true, message: '请输入项目用途', trigger: 'blur' }],
+  scenicGroundArea: [
+    { required: true, message: '请输入风景区地上建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  scenicUndergroundArea: [
+    { required: true, message: '请输入风景区地下建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  projectUsage: [
+    { required: true, message: '请输入项目用途', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        // 去除首尾空格后判断是否在白名单中
+        const inputValue = value ? value.trim() : ''
+        if (inputValue && !projectUsageWhiteList.includes(inputValue)) {
+          callback(new Error(
+            '项目用途只能输入：公路、铁路、机场、水利水电、电力通讯、油气管网、科技、教育、公用设施、乡村道路、保障性住房或移民搬迁、农民自建基本生产生活房舍、商业服务业、物流仓储、旅游开发、养殖、滑雪场、林业生产经营、科研科普服务设施、其他'
+          ))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change']
+    }],
   projectPurpose: [{ required: true, message: '请输入拟选位置', trigger: 'blur' }],
   projectInvestment: [
     { required: true, message: '请输入建设项目拟投资额', trigger: 'blur' },
-    { pattern: /^[0-9]+(\.[0-9]{1,2})?$/, message: '请输入有效的数字（支持整数或两位小数）', trigger: 'blur' }
+    { pattern: /^\d+(\.\d+)?$/, message: '请输入有效的数字（支持整数或小数，金额不能为负）', trigger: 'blur' }
   ],
   planningBasis: [{ required: true, message: '请输入规划依据', trigger: 'blur' }],
   constructionContent: [{ required: true, message: '请输入建设内容涉及规模', trigger: 'blur' }],

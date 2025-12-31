@@ -298,12 +298,12 @@ watch(currentYear, newYear => {
 
     .legendBody {
         &::-webkit-scrollbar {
-            width: 6px; // 滚动条宽度
+            width: 0.3125vw; // 滚动条宽度
         }
 
         &::-webkit-scrollbar-thumb {
             background-color: rgba(255, 207, 112, 0.01); // 滚动条滑块透明
-            border-radius: 3px;
+            border-radius: 0.15625vw;
         }
 
         &::-webkit-scrollbar-track {
@@ -313,22 +313,22 @@ watch(currentYear, newYear => {
         .legendTitle {
             display: flex;
             align-items: center;
-            margin-bottom: 15px; // 每个图例项间距
+            margin-bottom: 0.78125vw; // 每个图例项间距
 
             .legendRect {
-                width: 32px;
-                height: 16px;
-                margin-right: 16px;
-                margin-left: 5px;
+                width: 1.6667vw;
+                height: 0.833vw;
+                margin-right: 0.833vw;
+                margin-left: 0.26vw;
             }
 
             .legendText {
-                height: 16px;
+                height: 0.833vw;
                 font-family: SourceHanSansCN, SourceHanSansCN;
                 font-weight: 400;
-                font-size: 16px;
+                font-size: 0.833vw;
                 color: #ffffff;
-                line-height: 16px;
+                line-height: 0.833vw;
                 text-align: left;
             }
         }
@@ -340,10 +340,10 @@ watch(currentYear, newYear => {
     pointer-events: auto;
     position: absolute;
     left: 50%;
-    transform: translateX(-490px);
-    bottom: 190px;
-    width: 980px;
-    height: 108px;
+    transform: translateX(-25.52vw);
+    bottom: 9.8958vw;
+    width: 51.04167vw;
+    height: 5.625;
     background: url(../../static/image/bottom/timeLine.png) no-repeat;
     background-size: 100% 100%;
     display: flex;
@@ -352,10 +352,10 @@ watch(currentYear, newYear => {
 
     .leftArrow {
         position: absolute;
-        left: 216px;
-        top: 28px;
-        width: 16px;
-        height: 18px;
+        left: 11.25vw;
+        top: 1.4583vw;
+        width: 0.833vw;
+        height: 0.9375vw;
         background: url(../../static/image/bottom/arrow-left.png) no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -363,10 +363,10 @@ watch(currentYear, newYear => {
 
     .rightArrow {
         position: absolute;
-        right: 216px;
-        top: 28px;
-        width: 16px;
-        height: 18px;
+        right: 11.25vw;
+        top: 1.4583vw;
+        width: 0.8333vw;
+        height: 0.9375vw;
         background: url(../../static/image/bottom/arrow-right.png) no-repeat;
         background-size: 100% 100%;
         cursor: pointer;
@@ -374,40 +374,40 @@ watch(currentYear, newYear => {
 
     .circle {
         position: absolute;
-        width: 4px;
-        height: 4px;
-        top: 35px;
-        left: 236px;
+        width: 0.2083vw;
+        height: 0.2083vw;
+        top: 1.823vw;
+        left: 12.29167vw;
         background: #fff8c7;
         border-radius: 50%;
     }
 
     .circle1 {
         position: absolute;
-        width: 4px;
-        height: 4px;
-        top: 35px;
-        left: 740px;
+        width:0.2083vw;
+        height: 0.2083vw;
+        top: 1.823vw;
+        left: 38.54167vw;
         background: #fff8c7;
         border-radius: 50%;
     }
 
     .base-line {
         position: absolute;
-        width: 492px;
-        height: 12px;
-        top: 36px;
-        left: 244px;
+        width: 25.625vw;
+        height: 0.625vw;
+        top: 1.875vw;
+        left: 12.7083vw;
         background: #847650;
         opacity: 0.4;
     }
 
     .top-line {
         position: absolute;
-        width: 492px;
-        height: 2px;
-        top: 36px;
-        left: 244px;
+        width: 25.625vw;
+        height: 0.104167vw;
+        top: 1.875vw;
+        left: 12.7083vw;
         background: #847650;
     }
 
@@ -417,20 +417,20 @@ watch(currentYear, newYear => {
         align-items: center;
         justify-content: center;
         position: relative;
-        width: 82px;
+        width: 4.27083vw;
         height: 100%;
 
         .star-icon-container {
-            width: 38px;
-            height: 38px;
+            width: 1.979167vw;
+            height: 1.979167vw;
             display: flex;
             justify-content: center;
             align-items: center;
 
             .star-icon {
                 margin: 0;
-                width: 14px;
-                height: 14px;
+                width: 0.729167vw;
+                height: 0.729167vw;
                 background: url(../../static/image/bottom/star-select.png) no-repeat;
                 background-size: 100% 100%;
                 transition: all 0.3s ease;
@@ -438,8 +438,8 @@ watch(currentYear, newYear => {
             }
 
             .star-icon.selected {
-                width: 38px;
-                height: 38px;
+                width: 1.979167vw;
+                height: 1.979167vw;
                 background: url(../../static/image/bottom/star-selected.png) no-repeat;
                 background-size: 100% 100%;
                 cursor: pointer;
@@ -451,7 +451,7 @@ watch(currentYear, newYear => {
             color: #fff;
             font-family: 'DINPro';
             font-weight: 400;
-            font-size: 20px;
+            font-size: 1.04167vw;
         }
 
         .year-text.active {

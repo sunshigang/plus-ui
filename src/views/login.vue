@@ -22,7 +22,7 @@
       <div class="form-footer">
         <el-form-item style="width: 100%">
           <el-button :loading="loading" size="large" type="primary"
-            style="width: 100%;border-radius: 22px;height: 60px" @click.prevent="handleLogin">账号登录
+            style="width: 100%;border-radius: 1.14583vw;height: 3.125vw" @click.prevent="handleLogin">账号登录
           </el-button>
         </el-form-item>
       </div>
@@ -167,16 +167,16 @@ const initTenantList = async () => {
  * 第三方登录
  * @param type
  */
-const doSocialLogin = (type: string) => {
-  authBinding(type, loginForm.value.tenantId).then((res: any) => {
-    if (res.code === HttpStatus.SUCCESS) {
-      // 获取授权地址跳转
-      window.location.href = res.data;
-    } else {
-      ElMessage.error(res.msg);
-    }
-  });
-};
+// const doSocialLogin = (type: string) => {
+//   authBinding(type, loginForm.value.tenantId).then((res: any) => {
+//     if (res.code === HttpStatus.SUCCESS) {
+//       // 获取授权地址跳转
+//       window.location.href = res.data;
+//     } else {
+//       ElMessage.error(res.msg);
+//     }
+//   });
+// };
 
 onMounted(() => {
   getCode();
@@ -201,10 +201,10 @@ onMounted(() => {
   display: flex;
 
   .title {
-    margin: 40px auto 50px auto;
+    margin: 2.0833vw auto 2.604167vw auto;
     text-align: center;
     font-weight: 500;
-    font-size: 26px;
+    font-size: 1.354167vw;
     color: rgba(0, 0, 0, 0.85);
   }
 
@@ -215,65 +215,56 @@ onMounted(() => {
 }
 
 .login-img {
-  width: 680px;
-  height: 680px;
+  width: 35.41667vw;
+  height: 35.41667vw;
 }
 
 .login-form {
-  border-radius: 6px;
   background: #ffffff;
-  width: 680px;
-  height: 680px;
-  padding: 45px 25px 5px 25px;
+  width: 35.41667vw;
+  height: 35.41667vw;
+  padding: 2.34375vw 1.302vw 0.26vw 1.302vw;
   z-index: 1;
-  border-radius: 0px 15px 15px 0px;
+  border-radius: 0 0.78125vw 0.78125vw 0;
 
   .el-input {
-    height: 60px;
-    font-size: 20px;
+    height: 3.125vw;
+    font-size: 1.041667vw;
 
     input {
-      height: 60px;
+      height: 3.125vw;
     }
   }
 
   .input-icon {
-    height: 39px;
-    width: 20px;
-    margin-left: 10px;
+    height: 2.03125vw;
+    width: 1.041667vw;
+    margin-left: 0.52vw;
   }
 }
 
 .form-item-top {
-  margin-top: 60px;
-  /* 可根据需求调整间距大小 */
+  margin-top: 3.125vw;
 }
-
-/* 记住密码：添加上外边距，移除默认margin */
 .remember-me {
-  margin: 60px 0 !important;
-  /* 上外边距20px，左右下0 */
+  margin: 3.125vw 0 !important;
   display: block;
-  /* 独占一行，对齐更整齐 */
 }
 
-/* 按钮组父容器：固定在底部 */
 .form-footer {
   margin-top: auto;
-  /* 自动占据剩余空间，把自己推到底部 */
-  padding-bottom: 40px;
-  /* 底部内边距，避免贴边 */
+  padding-bottom: 2.083vw;
 }
 
 .login-tip {
-  font-size: 16px;
+  font-size: 0.8333vw;
   text-align: center;
   color: #bfbfbf;
 }
 
 .login-code {
   width: 33%;
-  height: 40px;
+  height: 2.0833vw;
   float: right;
 
   img {
@@ -283,20 +274,20 @@ onMounted(() => {
 }
 
 .el-login-footer {
-  height: 40px;
-  line-height: 40px;
+  height: 2.0833vw;
+  line-height: 2.0833vw;
   position: fixed;
   bottom: 0;
   width: 100%;
   text-align: center;
   color: #fff;
   font-family: Arial, serif;
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 0.625vw;
+  letter-spacing: 0.052vw;
 }
 
 .login-code-img {
-  height: 40px;
-  padding-left: 12px;
+  height: 2.0833vw;
+  padding-left:  0.625vw;
 }
 </style>

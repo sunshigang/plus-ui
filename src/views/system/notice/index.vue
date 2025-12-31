@@ -93,7 +93,7 @@
     </el-card>
     <!-- 添加或修改公告对话框 -->
     <el-dialog v-model="dialog.visible" :title="dialog.title" width="780px" append-to-body>
-      <el-form ref="noticeFormRef" :model="form" :rules="rules" label-width="80px">
+      <el-form ref="noticeFormRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="12">
             <el-form-item label="公告标题" prop="noticeTitle">
@@ -136,10 +136,10 @@
 <script setup name="Notice" lang="ts">
 import { listNotice, getNotice, delNotice, readNotice, addNotice, updateNotice } from '@/api/system/notice';
 import { NoticeForm, NoticeQuery, NoticeVO } from '@/api/system/notice/types';
-
+import { useRouter } from 'vue-router'
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_notice_status, sys_notice_type } = toRefs<any>(proxy?.useDict('sys_notice_status', 'sys_notice_type'));
-
+const router = useRouter()
 const noticeList = ref<NoticeVO[]>([]);
 const loading = ref(true);
 const showSearch = ref(true);
@@ -239,14 +239,21 @@ const handleUpdate = async (row?: NoticeVO) => {
 };
 /**查看按钮操作 */
 const handleView = async (row?: NoticeVO) => {
-  if (!row) return; // 确保有选中行
+   if (!row) return; // 确保有选中行
   reset();
-  const noticeId = row.noticeId;
-  const { data } = await getNotice(noticeId);
-  Object.assign(form.value, data); // 加载数据
-  isViewMode.value = true; // 标记为查看模式
-  dialog.visible = true;
-  dialog.title = '查看公告';
+  if (row.majorFlag == true) {
+    router.push(`/project/major/major-view/${row.projectId}`);
+  } else {
+    router.push(`/project/normal/normal-view/${row.projectId}`);
+  }
+  // if (!row) return; // 确保有选中行
+  // reset();
+  // const noticeId = row.noticeId;
+  // const { data } = await getNotice(noticeId);
+  // Object.assign(form.value, data); // 加载数据
+  // isViewMode.value = true; // 标记为查看模式
+  // dialog.visible = true;
+  // dialog.title = '查看公告';
 };
 
 /** 提交按钮 */

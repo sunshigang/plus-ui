@@ -30,7 +30,7 @@ export default defineConfig(({ mode, command }) => {
           // secure: false
         },
         [env.VITE_APP_BASE_API]: {
-          target: 'http://47.96.251.128:25010',
+          target: 'http://frp5.ccszxc.site:38080/prod-api',
           changeOrigin: true,
           ws: true,
           rewrite: (path) => path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')

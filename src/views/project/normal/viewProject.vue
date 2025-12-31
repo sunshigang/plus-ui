@@ -105,6 +105,18 @@
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
+              <el-form-item label="涉及风景区地上建筑面积(㎡)">
+                <el-input v-model="form.scenicGroundArea" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="涉及风景区地下建筑面积(㎡)">
+                <el-input v-model="form.scenicUndergroundArea" disabled />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
               <el-form-item label="项目用途">
                 <el-input v-model="form.projectUsage" disabled />
               </el-form-item>
@@ -399,7 +411,9 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: false,
-  approveRecords: [] // 审批记录数组
+  approveRecords: [],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 文件列表

@@ -643,9 +643,9 @@ const selectItem = (index) => {
 // 箭头样式计算
 const arrowStyle = computed(() => {
     const topValues = [
-        '2px',
-        '43px',
-        '83px'
+        '0.104167vw',
+        '2.239583vw',
+        '4.3229vw'
     ]
     let lastSelectedIndex = -1
     for (let i = 2; i >= 0; i--) {
@@ -655,7 +655,7 @@ const arrowStyle = computed(() => {
         }
     }
     return {
-        top: lastSelectedIndex > -1 ? topValues[lastSelectedIndex] : '2px',
+        top: lastSelectedIndex > -1 ? topValues[lastSelectedIndex] : '0.1041667vw',
         display: lastSelectedIndex > -1 ? 'block' : 'none',
         transition: 'top 0.3s ease, display 0.3s ease'
     }
@@ -970,8 +970,8 @@ onUnmounted(() => {
 .rightSidebar {
     pointer-events: auto;
     position: absolute;
-    width: 312px;
-    height: 488px;
+    width: 16.25vw;
+    height: 25.41667vw;
     top: 14.26%;
     right: 6%;
     z-index: 2;
@@ -979,10 +979,10 @@ onUnmounted(() => {
     background-size: 100% 100%;
 
     .layerTitle {
-        margin-left: 34px;
-        margin-top: 31px;
-        width: 246px;
-        height: 36px;
+        margin-left: 1.77vw;
+        margin-top: 1.615vw;
+        width: 12.8125vw;
+        height: 1.875vw;
         background: url(../../static/image/right/layer-title.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -990,34 +990,34 @@ onUnmounted(() => {
         align-content: center;
 
         .layerTitleFont {
-            width: 92px;
-            height: 32px;
+            width: 4.79167vw;
+            height: 1.6667vw;
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 24px;
+            font-size: 1.25vw;
             color: #ffffff;
-            line-height: 36px;
-            text-shadow: 2px 0px 6px #0e0f19;
+            line-height: 1.875vw;
+            text-shadow: 0.104vw 0 0.3125vw #0e0f19;
             text-align: center;
-            letter-spacing: 3px;
+            letter-spacing: 0.15625vw;
         }
     }
 
     .layerContentBody {
         width: 95%;
-        height: 410px;
+        height: 21.354vw;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        padding: 0 5px;
+        padding: 0 0.26vw;
 
         &::-webkit-scrollbar {
-            width: 6px;
+            width: 0.3125vw;
         }
 
         &::-webkit-scrollbar-thumb {
             background-color: rgba(255, 207, 112, 0.01);
-            border-radius: 3px;
+            border-radius: 0.15625vw;
         }
 
         &::-webkit-scrollbar-track {
@@ -1025,7 +1025,7 @@ onUnmounted(() => {
         }
 
         .layerContentA {
-            margin-top: 10px;
+            margin-top: 0.52vw;
 
             .layerContentTitle {
                 position: relative;
@@ -1034,41 +1034,41 @@ onUnmounted(() => {
                 justify-content: space-between;
                 align-items: center;
                 width: 85%;
-                height: 34px;
-                margin-left: 18px;
+                height: 1.77vw;
+                margin-left: 0.9375vw;
 
                 .scroll-custom-checkbox {
                     position: absolute;
-                    right: 35px;
+                    right: 1.823vw;
                     top: 50%;
                     transform: translateY(-50%);
                     margin: 0;
                     z-index: 1;
 
                     :deep(.el-checkbox__inner) {
-                        width: 17px;
-                        height: 17px;
+                        width: 0.8854vw;
+                        height: 0.8854vw;
                         background-color: transparent;
-                        border: 2px solid #76602f;
+                        border: 0.104vw solid #76602f;
                     }
 
                     :deep(.el-checkbox__inner::after) {
-                        width: 6px;
-                        height: 8px;
-                        border: 3px solid #89df4a;
+                        width: 0.3125vw;
+                        height: 0.4167vw;
+                        border: 0.15625vw solid #89df4a;
                         border-left: 0;
                         border-top: 0;
                     }
                 }
 
                 .layerContentLabel {
-                    margin-left: 15px;
+                    margin-left: 0.78125vw;
                     font-family: 'SourceHanSansCN-Medium';
                     font-weight: 500;
-                    font-size: 18px;
+                    font-size: 0.9375vw;
                     color: #ece1b9;
-                    line-height: 36px;
-                    text-shadow: 2px 1px 8px #ffed59;
+                    line-height: 1.875vw;
+                    text-shadow: 0.104vw 0.052vw 0.4167vw #ffed59;
                     text-align: left;
                     font-style: normal;
                     text-transform: none;
@@ -1080,16 +1080,16 @@ onUnmounted(() => {
 
                 .layerContentShow {
                     cursor: pointer;
-                    width: 22px;
-                    height: 28px;
+                    width: 1.14583vw;
+                    height: 1.4583vw;
                     background: url(../../static/image/right/down.png) no-repeat;
                     background-size: 100% 100%;
                 }
 
                 .layerContentHide {
                     cursor: pointer;
-                    width: 28.1px;
-                    height: 22px;
+                    width: 1.46354vw;
+                    height: 1.14583vw;
                     background: url(../../static/image/right/left.png) no-repeat;
                     background-size: 100% 100%;
                 }
@@ -1101,16 +1101,16 @@ onUnmounted(() => {
 
             .scrollContentA {
                 width: 77%;
-                max-height: 110px;
+                max-height: 5.729vw;
                 overflow-y: auto;
 
                 &::-webkit-scrollbar {
-                    width: 6px;
+                    width: 0.3125vw;
                 }
 
                 &::-webkit-scrollbar-thumb {
                     background-color: rgba(255, 207, 112, 0.01);
-                    border-radius: 3px;
+                    border-radius: 0.15625vw;
                 }
 
                 &::-webkit-scrollbar-track {
@@ -1119,38 +1119,38 @@ onUnmounted(() => {
 
                 font-family: 'SourceHanSansCN-Medium';
                 font-weight: 400;
-                font-size: 15px;
+                font-size: 0.78125vw;
                 color: #ffffff;
-                line-height: 36px;
+                line-height: 1.875;
                 display: flex;
                 flex-direction: column;
-                margin-left: 40px;
+                margin-left: 2.083vw;
 
                 .scrollDetailA {
                     width: 100%;
-                    height: 30px;
+                    height: 1.5625vw;
                     display: flex;
                     flex-direction: row;
                     justify-content: space-between;
 
                     .scrollDetailFontA {
-                        margin-left: 5px;
+                        margin-left: 0.26vw;
                     }
 
                     .scroll-custom-checkbox {
-                        margin-top: 5px;
+                        margin-top: 0.26vw;
 
                         :deep(.el-checkbox__inner) {
-                            width: 17px;
-                            height: 17px;
+                            width: 0.8854vw;
+                            height: 0.8854vw;
                             background-color: transparent;
-                            border: 2px solid #76602f;
+                            border: 0.104vw solid #76602f;
                         }
 
                         :deep(.el-checkbox__inner::after) {
-                            width: 6px;
-                            height: 8px;
-                            border: 3px solid #89df4a;
+                            width: 0.3125vw;
+                            height: 0.4167vw;
+                            border: 0.15625vw solid #89df4a;
                             border-left: 0;
                             border-top: 0;
                         }
@@ -1164,8 +1164,8 @@ onUnmounted(() => {
 .functionPanel {
     pointer-events: auto;
     position: absolute;
-    width: 220px;
-    height: 113px;
+    width: 11.4583vw;
+    height: 5.8854vw;
     top: 82.04%;
     right: 6.25%;
     z-index: 2;
@@ -1174,8 +1174,8 @@ onUnmounted(() => {
     align-items: center;
 
     .arrow {
-        width: 42px;
-        height: 44px;
+        width: 2.1875vw;
+        height: 2.29167vw;
         background: url(../../static/image/right/arrow.png) no-repeat;
         background-size: 100% 100%;
         position: absolute;
@@ -1187,27 +1187,27 @@ onUnmounted(() => {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        margin-right: 20px;
-        margin-left: 40px;
+        margin-right: 1.0416vw;
+        margin-left: 2.083vw;
 
         .text-item {
-            width: 147px;
-            height: 28px;
+            width: 7.65625vw;
+            height: 1.4583vw;
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 24px;
+            font-size: 1.25vw;
             color: #f5e4c4;
             text-align: right;
             font-style: italic;
             text-decoration-line: underline;
             text-transform: none;
-            line-height: 28px;
-            margin-bottom: 15px;
+            line-height: 1.4583vw;
+            margin-bottom: 0.78125vw;
             cursor: pointer;
             transition: font-size 0.3s ease;
 
             &.active {
-                font-size: 30px;
+                font-size: 1.5625vw;
                 color: #ffa621;
             }
         }
@@ -1223,21 +1223,21 @@ onUnmounted(() => {
         justify-content: center;
 
         .circle {
-            width: 9px;
-            height: 9px;
-            border: 1px solid #ffa621;
+            width: 0.46875vw;
+            height: 0.46875vw;
+            border: 0.052vw solid #ffa621;
             border-radius: 50%;
-            margin-bottom: 12px;
+            margin-bottom: 0.625vw;
             background-color: transparent;
             transition: background-color 0.3s ease, border 0.3s ease;
-            margin-top: 20px;
+            margin-top: 1.04167vw;
         }
 
         .circle.solid {
             background-color: #ffa621;
             border: none;
-            width: 10px;
-            height: 10px;
+            width: 0.52vw;
+            height: 0.52vw;
         }
     }
 }
@@ -1245,8 +1245,8 @@ onUnmounted(() => {
 .drawFunctionBody {
     pointer-events: auto;
     position: absolute;
-    width: 71px;
-    height: 295px;
+    width: 3.6979vw;
+    height: 15.36458vw;
     top: 62.28%;
     right: 5.25%;
     z-index: 2;
@@ -1263,18 +1263,18 @@ onUnmounted(() => {
         align-items: center;
 
         .drawPointImg {
-            width: 56px;
-            height: 56px;
+            width: 2.91667vw;
+            height: 2.91667vw;
             background-size: 100% 100%;
         }
 
         .drawPointFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 24px;
-            margin-top: 5px;
-            width: 71px;
-            height: 20px;
+            font-size: 1.25vw;
+            margin-top: 0.26vw;
+            width: 3.6979vw;
+            height: 1.0416vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1311,18 +1311,18 @@ onUnmounted(() => {
         align-items: center;
 
         .drawPolylineImg {
-            width: 56px;
-            height: 56px;
+            width: 2.9166667vw;
+            height: 2.9166667vw;
             background-size: 100% 100%;
         }
 
         .drawPolylineFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 24px;
-            margin-top: 5px;
-            width: 71px;
-            height: 20px;
+            font-size: 1.25vw;
+            margin-top: 0.26vw;
+            width: 3.6979vw;
+            height: 1.041667vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1359,18 +1359,18 @@ onUnmounted(() => {
         align-items: center;
 
         .drawPloygonImg {
-            width: 56px;
-            height: 56px;
+            width: 2.916667vw;
+            height: 2.916667vw;
             background-size: 100% 100%;
         }
 
         .drawPloygonFont {
             font-family: 'xianglifang';
             font-weight: 400;
-            font-size: 24px;
-            margin-top: 5px;
-            width: 71px;
-            height: 20px;
+            font-size: 1.25vw;
+            margin-top: 0.26vw;
+            width: 3.6979vw;
+            height: 1.041667vw;
             display: flex;
             justify-content: center;
             align-items: center;

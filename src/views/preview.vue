@@ -43,7 +43,7 @@ import { useRouter, useRoute } from 'vue-router'
 import messageHandler from '@/libs/messageHandler.js'
 
 // 基础配置
-// const iframeUrl = ref('http://127.0.0.1:46150/')
+// const iframeUrl = ref('http://127.0.0.1:46150')
 const iframeUrl = ref('http://frp5.ccszxc.site:38082/')
 const router = useRouter()
 const route = useRoute()
@@ -60,6 +60,8 @@ const projectMajorFlag = ref(false)
 const projectThreeDModelOssId = ref('')
 const isWebRtcConnected = ref(false)
 const loadModelTimer = ref(null)
+// 新增：项目状态（用于判断是否删除模型）
+const projectStatus = ref('');
 // 新增：核心防重标记 - 确保模型只加载一次
 const isModelLoaded = ref(false)
 const loadAssetsDebounceTimer = ref(null);
@@ -132,16 +134,29 @@ const sendDeleteAssets = (ossId) => {
 };
 // ========== /新增 ==========
 
-// 2. 点击返回按钮（改造：异步等待DeleteAssets完成 + 保留UE场景到最后）
+// 2. 点击返回按钮（改造：异步等待DeleteAssets完成 + 保留UE场景到最后 + 精准删除判断）
 const clickBack = async () => {
     if (isClicking.value) return;
     isClicking.value = true;
     isDeletingModel.value = true;
     try {
-        // ========== 改造：先执行DeleteAssets并等待回调/超时 ==========
-        if (projectThreeDModelOssId.value) {
+        // ========== 核心修改：精准判断是否需要删除模型 ==========
+        const shouldDeleteModel = () => {
+            if (projectMajorFlag.value === false) {
+                // 非重大项目：仅"管委会通过"不删除，其他所有状态（含空/其他）都删除
+                return projectStatus.value !== "管委会通过";
+            } else {
+                // 重大项目：仅"林业局通过"不删除，其他所有状态（含空/其他）都删除
+                return projectStatus.value !== "林业局通过";
+            }
+        };
+
+        // 仅当需要删除且模型OSS ID非空时，执行删除操作
+        if (shouldDeleteModel() && projectThreeDModelOssId.value) {
             await sendDeleteAssets(projectThreeDModelOssId.value);
         }
+        // ========== /核心修改 ==========
+
         sendMsgUE({
             "Command": "SwitchCamera",
             "Args": { "ID": "Main", "Duration": 1.0 }
@@ -181,7 +196,7 @@ const clickBack = async () => {
                 isClicking.value = false;
                 isRouteLeaving.value = false;
             }, 1000);
-        }, 400);
+        }, 2000);
     } catch (err) {
         ElMessage.error(`返回失败：${err.message}`);
         // 异常时重置防重复点击标记
@@ -278,7 +293,7 @@ const handleOnLoadAssets = (args) => {
 };
 
 const currentLoadingModel = ref(null);
-// 7. 加载 3D 模型（核心：增加基于ID的防重逻辑）
+// 7. 加载 3D 模型（核心：增加基于ID的防重逻辑 + 补充projectStatus赋值）
 const loadThreeDModel = async () => {
     // 防重判断：已加载/无ID/已点击返回/WebRTC未连接 → 直接返回
     if (isModelLoaded.value || !projectId || isClicking.value || !isWebRtcConnected.value) {
@@ -290,7 +305,10 @@ const loadThreeDModel = async () => {
         const response = await getInfo(projectId);
         const projectData = response.data;
 
+        // ========== 补充：赋值项目状态和重大项目标记 ==========
         projectMajorFlag.value = projectData.majorFlag || false;
+        projectStatus.value = projectData.status || ''; // 关键：获取项目状态用于删除判断
+        // ========== /补充 ==========
 
         let threeDModel = projectData.threeDModel;
         if (typeof threeDModel === 'string') {

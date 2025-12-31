@@ -101,7 +101,7 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="保护区等级" prop="protectionLevel">
-                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple >
+                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple>
                       <el-option label="一级保护区" value="一级保护区"></el-option>
                       <el-option label="二级保护区" value="二级保护区"></el-option>
                       <el-option label="三级保护区" value="三级保护区"></el-option>
@@ -115,6 +115,18 @@
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地上建筑面积(㎡)">
+                    <el-input v-model="form.scenicGroundArea" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地下建筑面积(㎡)">
+                    <el-input v-model="form.scenicUndergroundArea" disabled />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -483,7 +495,9 @@ const form = reactive({
     lyjApproveTime: '',
     lyjApprovalReason: '',
     lyjApprovalAttachment: '',
-  }]
+  }],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 文件列表（与viewProject保持一致）

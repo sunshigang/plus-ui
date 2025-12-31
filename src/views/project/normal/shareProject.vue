@@ -125,6 +125,20 @@
                   <el-row :gutter="20">
                     <el-col :span="12">
                       <div class="info-item">
+                        <span class="label">涉及风景区地上建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicGroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="info-item">
+                        <span class="label">涉及风景区地下建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicUndergroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="info-item">
                         <span class="label">项目用途：</span>
                         <span class="value">{{ form.projectUsage || '暂无' }}</span>
                       </div>
@@ -469,6 +483,20 @@
                   <el-row :gutter="20">
                     <el-col :span="12">
                       <div class="info-item">
+                        <span class="label">涉及风景区地上建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicGroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="info-item">
+                        <span class="label">涉及风景区地下建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicUndergroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="info-item">
                         <span class="label">项目用途：</span>
                         <span class="value">{{ form.projectUsage || '暂无' }}</span>
                       </div>
@@ -704,13 +732,9 @@
     <div class="add-footer">
       <el-button @click="cancel">取消</el-button>
       <el-button type="warning" v-hasPermi="['project:project:share']" @click="clickDataDownload">数据下载</el-button>
-      <!-- <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare" :disabled="shareFlag"
-        :class="{ 'disabled-btn': shareFlag }">
-        {{ shareFlag ? '已共享' : '数据共享' }}
-      </el-button> -->
       <el-button type="success" v-hasPermi="['project:project:share']" @click="clickDataShare"
-        :disabled="shareFlag || buttonLoading" :loading="buttonLoading" class="share-btn">
-        {{ shareFlag ? '已共享' : '数据共享' }}
+        :disabled="form.remark !== ''" :class="{ 'disabled-btn': form.remark !== '' }">
+        {{ form.remark !== '' ? '已共享' : '数据共享' }}
       </el-button>
     </div>
   </div>
@@ -756,9 +780,7 @@ const collapseVisible = ref({
     construction: false
   }
 })
-const shareFlag = ref(false)
-// 表单引用
-const infoFormRef = ref(null)
+
 // 按钮加载状态
 const buttonLoading = ref(false)
 
@@ -796,7 +818,10 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: false,
-  approveRecords: []
+  approveRecords: [],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
+  remark: '',
 })
 const dialog = reactive({
   visible: false,
@@ -875,6 +900,7 @@ onMounted(async () => {
     const projectData = response.data
     // 填充表单数据
     Object.assign(form, projectData)
+    form.remark = projectData.remark || '';
     form.protectionLevel = typeof projectData.protectionLevel === 'string'
       ? projectData.protectionLevel.split(',').filter(Boolean)
       : (Array.isArray(projectData.protectionLevel) ? projectData.protectionLevel : []);
@@ -894,7 +920,6 @@ onMounted(async () => {
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 赋值审批记录数组
     form.approveRecords = projectData.approveRecords || []
-    shareFlag.value = projectData.shareFlag
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/normal')
@@ -936,46 +961,22 @@ const clickDataDownload = async () => {
     ElMessage.error('下载失败：' + (err.message || '未知错误'))
   }
 }
-// const clickDataShare = async () => {
-//   try {
-//     await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
-//     buttonLoading.value = true;
-//     await shareInfo(form.id);
-//     proxy?.$modal.msgSuccess('数据共享成功');
-//     shareFlag.value = true; // 共享成功后更新状态
-//     dialog.visible = false;
-//   } catch (err) {
-//     if (err !== 'cancel') {
-//       proxy?.$modal.msgError('数据共享失败：' + (err.message || '未知错误'));
-//     }
-//   } finally {
-//     buttonLoading.value = false;
-//   }
-// }
 const clickDataShare = async () => {
-  // 前置判断：已共享则直接返回，阻止后续逻辑
-  if (shareFlag.value) {
-    ElMessage.info('该项目数据已共享，无需重复操作');
-    return;
-  }
-  // 加载中+防重复点击
-  if (buttonLoading.value) return;
-
   try {
     await proxy?.$modal.confirm1('确认共享后最新的项目信息数据将共享至自然保护地审批平台进行最终的审批。');
-    buttonLoading.value = true; // 加载中，按钮禁用
-    const res = await shareInfo(form.id);
-    // 接口返回成功后，永久标记为已共享
-    if (res.code === 200 || res.success) { // 根据实际接口返回调整判断条件
-      proxy?.$modal.msgSuccess('数据共享成功');
-      shareFlag.value = true; // 永久禁用按钮
-    }
+    buttonLoading.value = true;
+    // 调用共享接口
+    await shareInfo(form.id);
+    proxy?.$modal.msgSuccess('数据共享成功');
+    // 可选：共享成功后给remark赋值（避免重复共享）
+    form.remark = '已共享';
+    dialog.visible = false;
   } catch (err) {
     if (err !== 'cancel') {
-      proxy?.$modal.msgError('数据共享失败：' + (err.message || '未知错误'));
+      proxy?.$modal.msgError('数据共享失败：' + (err?.message || '未知错误'));
     }
   } finally {
-    buttonLoading.value = false; // 无论成败，关闭加载状态
+    buttonLoading.value = false;
   }
 }
 </script>

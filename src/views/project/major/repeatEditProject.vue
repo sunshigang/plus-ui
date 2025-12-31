@@ -8,7 +8,7 @@
           <!-- 项目基础信息 -->
           <div class="project-basic-info">
             <h3 class="section-title">项目基础信息</h3>
-            <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef" :model="form" label-width="240px" :rules="rules">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设活动（建设项目）名称" prop="projectName">
@@ -62,7 +62,7 @@
                 <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
-            <el-form ref="infoFormRef2" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef2" :model="form" label-width="240px" :rules="rules">
               <!-- 建设信息表单内容 -->
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -105,6 +105,18 @@
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicGroundArea">
+                    <el-input v-model="form.scenicGroundArea" placeholder="请输入风景区地上建筑面积" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地下建筑面积(㎡)" prop="scenicUndergroundArea">
+                    <el-input v-model="form.scenicUndergroundArea" placeholder="请输入风景区地下建筑面积" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -509,6 +521,20 @@
                   <el-row :gutter="20">
                     <el-col :span="12">
                       <div class="info-item">
+                        <span class="label">涉及风景区地上建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicGroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="info-item">
+                        <span class="label">涉及风景区地下建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicUndergroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="info-item">
                         <span class="label">项目用途：</span>
                         <span class="value">{{ form.projectUsage || '暂无' }}</span>
                       </div>
@@ -864,7 +890,9 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecords: [] // 审批记录数组
+  approveRecords: [],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 审批反馈折叠状态
@@ -892,6 +920,22 @@ const rules = reactive({
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
+  scenicGroundArea: [
+    { required: true, message: '请输入风景区地上建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  scenicUndergroundArea: [
+    { required: true, message: '请输入风景区地下建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
   projectUsage: [{ required: true, message: '请输入项目用途', trigger: 'blur' }],
   projectPurpose: [{ required: true, message: '请输入拟选位置', trigger: 'blur' }],
@@ -1207,7 +1251,7 @@ const handleExceed = (files, fileList) => {
 }
 const handleUploadSuccess = (res, file, type) => {
   // 优先处理SHP（redLineCoordinate）类型的验证逻辑
-   if (type === 'redLineCoordinate') {
+  if (type === 'redLineCoordinate') {
     try {
       const validationResult = res.data?.validationResult || {}
       dialogTitle.value = validationResult.message || 'SHP数据验证结果'
@@ -1895,6 +1939,7 @@ const submitForm = () => {
 .validation-dialog {
   --el-dialog-width: 800px !important;
 }
+
 .validation-dialog :deep(.el-dialog__body) {
   height: 500px;
   padding: 24px;
@@ -1941,18 +1986,23 @@ const submitForm = () => {
   min-width: 0;
   flex-direction: column;
 }
+
 .upload-progress-container {
-  width: 50%;          /* 关键：占满父元素宽度 */
-  box-sizing: border-box; /* 防止宽度溢出 */
+  width: 50%;
+  /* 关键：占满父元素宽度 */
+  box-sizing: border-box;
+  /* 防止宽度溢出 */
 }
 
 /* 进度条文件名 - 样式优化 */
 .progress-file-name {
   font-size: 14px;
   color: #666;
-  margin-bottom: 4px;   /* 与进度条拉开间距 */
+  margin-bottom: 4px;
+  /* 与进度条拉开间距 */
   display: flex;
-  justify-content: space-between; /* 文件名和进度文本左右分布 */
+  justify-content: space-between;
+  /* 文件名和进度文本左右分布 */
   align-items: center;
 }
 
@@ -1964,9 +2014,12 @@ const submitForm = () => {
 
 /* 进度条组件 - 强制占满容器宽度 + 线宽保持 */
 .upload-progress-bar {
-  width: 100% !important; /* 关键：覆盖element默认宽度 */
-  stroke-width: 6;        /* 原有线宽保留，可根据需求调整 */
-  --el-progress-text-font-size: 12px; /* 优化进度百分比字体大小 */
+  width: 100% !important;
+  /* 关键：覆盖element默认宽度 */
+  stroke-width: 6;
+  /* 原有线宽保留，可根据需求调整 */
+  --el-progress-text-font-size: 12px;
+  /* 优化进度百分比字体大小 */
 }
 
 /* 确保进度条父元素不限制宽度 */
@@ -1976,6 +2029,7 @@ const submitForm = () => {
   line-height: 32px;
   min-width: 0;
   flex-direction: column;
-  width: 100%; /* 补充：让表单内容区占满宽度 */
+  width: 100%;
+  /* 补充：让表单内容区占满宽度 */
 }
 </style>

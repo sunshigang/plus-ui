@@ -1,8 +1,8 @@
 <template>
     <div id="leftSidebar">
-        <div class="leftLine" v-hasPermi="['screen:function:review']"></div>
+        <div v-show="superadminShowOrHide" class="leftLine" v-hasPermi="['screen:function:review']"></div>
         <div :class="schemeReviewStyle == true ? 'schemeReviewSelected' : 'schemeReviewSelect'"
-            @click="clickSchemeReview" v-hasPermi="['screen:function:review']">
+            @click="clickSchemeReview" v-hasPermi="['screen:function:review']" v-show="superadminShowOrHide">
             <div class="schemeReviewFont">方案审查</div>
         </div>
         <div class="leftLine1" v-hasPermi="['screen:function:achievement']"></div>
@@ -22,12 +22,12 @@
     <div class="searchBox" v-hasPermi="['screen:function:achievement']" v-if="planningAchievementStyle">
         <!-- 调整：option绑定改为item.name（显示）、item.id（值） -->
         <el-select v-model="selectedValues" filterable placeholder="请输入点位名称搜索" class="search-input"
-            @clear="handleSelectClear" style="--el-select-input-font-size: 16px;" :teleported="false">
+            @clear="handleSelectClear" style="--el-select-input-font-size: 0.833vw;" :teleported="false">
             <template #empty>
-                <div style="padding: 10px; color: #999;">暂无匹配的点位</div>
+                <div style="padding: 0.52083vw; color: #999;">暂无匹配的点位</div>
             </template>
             <el-option v-for="item in filteredOptionsPoi" :key="item.id" :label="item.name" :value="item.id"
-                style="font-size: 14px;" />
+                style="font-size: 0.729167vw;" />
         </el-select>
         <!-- 禁用判断：判断是否为空值（undefined/''） -->
         <div class="search-btn" @click="handleSearch" :class="{ disabled: selectedValues === '' }">
@@ -39,11 +39,11 @@
 <script setup>
 import { reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, ref, computed } from 'vue'
 import bus from '../../libs/eventbus'
-
+import { getInfo } from '@/api/login'
 // 定义响应式数据
 const sceneRoamingShow = ref(true)
 const { proxy } = getCurrentInstance()
-
+const superadminShowOrHide =ref(true)
 const schemeReviewStyle = ref(false)
 const planningAchievementStyle = ref(false)
 const vectorLayerStyle = ref(false)
@@ -243,7 +243,12 @@ const handleSearch = () => {
     // searchQuery.value = ''
 }
 
-onMounted(() => {
+onMounted(async () => {
+    const userData = await getInfo()
+    const currentUser = userData.data.roles[0]
+    if(currentUser=='superadmin'){
+        superadminShowOrHide.value =false
+    }
     filteredOptionsPoi.value = [...allOptionsPoi.value]
 })
 
@@ -281,7 +286,7 @@ onUnmounted(() => {
 #leftSidebar {
     pointer-events: auto;
     position: absolute;
-    width: 73px;
+    width: 3.8vw;
     height: 89.5vh;
     top: 6.5%;
     left: 6.875%;
@@ -290,9 +295,9 @@ onUnmounted(() => {
     flex-direction: column;
 
     .leftLine {
-        width: 1px;
-        height: 70px;
-        background: repeating-linear-gradient(to bottom, transparent 0, transparent 4px, #fad126 4px, #fad126 5px);
+        width: 0.05208vw;
+        height: 3.64583vw;
+        background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.2083vw, #fad126 0.2083vw, #fad126 0.26vw);
         margin: 0 auto;
         position: relative;
     }
@@ -300,19 +305,19 @@ onUnmounted(() => {
     .leftLine::after {
         content: '';
         position: absolute;
-        top: calc(70px * 0.5);
+        top: calc(3.6458vw * 0.5);
         left: 50%;
         transform: translateX(-50%);
-        width: 6px;
-        height: 6px;
+        width: 0.3125vw;
+        height: 0.3125vw;
         border-radius: 50%;
         background: radial-gradient(circle, #fff99d 0%, #fad126 100%);
-        box-shadow: 0 0 4px rgba(250, 209, 38, 0.8);
+        box-shadow: 0 0 0.2083vw rgba(250, 209, 38, 0.8);
     }
 
     .schemeReviewSelected {
-        width: 73px;
-        height: 190px;
+        width: 3.8vw;
+        height: 9.8958vw;
         background: url(../../static/image/left/scheme-selected.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -321,25 +326,25 @@ onUnmounted(() => {
         color: #ffffff;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 24px;
+        font-size: 1.25vw;
         cursor: pointer;
 
         .schemeReviewFont {
-            width: 32px;
-            height: 123px;
+            width: 1.667vw;
+            height: 6.40625vw;
             display: flex;
             justify-content: center;
             align-items: center;
             writing-mode: vertical-lr;
             text-orientation: upright;
-            letter-spacing: 4px;
+            letter-spacing: 0.2083vw;
         }
     }
 
     .schemeReviewSelect {
         cursor: pointer;
-        width: 73px;
-        height: 190px;
+        width: 3.8vw;
+        height: 9.8958vw;
         background: url(../../static/image/left/scheme-select.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -348,24 +353,24 @@ onUnmounted(() => {
         color: #7a4a28;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 24px;
+        font-size: 1.25vw;
 
         .schemeReviewFont {
-            width: 32px;
-            height: 123px;
+            width: 1.667vw;
+            height: 6.40625vw;
             display: flex;
             justify-content: center;
             align-items: center;
             writing-mode: vertical-lr;
             text-orientation: upright;
-            letter-spacing: 4px;
+            letter-spacing: 0.2083vw;
         }
     }
 
     .leftLine1 {
-        width: 1px;
-        height: 60px;
-        background: repeating-linear-gradient(to bottom, transparent 0, transparent 4px, #fad126 4px, #fad126 5px);
+        width: 0.05208vw;
+        height: 3.125vw;
+        background: repeating-linear-gradient(to bottom, transparent 0, transparent 0.2083vw, #fad126 0.2083vw, #fad126 0.26vw);
         margin: 0 auto;
         position: relative;
     }
@@ -373,19 +378,19 @@ onUnmounted(() => {
     .leftLine1::after {
         content: '';
         position: absolute;
-        top: calc(60px * 0.5);
+        top: calc(3.125vw * 0.5);
         left: 50%;
         transform: translateX(-50%);
-        width: 6px;
-        height: 6px;
+        width: 0.3125vw;
+        height: 0.3125vw;
         border-radius: 50%;
         background: radial-gradient(circle, #fff99d 0%, #fad126 100%);
-        box-shadow: 0 0 4px rgba(250, 209, 38, 0.8);
+        box-shadow: 0 0 0.2083vw rgba(250, 209, 38, 0.8);
     }
 
     .planningAchievementSelect {
-        width: 73px;
-        height: 190px;
+        width: 3.8vw;
+        height: 9.8958vw;
         background: url(../../static/image/left/scheme-select.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -394,24 +399,24 @@ onUnmounted(() => {
         color: #7a4a28;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 24px;
+        font-size: 1.25vw;
         cursor: pointer;
 
         .planningAchievementsFont {
-            width: 32px;
-            height: 123px;
+            width: 1.667vw;
+            height: 6.40625vw;
             display: flex;
             justify-content: center;
             align-items: center;
             writing-mode: vertical-lr;
             text-orientation: upright;
-            letter-spacing: 4px;
+            letter-spacing: 0.2083vw;
         }
     }
 
     .planningAchievementSelected {
-        width: 73px;
-        height: 190px;
+        width: 3.842vw;
+        height: 9.8958vw;
         background: url(../../static/image/left/scheme-selected.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -420,24 +425,24 @@ onUnmounted(() => {
         color: #ffffff;
         font-family: 'xianglifang';
         font-weight: 400;
-        font-size: 24px;
+        font-size: 1.25vw;
         cursor: pointer;
 
         .planningAchievementsFont {
-            width: 32px;
-            height: 123px;
+            width: 1.667vw;
+            height: 6.40625vw;
             display: flex;
             justify-content: center;
             align-items: center;
             writing-mode: vertical-lr;
             text-orientation: upright;
-            letter-spacing: 4px;
+            letter-spacing: 0.2083vw;
         }
     }
 
     .lanternEar {
-        width: 28px;
-        height: 121px;
+        width: 1.4573vw;
+        height: 6.3vw;
         background: url(../../static/image/left/lantern-ear.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -454,8 +459,8 @@ onUnmounted(() => {
     left: 6.7%;
     position: absolute;
     pointer-events: auto;
-    width: 86px;
-    height: 87px;
+    width: 4.479vw;
+    height: 4.53125vw;
     bottom: 4%;
     background: url(../../static/image/left/sceneRoaming.png) no-repeat;
     background-size: cover;
@@ -466,8 +471,8 @@ onUnmounted(() => {
 .searchBox {
     pointer-events: auto;
     position: absolute;
-    width: 257px;
-    height: 68px;
+    width: 13.3854vw;
+    height: 3.54167vw;
     top: 17.78%;
     left: 12.08%;
     background: url(../../static/image/left/search.png) no-repeat;
@@ -482,20 +487,20 @@ onUnmounted(() => {
     .search-input {
         flex: 1;
         height: 60%;
-        margin-left: 20px;
+        margin-left: 1.04167vw;
         border: none !important; // 强制清除边框
         outline: none;
         background: transparent !important; // 背景透明
-        min-height: 40px; // 最小高度40px
+        min-height: 2.083vw;
         color: #584424;
-        font-size: 16px;
+        font-size: 0.833vw;
         font-family: 'SourceHanSansCN-Regular';
     }
 
     // 1. 调整 el-select 基础容器样式
     :deep(.el-select__wrapper) {
         width: 100%;
-        min-height: 36px;
+        min-height: 1.875vw;
         background: transparent !important;
         // 1. 清除基础边框 + 重置边框颜色变量
         border: 0 !important;
@@ -505,7 +510,7 @@ onUnmounted(() => {
         --el-select-border-color-focus: transparent !important;
         outline: none !important; // 清除聚焦外边框
         box-shadow: none !important; // 清除聚焦阴影
-        margin-top: 3px;
+        margin-top: 0.15625vw;
 
         // 2. 聚焦状态强制清除边框/阴影
         &.is-focus {
@@ -519,10 +524,10 @@ onUnmounted(() => {
         :deep(.el-input__inner) {
             background: transparent !important;
             border: 0 !important;
-            min-height: 36px;
-            padding: 0 10px;
+            min-height: 1.875vw;
+            padding: 0 0.52083vw;
             color: #584424;
-            font-size: 16px;
+            font-size: 0.833vw;
             outline: none !important;
             box-shadow: none !important; // 输入框聚焦阴影也清除
 
@@ -548,17 +553,16 @@ onUnmounted(() => {
 
     // 5. 调整下拉框容器样式（关键：解决下拉框挂载到body的问题）
     :deep(.el-select-dropdown) {
-        width: 100px !important; // 下拉框宽度100px
+        width: 5.2083vw !important;
         background: rgba(245, 211, 110, 0.2) !important; // 半透明背景
         border: 0 !important; // 清除下拉框边框
-        border-radius: 4px; // 可选：圆角
-        // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); // 可选：轻微阴影
+        border-radius: 0.2083vw; // 可选：圆角
 
         // 6. 调整下拉选项样式
         :deep(.el-select-dropdown__item) {
             color: #584424; // 选项文字颜色
-            font-size: 14px;
-            padding: 8px 10px; // 选项内边距
+            font-size: 0.729167vw;
+            padding: 0.4167vw 0.52083vw; // 选项内边距
 
             // 选项hover样式
             &:hover {
@@ -576,21 +580,21 @@ onUnmounted(() => {
         // 7. 调整下拉框空状态样式（可选）
         :deep(.el-select-dropdown__empty) {
             color: #999;
-            padding: 10px;
+            padding: 0.52083vw;
         }
     }
 
 
     .search-btn {
-        width: 60px;
+        width: 3.125vw;
         height: 60%;
-        margin-right: 3px;
-        border-radius: 3px;
+        margin-right: 0.15625vw;
+        border-radius: 0.15625vw;
         display: flex;
         justify-content: center;
         align-items: center;
         color: #a57223;
-        font-size: 20px;
+        font-size: 1.04167vw;
         font-weight: 400;
         font-family: 'xianglifang';
         cursor: pointer;

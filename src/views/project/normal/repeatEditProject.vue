@@ -8,7 +8,7 @@
           <!-- 项目基础信息 -->
           <div class="project-basic-info">
             <h3 class="section-title">项目基础信息</h3>
-            <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef" :model="form" label-width="240px" :rules="rules">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设活动（建设项目）名称" prop="projectName">
@@ -62,7 +62,7 @@
                 <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
               </el-button>
             </div>
-            <el-form ref="infoFormRef1" :model="form" label-width="230px" :rules="rules">
+            <el-form ref="infoFormRef1" :model="form" label-width="240px" :rules="rules">
               <!-- 建设信息表单内容 -->
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -105,6 +105,18 @@
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicGroundArea">
+                    <el-input v-model="form.scenicGroundArea" placeholder="请输入风景区地上建筑面积" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地下建筑面积(㎡)" prop="scenicUndergroundArea">
+                    <el-input v-model="form.scenicUndergroundArea" placeholder="请输入风景区地下建筑面积" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -509,6 +521,20 @@
                   <el-row :gutter="20">
                     <el-col :span="12">
                       <div class="info-item">
+                        <span class="label">涉及风景区地上建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicGroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                    <el-col :span="12">
+                      <div class="info-item">
+                        <span class="label">涉及风景区地下建筑面积(㎡)：</span>
+                        <span class="value">{{ form.scenicUndergroundArea || '暂无' }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="20">
+                    <el-col :span="12">
+                      <div class="info-item">
                         <span class="label">项目用途：</span>
                         <span class="value">{{ form.projectUsage || '暂无' }}</span>
                       </div>
@@ -833,7 +859,9 @@ const form = reactive({
   modelCoordinate: undefined,
   modelPreview: undefined,
   majorFlag: true,
-  approveRecords: [] // 审批记录数组
+  approveRecords: [],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 const handleCancel = () => {
   router.push('/project/normal')
@@ -870,6 +898,22 @@ const rules = reactive({
     }
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
+  scenicGroundArea: [
+    { required: true, message: '请输入风景区地上建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  scenicUndergroundArea: [
+    { required: true, message: '请输入风景区地下建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
   projectUsage: [{ required: true, message: '请输入项目用途', trigger: 'blur' }],
   projectPurpose: [{ required: true, message: '请输入拟选位置', trigger: 'blur' }],
