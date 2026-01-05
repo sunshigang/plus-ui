@@ -15,7 +15,6 @@
                 <mapTitle />
             </template>
         </my-mask>
-        <!-- 关键：根据shareFlag隐藏返回按钮 -->
         <div class="backButton" v-if="!projectData?.shareFlag">
             <div class="back-line left-line">
                 <div class="dash-line dash1"></div>

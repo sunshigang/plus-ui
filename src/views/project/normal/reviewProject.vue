@@ -18,7 +18,7 @@
             <div class="section-title-text">基础信息</div>
           </div>
           <div class="section-content" v-if="basicInfoVisible">
-            <el-form :model="form" label-width="230px" disabled>
+            <el-form :model="form" label-width="230px" >
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设活动（建设项目）名称">
@@ -73,7 +73,7 @@
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
-            <el-form :model="form" label-width="230px" disabled>
+            <el-form :model="form" label-width="230px" >
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设单位名称">
@@ -322,7 +322,7 @@
           </div>
         </div>
         <!-- 审批信息（按状态显示） -->
-        <div class="project-documents" v-if="showApprovalSection">
+        <div class="project-documents" v-if="showApprovalSection && !!form.approveRecords?.[0]?.gwhApproveResult"">
           <h3 class="section-title">审批信息</h3>
           <el-form label-width="230px" disabled>
             <!-- 管委会审批信息 -->
@@ -518,7 +518,7 @@ const auditForm = reactive({
 })
 const showApprovalSection = computed(() => {
   const currentStatus = (form.status || '').trim();
-  const validStatuses = ['管委会审批中',,'管委会通过', '管委会驳回'];
+  const validStatuses = ['管委会审批中', , '管委会通过', '管委会驳回'];
   return validStatuses.includes(currentStatus);
 
 })
@@ -1182,25 +1182,24 @@ const handleDownloadTemplate = (type) => {
 .ele-upload-list__item-content {
   display: flex;
   align-items: center;
-  border: 1px solid #e5e7eb;
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
 }
+
 .ele-upload-list__item-content:hover {
   background-color: rgba(129, 195, 253, 0.2);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+
 .ele-upload-list__item-content .el-link {
   flex: 1;
-  /* 占满剩余空间 */
   min-width: 0;
-  /* 允许宽度小于内容宽度 */
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 10px;
-  /* 与删除按钮保持距离 */
+  color: #409eff;
 }
 
 .ele-upload-list__item-content .el-icon-document {

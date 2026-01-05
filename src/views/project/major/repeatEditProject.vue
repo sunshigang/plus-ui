@@ -169,11 +169,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'locationPlan')">
-                            删除
-                          </el-button> -->
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'locationPlan')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -199,11 +196,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'expertOpinions')">
-                            删除
-                          </el-button> -->
-                           <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'expertOpinions')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -231,11 +225,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'meetingMaterials')">
-                            删除
-                          </el-button> -->
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'meetingMaterials')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -261,11 +252,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
-                            删除
-                          </el-button> -->
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -292,11 +280,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'approvalDocuments')">
-                            删除
-                          </el-button> -->
-                           <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'approvalDocuments')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -322,11 +307,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'projectRedLine')">
-                            删除
-                          </el-button> -->
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'projectRedLine')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -357,11 +339,8 @@
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                     </el-link>
                     <div class="ele-upload-list__item-content-action">
-                      <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
-                        删除
-                      </el-button> -->
-                       <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"/>
-                      <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                      <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
+                      <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                     </div>
                   </li>
                 </transition-group>
@@ -372,7 +351,8 @@
                     <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
                       :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')"
                       :file-list="threeDModelFileList" :limit="1" accept=".pak"
-                      :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceedThreeDModel"
+                      :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')"
+                      :on-exceed="handleExceedThreeDModel"
                       :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                       :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
                       class="upload-file-uploader">
@@ -381,10 +361,10 @@
                     <div class="operation-group">
                       <el-button link type="primary" icon="Download"
                         @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
-                        <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
-                          <el-icon>
-                            <question-filled />
-                          </el-icon>
+                      <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
+                        <el-icon>
+                          <question-filled />
+                        </el-icon>
                       </el-tooltip>
                     </div>
                     <!-- <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
@@ -402,11 +382,8 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'threeDModel')">
-                            删除
-                          </el-button> -->
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'threeDModel')"/>
-                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
+                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
+                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -616,8 +593,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -638,8 +616,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -662,8 +641,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -680,12 +660,14 @@
                             </el-link>
                           </template> -->
                           <template v-if="siteSelectionReportFileList.length">
-                            <div v-for="file in siteSelectionReportFileList" :key="file.ossId" class="approval-file-item">
+                            <div v-for="file in siteSelectionReportFileList" :key="file.ossId"
+                              class="approval-file-item">
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -708,8 +690,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -730,8 +713,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -748,13 +732,14 @@
                         </el-link>
                       </template> -->
                       <template v-if="redLineCoordinateFileList.length">
-                            <div v-for="file in redLineCoordinateFileList" :key="file.ossId" class="approval-file-item">
-                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
-                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
-                              </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
-                          </template>
+                        <div v-for="file in redLineCoordinateFileList" :key="file.ossId" class="approval-file-item">
+                          <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                            <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                          </el-link>
+                          <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                            @click="handleFilePreview(file.url)" />
+                        </div>
+                      </template>
                       <span v-else>暂无</span>
                     </div>
                   </div>
@@ -774,8 +759,9 @@
                               <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
                                 <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                               </el-link>
-                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
-                              </div>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon"
+                                @click="handleFilePreview(file.url)" />
+                            </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -1959,18 +1945,16 @@ const submitForm = () => {
 
 .ele-upload-list__item-content {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
   margin-top: -5px;
-  margin-left: 5px;
 }
+
 .ele-upload-list__item-content:hover {
   background-color: rgba(129, 195, 253, 0.2);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+
 .ele-upload-list__item-content-action {
   margin-left: 10px;
   display: flex;
@@ -2133,6 +2117,7 @@ const submitForm = () => {
   width: 100%;
   /* 补充：让表单内容区占满宽度 */
 }
+
 /* 审批反馈文件项容器 - 悬浮背景效果 */
 .approval-file-item {
   cursor: pointer;

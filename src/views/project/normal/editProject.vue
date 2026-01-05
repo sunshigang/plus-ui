@@ -175,9 +175,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click.stop="handleDeleteUploadFile(index, 'locationPlan')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click.stop="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -205,9 +204,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click.stop="handleDeleteUploadFile(index, 'expertOpinions')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click.stop="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -237,9 +235,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'meetingMaterials')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -267,9 +264,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -299,9 +295,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'approvalDocuments')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -328,9 +323,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'projectRedLine')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -363,9 +357,8 @@
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                   <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                    <el-button type="danger" link @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
-                      删除
-                    </el-button>
+                    <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
+                    <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                   </div>
                 </li>
               </transition-group>
@@ -411,9 +404,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'threeDModel')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -806,7 +798,14 @@ onMounted(async () => {
     router.push('/project/normal')
   }
 })
-
+const handleFilePreview = (fileUrl) => {
+  if (!fileUrl) {
+    ElMessage.warning('文件链接无效，无法预览');
+    return;
+  }
+  // 新窗口打开文件链接，实现预览功能
+  window.open(fileUrl, '_blank');
+};
 // 上传前置校验
 const handleBeforeUpload = (file, type) => {
   const fileExt = file.name.split('.').pop()?.toLowerCase() || '';

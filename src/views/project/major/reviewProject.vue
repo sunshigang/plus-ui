@@ -73,7 +73,7 @@
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
-            <el-form :model="form" label-width="230px" disabled>
+            <el-form :model="form" label-width="230px" >
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设单位名称">
@@ -1176,7 +1176,6 @@ onMounted(async () => {
 .ele-upload-list__item-content {
   display: flex;
   align-items: center;
-  border: 1px solid #e5e7eb;
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
@@ -1192,6 +1191,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 10px;
+  color: #409eff;
 }
 
 .ele-upload-list__item-content .el-icon-document {
