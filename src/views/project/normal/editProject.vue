@@ -144,12 +144,19 @@
           <el-form-item label="其他需要说明的情况" prop="otherExplanations">
             <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况" />
           </el-form-item>
-
-          <!-- 文件上传区域（添加 ref 和 @change 事件） -->
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="选址方案" prop="locationPlan">
                 <div class="upload-container">
+                  <!-- <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')"
+                    :file-list="locationPlanFileList" :limit="props.limit" :accept="getFileAccept()"
+                    :on-error="(err, file) => handleUploadError(err, file, 'locationPlan')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'locationPlan')"
+                    :on-remove="(file, fileList) => handleLocationPlanRemove(file, fileList)" :headers="headers"
+                    class="upload-file-uploader" :disabled="props.compDisabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload> -->
                   <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
                     :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')"
                     :file-list="locationPlanFileList" :limit="props.limit" :accept="getFileAccept()"
@@ -282,7 +289,7 @@
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')"
                     :show-file-list="false" :headers="headers" class="upload-file-uploader"
                     :disabled="props.compDisabled">
-                    <el-button type="primary">点击上传</el-button>
+                    <el-button type="primary"> 点击上传</el-button>
                   </el-upload>
                   <transition-group class="upload-file-list el-upload-list el-upload-list--text"
                     name="el-fade-in-linear" tag="ul">
@@ -371,7 +378,8 @@
                   <el-upload ref="threeDModelUploadRef" :multiple="false" :action="uploadFileUrl"
                     :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
                     :limit="props.limit1" :accept="getFileAccept1()"
-                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceedThreeDModel"
+                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')"
+                    :on-exceed="handleExceedThreeDModel"
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                     :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
                     class="upload-file-uploader" :disabled="props.compDisabled"
@@ -993,7 +1001,21 @@ const handleUploadSuccess = (res, file, type) => {
     ElMessage.error(res.msg || '上传失败')
   }
 }
+const handleLocationPlanRemove = (file, fileList) => {
+  // 1. 找到当前删除文件在locationPlanFileList中的索引（优先匹配ossId，无则匹配name+uid）
+  const index = locationPlanFileList.value.findIndex(item => {
+    return item.ossId === file.ossId || (item.name === file.name && item.uid === file.uid);
+  });
 
+  // 2. 调用自定义删除函数（删除文件+调用后端接口）
+  if (index > -1) {
+    handleDeleteUploadFile(index, 'locationPlan');
+  }
+
+  // 3. 触发表单校验（保留原handleFileRemove的校验逻辑）
+  if (basicFormRef.value) basicFormRef.value.validateField('locationPlan');
+  if (infoFormRef.value) infoFormRef.value.validateField('locationPlan');
+};
 // 删除上传文件（修复：使用 ossId 而非 id）
 const handleDeleteUploadFile = async (index, type) => {
   let fileList = []

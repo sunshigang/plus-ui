@@ -1,8 +1,6 @@
 <template>
     <div class="preview-page">
-        <div v-if="isDeletingModel" class="delete-loading">正在删除模型...</div>
         <div v-if="isIframeLoading" class="iframe-loading">加载 3D 模型中...</div>
-        <!-- 🌟 调整：改用 isRouteLeaving 控制 iframe 隐藏（仅路由跳转时隐藏） -->
         <iframe ref="iframeRef" frameborder="0" :src="iframeUrl" style="width: 100%; height: 100%"
             allow="xr-spatial-tracking *" v-show="!isRouteLeaving"></iframe>
         <my-mask>
@@ -51,7 +49,6 @@ const projectId = route.query.id
 const projectType = route.query.type
 const isRouteLeaving = ref(false)
 const isClicking = ref(false)
-const isDeletingModel = ref(false);
 const iframeRef = ref(null)
 const loadAssetsStatus = ref(''); // 缓存最终状态
 // 响应式状态
@@ -138,7 +135,6 @@ const sendDeleteAssets = (ossId) => {
 const clickBack = async () => {
     if (isClicking.value) return;
     isClicking.value = true;
-    isDeletingModel.value = true;
     try {
         // ========== 核心修改：精准判断是否需要删除模型 ==========
         const shouldDeleteModel = () => {
@@ -202,8 +198,6 @@ const clickBack = async () => {
         // 异常时重置防重复点击标记
         isClicking.value = false;
     } finally {
-        isDeletingModel.value = false;
-        // 清理定时器，防止内存泄漏
         clearTimeout(deleteAssetsTimer.value);
         deleteAssetsResolve.value = null;
     }
@@ -484,20 +478,6 @@ onUnmounted(() => {
     padding: 16px 32px;
     border-radius: 8px;
 }
-
-.delete-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 16px;
-    color: #ffd700;
-    z-index: 999;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 8px 16px;
-    border-radius: 4px;
-}
-
 @keyframes spin {
     0% {
         transform: rotate(0deg);

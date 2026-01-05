@@ -39,7 +39,7 @@
 <script setup>
 import { reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, ref, computed } from 'vue'
 import bus from '../../libs/eventbus'
-import { getInfo } from '@/api/login'
+// import { getInfo } from '@/api/login'
 // 定义响应式数据
 const sceneRoamingShow = ref(true)
 const { proxy } = getCurrentInstance()
@@ -244,15 +244,21 @@ const handleSearch = () => {
 }
 
 onMounted(async () => {
-    const userData = await getInfo()
-    const currentUser = userData.data.roles[0]
-    if(currentUser=='superadmin'){
-        superadminShowOrHide.value =false
+    const handleVisScreenClick = (isShow) => {
+        superadminShowOrHide.value = isShow // 接收事件参数，设置为 false（隐藏）
+        console.log("🚀 ~ handleVisScreenClick ~ superadminShowOrHide.value:", superadminShowOrHide.value)
     }
+    bus.on('vis-screen-clicked', handleVisScreenClick)
+
+    // 3. 缓存监听函数，用于销毁时移除
+    window.handleVisScreenClick = handleVisScreenClick
     filteredOptionsPoi.value = [...allOptionsPoi.value]
 })
 
 onUnmounted(() => {
+    if (window.handleVisScreenClick) {
+        bus.off('vis-screen-clicked', window.handleVisScreenClick)
+    }
     // 重置所有响应式状态
     sceneRoamingShow.value = true
     schemeReviewStyle.value = false

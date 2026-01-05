@@ -203,6 +203,7 @@ onMounted(() => {
   .title {
     margin: 2.0833vw auto 2.604167vw auto;
     text-align: center;
+    font-family: 'SourceHanSansCN-Medium';
     font-weight: 500;
     font-size: 1.354167vw;
     color: rgba(0, 0, 0, 0.85);

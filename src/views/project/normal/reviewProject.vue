@@ -518,7 +518,7 @@ const auditForm = reactive({
 })
 const showApprovalSection = computed(() => {
   const currentStatus = (form.status || '').trim();
-  const validStatuses = ['管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
+  const validStatuses = ['管委会审批中',,'管委会通过', '管委会驳回'];
   return validStatuses.includes(currentStatus);
 
 })

@@ -971,7 +971,6 @@ const clickDataShare = async () => {
     // 调用共享接口
     await shareInfo(form.id);
     proxy?.$modal.msgSuccess('数据共享成功');
-    // 可选：共享成功后给remark赋值（避免重复共享）
     form.remark = '已共享';
     dialog.visible = false;
   } catch (err) {

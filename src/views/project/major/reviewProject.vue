@@ -322,7 +322,7 @@
           </div>
         </div>
         <!-- 审批信息（多记录循环展示） -->
-        <div class="project-documents" v-if="showApprovalSection && form.approveRecords.length > 0">
+        <div class="project-documents" v-if="showApprovalSection && !!form.approveRecords?.[0]?.gwhApproveResult">
           <h3 class="section-title">审批信息</h3>
           <!-- 循环渲染每一条审批记录 -->
           <div v-for="(record, index) in form.approveRecords" :key="record.id || `approval-record-${index}`"

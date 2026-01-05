@@ -92,6 +92,7 @@ import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBox, ElMessageBoxOptions } from 'element-plus';
 import { getInfo as getUserInfo } from '@/api/login';
+import bus from '../../libs/eventbus';
 // 声明自定义 proxy 类型
 interface CustomProxy {
   $router: {
@@ -135,6 +136,12 @@ const openSearchMenu = () => {
 const handle3DScreen = () => {
   router.push({
     path: '/screen/screen',
+  }).then(() => {
+    // 路由跳转成功后，延迟发送事件（确保大屏组件已挂载）
+    setTimeout(() => {
+      bus.emit('vis-screen-clicked', false)
+      console.log("事件已发送：vis-screen-clicked -> false")
+    }, 100); // 100ms 延迟足够组件挂载
   })
 }
 // 动态切换

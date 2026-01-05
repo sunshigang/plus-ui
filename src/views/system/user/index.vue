@@ -46,8 +46,7 @@
               @click="handleExport">导出</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button  type="primary" plain icon="Download"
-              @click="importTemplate">下载模板</el-button>
+            <el-button type="primary" plain icon="Download" @click="importTemplate">下载模板</el-button>
             <!-- <el-dropdown class="mt-[1px]">
               <el-button plain type="info">
                 更多
@@ -57,7 +56,7 @@
                   <el-dropdown-item icon="Download" @click="importTemplate">下载模板</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
-            </el-dropdown> -->
+</el-dropdown> -->
           </el-col>
           <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true"
             @query-table="getList"></right-toolbar>
@@ -93,7 +92,7 @@
               @change="handleStatusChange(scope.row)"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="250"/>
+        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="250" />
         <!-- <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="200">
           <template #default="scope">
             <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
@@ -132,7 +131,7 @@
         </el-form-item>
 
         <el-form-item label="所属角色" prop="roleIds" v-if="dialog.isView == false">
-          <el-select v-model="form.roleIds" filterable multiple placeholder="请选择" :disabled="dialog.isView">
+          <el-select v-model="form.roleIds" filterable multiple clearable placeholder="请选择" :disabled="dialog.isView">
             <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName"
               :value="String(item.roleId)" :disabled="item.status == '1'"></el-option>
           </el-select>
@@ -141,8 +140,8 @@
           <el-input v-model="joinedRoleNames" placeholder="无角色" :disabled="true" />
         </el-form-item>
         <el-form-item label="项目权限" prop="projectIds">
-          <el-select v-model="form.projectIds" filterable multiple clearable collapse-tags placeholder="请选择项目"
-            :max-collapse-tags="1" popper-class="custom-header" :disabled="dialog.isView">
+          <el-select v-model="form.projectIds" filterable multiple clearable placeholder="请选择项目"
+            popper-class="custom-header" :disabled="dialog.isView">
             <template #header>
               <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll"
                 :disabled="dialog.isView">
