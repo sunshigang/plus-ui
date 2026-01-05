@@ -169,9 +169,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'locationPlan')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'locationPlan')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'locationPlan')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -197,9 +199,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'expertOpinions')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'expertOpinions')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                           <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'expertOpinions')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -227,9 +231,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'meetingMaterials')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'meetingMaterials')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'meetingMaterials')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -255,9 +261,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -284,9 +292,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'approvalDocuments')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'approvalDocuments')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                           <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'approvalDocuments')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -312,9 +322,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'projectRedLine')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'projectRedLine')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'projectRedLine')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -345,9 +357,11 @@
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                     </el-link>
                     <div class="ele-upload-list__item-content-action">
-                      <el-button type="danger" link @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
+                      <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
                         删除
-                      </el-button>
+                      </el-button> -->
+                       <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"/>
+                      <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                     </div>
                   </li>
                 </transition-group>
@@ -357,25 +371,29 @@
                   <el-form-item label="项目三维模型" prop="threeDModel">
                     <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
                       :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')"
-                      :file-list="threeDModelFileList" :limit="props.limit" :accept="getFileAccept()"
-                      :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
+                      :file-list="threeDModelFileList" :limit="1" accept=".pak"
+                      :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceedThreeDModel"
                       :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                       :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
-                      class="upload-file-uploader"
-                      :on-progress="(progressEvent, file) => handleUploadProgress(progressEvent, file, 'threeDModel')">
+                      class="upload-file-uploader">
                       <el-button type="primary">点击上传</el-button>
                     </el-upload>
                     <div class="operation-group">
                       <el-button link type="primary" icon="Download"
                         @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
+                        <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
+                          <el-icon>
+                            <question-filled />
+                          </el-icon>
+                      </el-tooltip>
                     </div>
-                    <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
+                    <!-- <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
                       class="upload-progress-container">
                       <div class="progress-file-name">{{ item.fileName }}<span v-if="item.progressText"
                           class="progress-text">{{ item.progressText }}</span></div>
                       <el-progress :percentage="item.progress" :status="item.status" :stroke-width="6"
                         class="upload-progress-bar" />
-                    </div>
+                    </div> -->
                     <transition-group class="upload-file-list el-upload-list el-upload-list--text"
                       name="el-fade-in-linear" tag="ul">
                       <li v-for="(file, index) in threeDModelFileList" :key="file.ossId"
@@ -384,9 +402,11 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link @click="handleDeleteUploadFile(index, 'threeDModel')">
+                          <!-- <el-button type="danger" link @click="handleDeleteUploadFile(index, 'threeDModel')">
                             删除
-                          </el-button>
+                          </el-button> -->
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/delete-icon.png" @click="handleDeleteUploadFile(index, 'threeDModel')"/>
+                          <img style="width:20px;height:20px;cursor:pointer" src="@/assets/images/download-icon.png" @click="handleFilePreview(file.url)"/>
                         </div>
                       </li>
                     </transition-group>
@@ -469,9 +489,9 @@
                 <img v-else class="arrow-icon" src="@/assets/images/arrow-right.png" />
                 <span class="collapse-title">建设信息</span>
                 <!-- 三维场景效果预览按钮（与标题同排） -->
-                <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
+                <!-- <el-button type="primary" @click="handleModelPreview" class="modelPreview float-right">
                   <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
-                </el-button>
+                </el-button> -->
               </div>
               <div class="custom-collapse-content" v-if="constructionInfoVisible">
                 <!-- 建设信息内容 -->
@@ -585,11 +605,19 @@
                       <div class="info-item">
                         <span class="label">选址方案：</span>
                         <div class="file-list">
-                          <template v-if="locationPlanFileList.length">
+                          <!-- <template v-if="locationPlanFileList.length">
                             <el-link v-for="file in locationPlanFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="locationPlanFileList.length">
+                            <div v-for="file in locationPlanFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -599,11 +627,19 @@
                       <div class="info-item">
                         <span class="label">专家评审意见：</span>
                         <div class="file-list">
-                          <template v-if="expertOpinionsFileList.length">
+                          <!-- <template v-if="expertOpinionsFileList.length">
                             <el-link v-for="file in expertOpinionsFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="expertOpinionsFileList.length">
+                            <div v-for="file in expertOpinionsFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -615,11 +651,19 @@
                       <div class="info-item">
                         <span class="label">公示材料：</span>
                         <div class="file-list">
-                          <template v-if="meetingMaterialsFileList.length">
+                          <!-- <template v-if="meetingMaterialsFileList.length">
                             <el-link v-for="file in meetingMaterialsFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="meetingMaterialsFileList.length">
+                            <div v-for="file in meetingMaterialsFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -629,11 +673,19 @@
                       <div class="info-item">
                         <span class="label">选址方案核准申报表：</span>
                         <div class="file-list">
-                          <template v-if="siteSelectionReportFileList.length">
+                          <!-- <template v-if="siteSelectionReportFileList.length">
                             <el-link v-for="file in siteSelectionReportFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="siteSelectionReportFileList.length">
+                            <div v-for="file in siteSelectionReportFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -645,11 +697,19 @@
                       <div class="info-item">
                         <span class="label">立项文件：</span>
                         <div class="file-list">
-                          <template v-if="approvalDocumentsFileList.length">
+                          <!-- <template v-if="approvalDocumentsFileList.length">
                             <el-link v-for="file in approvalDocumentsFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="approvalDocumentsFileList.length">
+                            <div v-for="file in approvalDocumentsFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -659,11 +719,19 @@
                       <div class="info-item">
                         <span class="label">项目用地红线图：</span>
                         <div class="file-list">
-                          <template v-if="projectRedLineFileList.length">
+                          <!-- <template v-if="projectRedLineFileList.length">
                             <el-link v-for="file in projectRedLineFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="projectRedLineFileList.length">
+                            <div v-for="file in projectRedLineFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -673,12 +741,20 @@
                   <div class="info-item">
                     <span class="label">项目红线矢量数据：</span>
                     <div class="file-list">
-                      <template v-if="redLineCoordinateFileList.length">
+                      <!-- <template v-if="redLineCoordinateFileList.length">
                         <el-link v-for="file in redLineCoordinateFileList" :key="file.ossId" :href="file.url"
                           :underline="false" target="_blank">
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
-                      </template>
+                      </template> -->
+                      <template v-if="redLineCoordinateFileList.length">
+                            <div v-for="file in redLineCoordinateFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
+                          </template>
                       <span v-else>暂无</span>
                     </div>
                   </div>
@@ -687,11 +763,19 @@
                       <div class="info-item">
                         <span class="label">项目三维模型：</span>
                         <div class="file-list">
-                          <template v-if="threeDModelFileList.length">
+                          <!-- <template v-if="threeDModelFileList.length">
                             <el-link v-for="file in threeDModelFileList" :key="file.ossId" :href="file.url"
                               :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
+                          </template> -->
+                          <template v-if="threeDModelFileList.length">
+                            <div v-for="file in threeDModelFileList" :key="file.ossId" class="approval-file-item">
+                              <el-link :href="file.url" :underline="false" target="_blank" class="file-name-link">
+                                <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
+                              </el-link>
+                              <img src="@/assets/images/download-icon.png" class="common-download-icon" @click="handleFilePreview(file.url)"/>
+                              </div>
                           </template>
                           <span v-else>暂无</span>
                         </div>
@@ -855,7 +939,7 @@ const infoFormRef = ref(null)
 const infoFormRef2 = ref(null)
 // 按钮加载状态
 const buttonLoading = ref(false)
-const threeDModelUploadProgress = ref([])
+// const threeDModelUploadProgress = ref([])
 // 表单数据
 const form = reactive({
   id: undefined,
@@ -898,7 +982,15 @@ const form = reactive({
 // 审批反馈折叠状态
 const basicInfoVisible = ref(true)
 const constructionInfoVisible = ref(false)
-
+// 新增：文件预览方法（与文件名链接功能一致，新窗口打开）
+const handleFilePreview = (fileUrl) => {
+  if (!fileUrl) {
+    ElMessage.warning('文件链接无效，无法预览');
+    return;
+  }
+  // 新窗口打开文件链接，实现预览功能
+  window.open(fileUrl, '_blank');
+};
 // 折叠控制方法
 const toggleBasicInfo = () => {
   basicInfoVisible.value = !basicInfoVisible.value
@@ -1125,16 +1217,16 @@ onMounted(async () => {
       if (threeDModelFileList.value.length > 0) {
         form.threeDModel = threeDModelFileList.value[0].url
         // 优化：清空旧进度条，重新初始化（避免重复）
-        threeDModelUploadProgress.value = []
-        threeDModelFileList.value.forEach(file => {
-          threeDModelUploadProgress.value.push({
-            fileName: getFileName(file.name),
-            progress: 100,
-            status: 'success',
-            fileId: file.ossId,
-            progressText: ''
-          })
-        })
+        // threeDModelUploadProgress.value = []
+        // threeDModelFileList.value.forEach(file => {
+        //   threeDModelUploadProgress.value.push({
+        //     fileName: getFileName(file.name),
+        //     progress: 100,
+        //     status: 'success',
+        //     fileId: file.ossId,
+        //     progressText: ''
+        //   })
+        // })
       }
     }
     // 赋值审批记录数组
@@ -1177,28 +1269,27 @@ const handleBeforeUpload = (file, type) => {
   }
   // 核心修改3：单独校验项目红线矢量数据仅允许zip格式
   if (type === 'redLineCoordinate') {
-    const fileExt = file.name.split('.').pop()?.toLowerCase()
     if (fileExt !== 'zip') {
       ElMessage.error('项目红线矢量数据仅支持上传ZIP格式文件！')
       return false
     }
     return true // 跳过通用类型校验
   }
-  if (type === 'threeDModel') {
-    const fileName = getFileName(file.name)
-    // 防止重复添加
-    const exists = threeDModelUploadProgress.value.some(item => item.fileName === fileName)
-    if (!exists) {
-      threeDModelUploadProgress.value.push({
-        fileName,
-        progress: 0,
-        status: undefined, // 上传中
-        fileId: '',
-        fileObj: file, // 保存文件对象，用于后续匹配
-        progressText: '（上传中...）' // 初始化进度文本
-      })
-    }
-  }
+  // if (type === 'threeDModel') {
+  //   const fileName = getFileName(file.name)
+  //   // 防止重复添加
+  //   const exists = threeDModelUploadProgress.value.some(item => item.fileName === fileName)
+  //   if (!exists) {
+  //     threeDModelUploadProgress.value.push({
+  //       fileName,
+  //       progress: 0,
+  //       status: undefined, // 上传中
+  //       fileId: '',
+  //       fileObj: file, // 保存文件对象，用于后续匹配
+  //       progressText: '（上传中...）' // 初始化进度文本
+  //     })
+  //   }
+  // }
   return true
 }
 const handleUploadError = (err, file, type) => {
@@ -1209,46 +1300,48 @@ const handleUploadError = (err, file, type) => {
   }
   ElMessage.error(`上传失败: ${err.message || '未知错误'}`)
   // 三维模型上传失败时更新进度条状态
-  if (type === 'threeDModel') {
-    const fileName = getFileName(file.name)
-    const existingIndex = threeDModelUploadProgress.value.findIndex(
-      item => item.fileName === fileName
-    )
-
-    if (existingIndex > -1) {
-      threeDModelUploadProgress.value[existingIndex] = {
-        ...threeDModelUploadProgress.value[existingIndex],
-        status: 'exception',
-        fileObj: null
-      }
-    }
-  }
+  // if (type === 'threeDModel') {
+  //   const fileName = getFileName(file.name)
+  //   const existingIndex = threeDModelUploadProgress.value.findIndex(
+  //     item => item.fileName === fileName
+  //   )
+  //   if (existingIndex > -1) {
+  //     threeDModelUploadProgress.value[existingIndex] = {
+  //       ...threeDModelUploadProgress.value[existingIndex],
+  //       status: 'exception',
+  //       fileObj: null
+  //     }
+  //   }
+  // }
 }
-const handleUploadProgress = (progressEvent, file, type) => {
-  if (type !== 'threeDModel') return // 只处理三维模型上传进度
-  const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-  const fileName = getFileName(file.name)
+// const handleUploadProgress = (progressEvent, file, type) => {
+//   if (type !== 'threeDModel') return // 只处理三维模型上传进度
+//   const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+//   const fileName = getFileName(file.name)
 
-  // 查找当前文件的进度记录
-  const existingIndex = threeDModelUploadProgress.value.findIndex(
-    item => item.fileName === fileName
-  )
-  if (existingIndex > -1) {
-    const status = undefined
-    const progressText = percent === 100
-      ? '（服务器处理中...）'
-      : '（上传中...）'
-    threeDModelUploadProgress.value[existingIndex] = {
-      ...threeDModelUploadProgress.value[existingIndex],
-      progress: percent,
-      status,
-      progressText
-    }
-  }
-}
+//   // 查找当前文件的进度记录
+//   const existingIndex = threeDModelUploadProgress.value.findIndex(
+//     item => item.fileName === fileName
+//   )
+//   if (existingIndex > -1) {
+//     const status = undefined
+//     const progressText = percent === 100
+//       ? '（服务器处理中...）'
+//       : '（上传中...）'
+//     threeDModelUploadProgress.value[existingIndex] = {
+//       ...threeDModelUploadProgress.value[existingIndex],
+//       progress: percent,
+//       status,
+//       progressText
+//     }
+//   }
+// }
 const handleExceed = (files, fileList) => {
   ElMessage.warning(`每次最多上传 ${props.limit} 个文件`)
 }
+const handleExceedThreeDModel = (files, fileList) => {
+  ElMessage.warning('仅支持上传1个PAK格式的三维模型文件！');
+};
 const handleUploadSuccess = (res, file, type) => {
   // 优先处理SHP（redLineCoordinate）类型的验证逻辑
   if (type === 'redLineCoordinate') {
@@ -1301,46 +1394,47 @@ const handleUploadSuccess = (res, file, type) => {
         threeDModelFileList.value.push(fileItem);
         form.threeDModel = res.data.url;
         // 更新进度条状态为成功（移除进度文本）
-        const fileName = getFileName(file.name)
-        const progressIndex = threeDModelUploadProgress.value.findIndex(
-          item => item.fileName === fileName || item.fileObj === file
-        )
-        if (progressIndex > -1) {
-          threeDModelUploadProgress.value[progressIndex] = {
-            fileName,
-            progress: 100,
-            status: 'success',
-            fileId: res.data.ossId,
-            fileObj: null,
-            progressText: '' // 清空提示文本
-          }
-        }
+        // const fileName = getFileName(file.name)
+        // const progressIndex = threeDModelUploadProgress.value.findIndex(
+        //   item => item.fileName === fileName || item.fileObj === file
+        // )
+        // if (progressIndex > -1) {
+        //   threeDModelUploadProgress.value[progressIndex] = {
+        //     fileName,
+        //     progress: 100,
+        //     status: 'success',
+        //     fileId: res.data.ossId,
+        //     fileObj: null,
+        //     progressText: '' // 清空提示文本
+        //   }
+        // }
         break
     }
     ElMessage.success(`${getFileName(file.name)} 上传成功`);
     if (infoFormRef.value) infoFormRef.value.validateField(type);
     if (infoFormRef2.value) infoFormRef2.value.validateField(type);
   } else {
-    if (type === 'threeDModel') {
-      const fileName = getFileName(file.name)
-      const progressIndex = threeDModelUploadProgress.value.findIndex(
-        item => item.fileName === fileName || item.fileObj === file
-      )
-      if (progressIndex > -1) {
-        threeDModelUploadProgress.value[progressIndex] = {
-          ...threeDModelUploadProgress.value[progressIndex],
-          status: 'exception',
-          fileObj: null,
-          progressText: '' // 清空提示文本
-        }
-      }
-    }
+    // if (type === 'threeDModel') {
+    //   const fileName = getFileName(file.name)
+    //   const progressIndex = threeDModelUploadProgress.value.findIndex(
+    //     item => item.fileName === fileName || item.fileObj === file
+    //   )
+    //   if (progressIndex > -1) {
+    //     threeDModelUploadProgress.value[progressIndex] = {
+    //       ...threeDModelUploadProgress.value[progressIndex],
+    //       status: 'exception',
+    //       fileObj: null,
+    //       progressText: '' // 清空提示文本
+    //     }
+    //   }
+    // }
     ElMessage.error(res.msg || '上传失败')
   }
 }
 const handleDeleteUploadFile = async (index, type) => {
   let fileList = []
   let fileId = ''
+  let fileName = '';
   // 确定当前操作的文件列表和文件ID
   switch (type) {
     case 'locationPlan':
@@ -1374,14 +1468,14 @@ const handleDeleteUploadFile = async (index, type) => {
     case 'threeDModel':
       fileList = threeDModelFileList.value;
       fileId = fileList[index]?.ossId;
-      fileName = getFileName(fileList[index]?.name || '');
+      fileName = getFileName(fileList[index]?.name || '未知文件');
       // 移除对应的进度条（多重匹配确保准确）
-      const progressIndex = threeDModelUploadProgress.value.findIndex(
-        item => item.fileId === fileId || item.fileName === fileName
-      )
-      if (progressIndex > -1) {
-        threeDModelUploadProgress.value.splice(progressIndex, 1)
-      }
+      // const progressIndex = threeDModelUploadProgress.value.findIndex(
+      //   item => item.fileId === fileId || item.fileName === fileName
+      // )
+      // if (progressIndex > -1) {
+      //   threeDModelUploadProgress.value.splice(progressIndex, 1)
+      // }
       break
   }
 
@@ -1431,8 +1525,8 @@ const handleDownloadTemplate = (type) => {
         filePath: '/面模板.zip' // 请根据实际文件路径调整
       },
       threeD: {
-        fileName: '方岩景区模型制作标准和案例参考.doc',
-        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
       }
     };
 
@@ -1500,13 +1594,13 @@ const handleModelPreview = () => {
     ElMessage.warning('请先点击「暂存」按钮保存数据后，再进行预览')
     return
   }
-  const isProcessing = threeDModelUploadProgress.value.some(item =>
-    item.progress < 100 || (item.progressText?.includes('服务器处理中') ?? false)
-  )
-  if (isProcessing) {
-    ElMessage.warning('模型文件正在上传或处理中，请等待完成后再预览')
-    return
-  }
+  // const isProcessing = threeDModelUploadProgress.value.some(item =>
+  //   item.progress < 100 || (item.progressText?.includes('服务器处理中') ?? false)
+  // )
+  // if (isProcessing) {
+  //   ElMessage.warning('模型文件正在上传或处理中，请等待完成后再预览')
+  //   return
+  // }
   router.push({
     path: '/screen/preview',
     query: {
@@ -1545,13 +1639,13 @@ const resetForm = async () => {
     threeDModelFileList.value = projectData.threeDModel ? JSON.parse(projectData.threeDModel) : []
     // 重置三维模型URL
     form.threeDModel = threeDModelFileList.value.length > 0 ? threeDModelFileList.value[0].url : ''
-    threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
-      fileName: getFileName(file.name),
-      progress: 100,
-      status: 'success',
-      fileId: file.ossId,
-      progressText: ''
-    }))
+    // threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
+    //   fileName: getFileName(file.name),
+    //   progress: 100,
+    //   status: 'success',
+    //   fileId: file.ossId,
+    //   progressText: ''
+    // }))
     // 重置表单校验状态
     infoFormRef.value.clearValidate()
     infoFormRef2.value.clearValidate()
@@ -1872,9 +1966,16 @@ const submitForm = () => {
   margin-top: -5px;
   margin-left: 5px;
 }
-
+.ele-upload-list__item-content:hover {
+  background-color: rgba(129, 195, 253, 0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
 .ele-upload-list__item-content-action {
   margin-left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .operation-group {
@@ -2031,5 +2132,56 @@ const submitForm = () => {
   flex-direction: column;
   width: 100%;
   /* 补充：让表单内容区占满宽度 */
+}
+/* 审批反馈文件项容器 - 悬浮背景效果 */
+.approval-file-item {
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 鼠标悬浮时背景变色 */
+.approval-file-item:hover {
+  background-color: rgba(129, 195, 253, 0.2);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* 审批反馈文件名称链接样式 */
+.file-name-link {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #409eff;
+}
+
+/* 统一下载图标样式（审批反馈+信息填报通用） */
+.common-download-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* 下载图标悬浮轻微透明效果 */
+.common-download-icon:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+  vertical-align: middle;
+}
+
+/* 优化信息填报的下载图标样式（保持与审批反馈一致） */
+.ele-upload-list__item-content-action img {
+  /* 复用通用下载图标样式，确保一致性 */
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.ele-upload-list__item-content-action img:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
 }
 </style>

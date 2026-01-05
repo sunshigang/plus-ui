@@ -58,7 +58,7 @@
             <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
-        <el-form :model="form" label-width="230px" disabled>
+        <el-form :model="form" label-width="230px" >
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="建设单位名称">
@@ -306,12 +306,12 @@
       <div class="project-documents" v-if="showApprovalSection && form.approveRecords.length > 0">
         <h3 class="section-title">审批信息</h3>
         <!-- 循环渲染每一条审批记录 -->
-        <div v-for="(record, index) in form.approveRecords" :key="record.id || `approval-record-${index}`"
+        <div v-for="(record, index) in targetApprovalRecord" :key="record.id || `approval-record-${index}`"
           class="approval-record-item">
-          <div class="approval-record-header">
+          <!-- <div class="approval-record-header">
             <span class="approval-record-index">审批记录 {{ index + 1 }}</span>
             <span class="approval-record-time">{{ record.gwhApproveTime || '无审批时间' }}</span>
-          </div>
+          </div> -->
 
           <!-- 管委会审批信息 -->
           <el-form label-width="230px" disabled class="approval-form">
@@ -355,7 +355,7 @@
           </el-form>
 
           <!-- 记录分隔线 -->
-          <div class="approval-record-divider" v-if="index < form.approveRecords.length - 1"></div>
+          <!-- <div class="approval-record-divider" v-if="index < form.approveRecords.length - 1"></div> -->
         </div>
       </div>
     </div>
@@ -432,7 +432,19 @@ const showApprovalSection = computed(() => {
   const validStatuses = ['管委会审批中', '管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
   return validStatuses.includes(currentStatus);
 })
-
+// 原有代码不变，新增以下计算属性
+const targetApprovalRecord = computed(() => {
+  // 容错处理：确保 approveRecords 是有效数组
+  const validRecords = Array.isArray(form.approveRecords) ? form.approveRecords : [];
+  if (validRecords.length === 0) {
+    return []; // 无记录时返回空数组，不渲染审批区域
+  } else if (validRecords.length === 1) {
+    return [validRecords[0]]; // 1条记录时，返回包含该条的数组
+  } else {
+    // 大于1条时，返回包含最后一条记录的数组（取数组最后一个元素）
+    return [validRecords[validRecords.length - 1]];
+  }
+});
 // 获取文件名（处理路径和空值）
 const getFileName = (name) => {
   if (!name) return '未知文件名'
@@ -494,8 +506,8 @@ const handleDownloadTemplate = (type) => {
         filePath: '/面模板.zip' // 请根据实际文件路径调整
       },
       threeD: {
-        fileName: '方岩景区模型制作标准和案例参考.doc',
-        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
       }
     };
 
@@ -793,8 +805,7 @@ const loadProjectData = async (projectId) => {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
-  margin-left: 0;
-  margin-top: 8px;
+  margin-left: 20px;
 }
 
 .operation-group div {
@@ -804,6 +815,20 @@ const loadProjectData = async (projectId) => {
 
 .add-footer el-button+el-button {
   margin-left: 10px;
+}
+.ele-upload-list__item-content:not(.empty-file) :deep(.el-link) {
+  color: #409eff !important;
+  text-decoration: none !important;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ele-upload-list__item-content:not(.empty-file) :deep(.el-link:hover) {
+  background-color: rgba(64, 158, 255, 0.2) !important;
+}
+.ele-upload-list__item-content:not(.empty-file) :deep(.el-icon-document) {
+  color: #409eff !important;
 }
 </style>
 <style>

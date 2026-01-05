@@ -56,7 +56,7 @@ service.interceptors.request.use(
 
     const clientId = getClientId() || import.meta.env.VITE_APP_CLIENT_ID;
 
-    console.log('Request Interceptor - clientId:', getClientId());
+    // console.log('Request Interceptor - clientId:', getClientId());
     if (getToken() && !isToken) {
       config.headers['Authorization'] = 'Bearer ' + getToken(); // 自定义token
       config.headers['ClientId'] = clientId; // 自定义clientId

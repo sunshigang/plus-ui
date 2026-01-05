@@ -390,7 +390,7 @@
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="二次审批信息" name="feedback">
+        <el-tab-pane label="二次审批信息" name="feedback" v-if="form.approveRecords && form.approveRecords.length > 1">
           <!-- 审批反馈标签页内的项目信息部分 -->
           <div class="project-info">
             <h3 class="section-title">项目信息</h3>
@@ -1036,6 +1036,9 @@ onMounted(async () => {
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 赋值审批记录数组
     form.approveRecords = Array.isArray(projectData.approveRecords) ? projectData.approveRecords : []
+    if (form.approveRecords.length <= 1) {
+      activeTab.value = 'fill'
+    }
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/major')
@@ -1349,5 +1352,23 @@ onMounted(async () => {
   /* 反馈建议/文件背景改为灰色 */
   padding: 8px 12px;
   border-radius: 4px;
+}
+.info-item .file-list :deep(.el-link) {
+  color: #409eff !important;
+  text-decoration: none !important;
+}
+.info-item .file-list :deep(.el-link) {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.info-item .file-list :deep(.el-link:hover) {
+  background-color: rgba(64, 158, 255, 0.2) !important;
+}
+
+.info-item .file-list :deep(.el-icon-document) {
+  color: #409eff !important;
 }
 </style>

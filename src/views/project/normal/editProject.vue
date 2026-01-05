@@ -368,10 +368,10 @@
             <el-col :span="12">
               <el-form-item label="项目三维模型" prop="threeDModel">
                 <div class="upload-container">
-                  <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
+                  <el-upload ref="threeDModelUploadRef" :multiple="false" :action="uploadFileUrl"
                     :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
-                    :limit="props.limit" :accept="getFileAccept()"
-                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
+                    :limit="props.limit1" :accept="getFileAccept1()"
+                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceedThreeDModel"
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                     :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
                     class="upload-file-uploader" :disabled="props.compDisabled"
@@ -382,6 +382,11 @@
                     <el-button link type="primary" icon="Download"
                       @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
                   </div>
+                  <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
+                    <el-icon>
+                      <question-filled />
+                    </el-icon>
+                  </el-tooltip>
                   <!-- 三维模型上传进度条 -->
                   <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
                     class="upload-progress-container">
@@ -474,6 +479,7 @@ const threeDModelUploadProgress = ref([])
 const props = defineProps({
   // 数量限制
   limit: propTypes.number.def(15),
+  limit1: propTypes.number.def(1),
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型
@@ -482,6 +488,7 @@ const props = defineProps({
     'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx',
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
+  fileType1: propTypes.array.def(['pak']),
   compDisabled: {
     type: Boolean,
     default: false
@@ -533,7 +540,9 @@ const form = reactive({
   scenicGroundArea: undefined,
   scenicUndergroundArea: undefined,
 })
-
+const handleExceedThreeDModel = (files, fileList) => {
+  ElMessage.warning('项目三维模型仅支持上传1个.pak格式文件！');
+};
 // 文件列表（用于校验是否上传）
 const locationPlanFileList = ref([])
 const expertOpinionsFileList = ref([])
@@ -676,7 +685,7 @@ const rules = reactive({
     }
   ],
   redLineCoordinate: [
-    { required: true, message: '请上传项目红线矢量数据', trigger: ['change', 'blur'] },
+    { required: true, message: '请上传项目红线矢量数据，只能上传zip文件', trigger: ['change', 'blur'] },
     {
       validator: (rule, value, callback) => {
         if (redLineCoordinateFileList.value.length > 0) {
@@ -689,7 +698,7 @@ const rules = reactive({
     }
   ],
   threeDModel: [
-    { required: true, message: '请上传项目三维模型', trigger: ['change', 'blur'] },
+    { required: true, message: '请上传项目三维模型，只能上传一个pak文件', trigger: ['change', 'blur'] },
     {
       validator: (rule, value, callback) => {
         if (threeDModelFileList.value.length > 0) {
@@ -727,7 +736,9 @@ const headers = computed(() => globalHeaders())
 const getFileAccept = () => {
   return props.fileType.map(type => `.${type.toLowerCase()}`).join(',')
 }
-
+const getFileAccept1 = () => {
+  return props.fileType1.map(type => `.${type.toLowerCase()}`).join(',')
+}
 // 生命周期：初始化时加载数据
 onMounted(async () => {
   const projectId = route.params.id
@@ -809,7 +820,6 @@ const handleBeforeUpload = (file, type) => {
   }
   // 核心修改3：单独校验项目红线矢量数据仅允许zip格式
   if (type === 'redLineCoordinate') {
-    const fileExt = file.name.split('.').pop()?.toLowerCase()
     if (fileExt !== 'zip') {
       ElMessage.error('项目红线矢量数据仅支持上传ZIP格式文件！')
       return false
@@ -817,6 +827,11 @@ const handleBeforeUpload = (file, type) => {
     return true // 跳过通用类型校验
   }
   if (type === 'threeDModel') {
+    // 1. 强制校验仅为pak格式
+    if (fileExt !== 'pak') {
+      ElMessage.error('项目三维模型仅支持上传.pak格式文件！');
+      return false;
+    }
     const fileName = getFileName(file.name)
     // 防止重复添加
     const exists = threeDModelUploadProgress.value.some(item => item.fileName === fileName)
@@ -936,6 +951,8 @@ const handleUploadSuccess = (res, file, type) => {
       case 'projectRedLine': projectRedLineFileList.value.push(fileItem); break
       case 'redLineCoordinate': redLineCoordinateFileList.value.push(fileItem); break
       case 'threeDModel':
+        threeDModelFileList.value = [];
+        threeDModelUploadProgress.value = [];
         threeDModelFileList.value.push(fileItem);
         form.threeDModel = res.data.url;
         // 更新进度条状态为成功
@@ -1067,8 +1084,8 @@ const handleDownloadTemplate = (type) => {
         filePath: '/面模板.zip' // 请根据实际文件路径调整
       },
       threeD: {
-        fileName: '方岩景区模型制作标准和案例参考.doc',
-        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
       }
     };
 
@@ -1417,7 +1434,6 @@ const handleModelPreview = () => {
   align-items: center;
   flex-wrap: wrap;
   margin: 0;
-  /* 去掉原有上下边距 */
 }
 
 .operation-group div {

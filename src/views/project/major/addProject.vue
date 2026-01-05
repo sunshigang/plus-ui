@@ -357,6 +357,11 @@
                 <div class="operation-group">
                   <el-button link type="primary" icon="Download"
                     @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
+                    <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
+                    <el-icon>
+                      <question-filled />
+                    </el-icon>
+                  </el-tooltip>
                 </div>
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
@@ -692,8 +697,8 @@ const handleDownloadTemplate = (type) => {
         filePath: '/面模板.zip' // 请根据实际文件路径调整
       },
       threeD: {
-        fileName: '方岩景区模型制作标准和案例参考.doc',
-        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
       }
     };
 

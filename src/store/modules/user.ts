@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
       // ========== 新增：登录成功后清空URL传入的clientId ==========
       const appStore = useAppStore();
       appStore.clearUrlClientId();
-      console.log('✅ 登录成功，已清空URL中的clientId');
+      // console.log('✅ 登录成功，已清空URL中的clientId');
 
       return Promise.resolve();
     }
@@ -76,7 +76,7 @@ export const useUserStore = defineStore('user', () => {
     // ========== 新增：退出登录后清空URL传入的clientId ==========
     const appStore = useAppStore();
     appStore.clearUrlClientId();
-    console.log('✅ 退出登录成功，已清空URL中的clientId');
+    // console.log('✅ 退出登录成功，已清空URL中的clientId');
   };
 
   const setAvatar = (value: string) => {

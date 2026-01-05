@@ -850,8 +850,8 @@ const handleDownloadTemplate = (type) => {
         filePath: '/面模板.zip' // 请根据实际文件路径调整
       },
       threeD: {
-        fileName: '方岩景区模型制作标准和案例参考.doc',
-        filePath: '/方岩景区模型制作标准和案例参考.doc' // 请根据实际文件路径调整
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
       }
     };
 
@@ -1181,7 +1181,11 @@ onMounted(async () => {
   width: 100%;
   box-sizing: border-box;
 }
-
+.ele-upload-list__item-content:hover {
+  background-color: rgba(129, 195, 253, 0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
 .ele-upload-list__item-content .el-link {
   flex: 1;
   min-width: 0;

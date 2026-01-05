@@ -174,7 +174,7 @@ const toggleSideBar = () => {
 };
 
 const logout = async () => {
-  await ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
+  await ElMessageBox.confirm('您确定要退出当前账号吗？项目操作数据将自动保存。', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
