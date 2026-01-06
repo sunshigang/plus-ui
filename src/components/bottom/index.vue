@@ -447,7 +447,7 @@ watch(currentYear, newYear => {
         }
 
         .year-text {
-            margin: 5px 0 0 0;
+            margin: 0.26vw 0  0.7vw;
             color: #fff;
             font-family: 'DINPro';
             font-weight: 400;

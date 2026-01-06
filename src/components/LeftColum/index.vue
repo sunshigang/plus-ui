@@ -43,7 +43,7 @@ import bus from '../../libs/eventbus'
 // 定义响应式数据
 const sceneRoamingShow = ref(true)
 const { proxy } = getCurrentInstance()
-const superadminShowOrHide =ref(true)
+const superadminShowOrHide =ref(false)
 const schemeReviewStyle = ref(false)
 const planningAchievementStyle = ref(false)
 const vectorLayerStyle = ref(false)
