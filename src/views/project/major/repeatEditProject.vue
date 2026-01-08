@@ -4,8 +4,11 @@
       <div class="back-normal" @click="handleCancel"><img src="@/assets/images/arrow-left.png" />二次填报</div>
       <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <!-- 信息填报标签页（可编辑） -->
-        <el-tab-pane label="信息填报" name="fill">
-          <!-- 项目基础信息 -->
+        <el-tab-pane name="fill">
+          <template #label>
+            <img :src="tabIcons.fill" class="tab-icon" alt="信息填报" />
+            信息填报
+          </template>
           <div class="project-basic-info">
             <h3 class="section-title">项目基础信息</h3>
             <el-form ref="infoFormRef" :model="form" label-width="240px" :rules="rules">
@@ -169,8 +172,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -196,8 +201,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -225,8 +232,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -252,8 +261,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -280,8 +291,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -307,8 +320,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -339,7 +354,8 @@
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                     </el-link>
                     <div class="ele-upload-list__item-content-action">
-                      <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
+                      <el-button type="danger" link icon="Delete"
+                        @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
                       <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                     </div>
                   </li>
@@ -382,8 +398,10 @@
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                         <div class="ele-upload-list__item-content-action">
-                          <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
-                          <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
+                          <el-button type="danger" link icon="Delete"
+                            @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
+                          <el-button type="primary" link icon="Download"
+                            @click="handleFilePreview(file.url)"></el-button>
                         </div>
                       </li>
                     </transition-group>
@@ -398,8 +416,11 @@
             </el-form>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="审批反馈" name="feedback">
-          <!-- 审批反馈标签页内的项目信息部分 -->
+        <el-tab-pane name="feedback">
+          <template #label>
+            <img :src="tabIcons.feedback" class="tab-icon" alt="审批反馈" />
+            审批反馈
+          </template>
           <div class="project-info">
             <h3 class="section-title">项目信息</h3>
 
@@ -896,6 +917,10 @@ import { propTypes } from '@/utils/propTypes';
 import { delOss } from '@/api/system/oss';
 import { ElMessage } from 'element-plus'
 import { globalHeaders } from '@/utils/request';
+import infoIcon from '@/assets/images/info.png'       // 信息填报未选中图标
+import infoedIcon from '@/assets/images/infoed.png'   // 信息填报选中图标
+import approvalIcon from '@/assets/images/approval.png' // 审批反馈未选中图标
+import approvaledIcon from '@/assets/images/approvaled.png' // 审批反馈选中图标
 const { proxy } = getCurrentInstance() || {}
 const router = useRouter()
 const route = useRoute()
@@ -911,7 +936,11 @@ const props = defineProps({
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
 });
-// ========== 新增：SHP验证弹窗相关数据 ==========
+const tabIcons = reactive({
+  fill: infoedIcon,    // 默认选中“信息填报”，显示infoed.png
+  feedback: approvalIcon // 默认未选中“审批反馈”，显示approval.png
+})
+
 const dialogVisible = ref(false) // 弹窗显隐
 const dialogTitle = ref('')      // 弹窗标题
 const dialogErrors = ref([])     // 验证错误列表
@@ -1225,12 +1254,22 @@ onMounted(async () => {
 
 // 标签页切换事件
 const handleTabChange = (tabName) => {
-  // 切换到审批反馈时，确保基础信息展开、建设信息关闭
+  // 1. 重置所有标签图标为“未选中”状态
+  tabIcons.fill = infoIcon
+  tabIcons.feedback = approvalIcon
+
+  // 2. 设置当前选中标签的图标为“选中”状态
+  if (tabName === 'fill') {
+    tabIcons.fill = infoedIcon // 信息填报选中 → infoed.png
+  } else if (tabName === 'feedback') {
+    tabIcons.feedback = approvaledIcon // 审批反馈选中 → approvaled.png
+  }
+
+  // 3. 保留原有逻辑
   if (tabName === 'feedback') {
     activeCollapse.value = ['basic']
   }
 }
-
 // 上传/文件相关方法（与editProject一致）
 const getFileAccept = () => {
   return props.fileType.map(type => `.${type.toLowerCase()}`).join(',')
@@ -1705,6 +1744,13 @@ const submitForm = () => {
 </script>
 
 <style scoped>
+.tab-icon {
+  width: 14px;
+  height: 13px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 .add-content-container {
   width: 100%;
   padding: 20px;
@@ -2011,6 +2057,7 @@ const submitForm = () => {
   /* 确保标题靠左，不被其他元素挤压 */
   flex-grow: 1;
   text-align: left;
+  font-family: 'SourceHanSansCN-Regular';
 }
 
 .custom-collapse-content {

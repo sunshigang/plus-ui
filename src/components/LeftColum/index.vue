@@ -22,36 +22,34 @@
     <div class="searchBox" v-hasPermi="['screen:function:achievement']" v-if="planningAchievementStyle">
         <!-- 调整：option绑定改为item.name（显示）、item.id（值） -->
         <el-select v-model="selectedValues" filterable placeholder="请输入点位名称搜索" class="search-input"
-            @clear="handleSelectClear" style="--el-select-input-font-size: 0.833vw;" :teleported="false">
+            @clear="handleSelectClear" style="--el-select-input-font-size: 0.833vw" :teleported="false">
             <template #empty>
-                <div style="padding: 0.52083vw; color: #999;">暂无匹配的点位</div>
+                <div style="padding: 0.52083vw; color: #999">暂无匹配的点位</div>
             </template>
             <el-option v-for="item in filteredOptionsPoi" :key="item.id" :label="item.name" :value="item.id"
-                style="font-size: 0.729167vw;" />
+                style="font-size: 0.729167vw" />
         </el-select>
         <!-- 禁用判断：判断是否为空值（undefined/''） -->
-        <div class="search-btn" @click="handleSearch" :class="{ disabled: selectedValues === '' }">
-            搜索
-        </div>
+        <div class="search-btn" @click="handleSearch" :class="{ disabled: selectedValues === '' }">搜索</div>
     </div>
 </template>
 
 <script setup>
-import { reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, ref, computed } from 'vue'
-import bus from '../../libs/eventbus'
-// import { getInfo } from '@/api/login'
+import { reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, ref, computed } from 'vue';
+import bus from '../../libs/eventbus';
+import { getInfo } from '@/api/login';
 // 定义响应式数据
-const sceneRoamingShow = ref(true)
-const { proxy } = getCurrentInstance()
-const superadminShowOrHide =ref(false)
-const schemeReviewStyle = ref(false)
-const planningAchievementStyle = ref(false)
-const vectorLayerStyle = ref(false)
-const sceneRoamingStart = ref(false)
-
+const sceneRoamingShow = ref(true);
+const { proxy } = getCurrentInstance();
+const superadminShowOrHide = ref(true);
+const schemeReviewStyle = ref(false);
+const planningAchievementStyle = ref(false);
+const vectorLayerStyle = ref(false);
+const sceneRoamingStart = ref(false);
+const currentUserRole = ref('');
 // 选中值改为绑定id（数字），初始值为空字符串
-const selectedValues = ref('')
-const searchQuery = ref('')
+const selectedValues = ref('');
+const searchQuery = ref('');
 // 核心修改：移除value/label，id从1开始编号
 const allOptionsPoi = ref([
     { id: 1, name: '五峰书院' },
@@ -169,123 +167,127 @@ const allOptionsPoi = ref([
     { id: 113, name: '抗日纪念碑' },
     { id: 114, name: '五峰双洞' },
     { id: 115, name: '云谷洞' },
-    { id: 116, name: '万成庙' },
-])
+    { id: 116, name: '万成庙' }
+]);
 
 // 模糊搜索逻辑：匹配name字段
 const filteredOptionsPoi = computed(() => {
-    if (!searchQuery.value) return allOptionsPoi.value
+    if (!searchQuery.value) return allOptionsPoi.value;
 
-    return allOptionsPoi.value.filter(item => {
-        return item.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    })
-})
+    return allOptionsPoi.value.filter((item) => {
+        return item.name.toLowerCase().includes(searchQuery.value.toLowerCase());
+    });
+});
 
 // 清空逻辑：重置为初始空值
 const handleSelectClear = () => {
-    selectedValues.value = ''
-    searchQuery.value = ''
-}
+    selectedValues.value = '';
+    searchQuery.value = '';
+};
 
 const clickSchemeReview = () => {
-    schemeReviewStyle.value = !schemeReviewStyle.value
-    planningAchievementStyle.value = false
-    vectorLayerStyle.value = false
+    schemeReviewStyle.value = !schemeReviewStyle.value;
+    planningAchievementStyle.value = false;
+    vectorLayerStyle.value = false;
     bus.emit('scheme-review-clicked', {
         isShow: schemeReviewStyle.value,
         module: 'schemeReview'
-    })
-    sceneRoamingShow.value = true
-}
+    });
+    sceneRoamingShow.value = true;
+};
 
 const clickPlanningAchievement = () => {
-    schemeReviewStyle.value = false
-    planningAchievementStyle.value = !planningAchievementStyle.value
-    vectorLayerStyle.value = false
+    schemeReviewStyle.value = false;
+    planningAchievementStyle.value = !planningAchievementStyle.value;
+    vectorLayerStyle.value = false;
     bus.emit('planning-achievement-clicked', {
         isShow: planningAchievementStyle.value,
         module: 'planningAchievement'
-    })
+    });
     if (!planningAchievementStyle.value) {
-        selectedValues.value = ''
-        searchQuery.value = ''
+        selectedValues.value = '';
+        searchQuery.value = '';
     }
-}
+};
 
 const clickVectorLayer = () => {
-    schemeReviewStyle.value = false
-    planningAchievementStyle.value = false
-    vectorLayerStyle.value = !vectorLayerStyle.value
-    console.log("🚀 ~ clickVectorLayer ~ vectorLayerStyle.value:", vectorLayerStyle.value)
-    bus.emit('vector-layer-clicked', vectorLayerStyle.value)
-    sceneRoamingShow.value = !vectorLayerStyle.value
-}
+    schemeReviewStyle.value = false;
+    planningAchievementStyle.value = false;
+    vectorLayerStyle.value = !vectorLayerStyle.value;
+    console.log('🚀 ~ clickVectorLayer ~ vectorLayerStyle.value:', vectorLayerStyle.value);
+    bus.emit('vector-layer-clicked', vectorLayerStyle.value);
+    sceneRoamingShow.value = !vectorLayerStyle.value;
+};
 
 const clickSceneRoaming = () => {
-    sceneRoamingStart.value = !sceneRoamingStart.value
-    bus.emit('scene-roaming-clicked', sceneRoamingStart.value)
-}
+    sceneRoamingStart.value = !sceneRoamingStart.value;
+    bus.emit('scene-roaming-clicked', sceneRoamingStart.value);
+};
 
 // 搜索逻辑：根据选中的id匹配name
 const handleSearch = () => {
     // 排除空值（''/undefined）
-    if (selectedValues.value === '') return
+    if (selectedValues.value === '') return;
 
     // 根据id查找对应的点位名称
-    const item = allOptionsPoi.value.find(i => i.id === selectedValues.value)
-    const selectedName = item?.name || ''
+    const item = allOptionsPoi.value.find((i) => i.id === selectedValues.value);
+    const selectedName = item?.name || '';
 
-    console.log('选中的点位名称：', selectedName)
-    bus.emit('search-relic', selectedName)
+    console.log('选中的点位名称：', selectedName);
+    bus.emit('search-relic', selectedName);
 
     // 可选：搜索后清空选中值
     // selectedValues.value = ''
     // searchQuery.value = ''
-}
+};
 
 onMounted(async () => {
-    const handleVisScreenClick = (isShow) => {
-        superadminShowOrHide.value = isShow // 接收事件参数，设置为 false（隐藏）
-        console.log("🚀 ~ handleVisScreenClick ~ superadminShowOrHide.value:", superadminShowOrHide.value)
+    const userData = await getInfo();
+    currentUserRole.value = userData.data?.roles?.[0] || '';
+    if (currentUserRole.value == 'superadmin' || currentUserRole.value == 'sysadmin') {
+        superadminShowOrHide.value = false
     }
-    bus.on('vis-screen-clicked', handleVisScreenClick)
+    const handleVisScreenClick = (isShow) => {
+        superadminShowOrHide.value = isShow;
+    };
+    bus.on('vis-screen-clicked', handleVisScreenClick);
 
     // 3. 缓存监听函数，用于销毁时移除
-    window.handleVisScreenClick = handleVisScreenClick
-    filteredOptionsPoi.value = [...allOptionsPoi.value]
-})
+    window.handleVisScreenClick = handleVisScreenClick;
+    filteredOptionsPoi.value = [...allOptionsPoi.value];
+});
 
 onUnmounted(() => {
     if (window.handleVisScreenClick) {
-        bus.off('vis-screen-clicked', window.handleVisScreenClick)
+        bus.off('vis-screen-clicked', window.handleVisScreenClick);
     }
     // 重置所有响应式状态
-    sceneRoamingShow.value = true
-    schemeReviewStyle.value = false
-    planningAchievementStyle.value = false
-    vectorLayerStyle.value = false
-    sceneRoamingStart.value = false
-    selectedValues.value = ''
-    searchQuery.value = ''
+    sceneRoamingShow.value = true;
+    schemeReviewStyle.value = false;
+    planningAchievementStyle.value = false;
+    vectorLayerStyle.value = false;
+    sceneRoamingStart.value = false;
+    selectedValues.value = '';
+    searchQuery.value = '';
 
     if (sceneRoamingStart.value) {
-        bus.emit('scene-roaming-clicked', false)
+        bus.emit('scene-roaming-clicked', false);
     }
 
-    const leftSidebar = document.getElementById('leftSidebar')
-    const sceneRoaming = document.querySelector('.sceneRoaming')
-    const searchBtn = document.querySelector('.search-btn')
+    const leftSidebar = document.getElementById('leftSidebar');
+    const sceneRoaming = document.querySelector('.sceneRoaming');
+    const searchBtn = document.querySelector('.search-btn');
 
     if (leftSidebar) {
-        leftSidebar.onclick = null
+        leftSidebar.onclick = null;
     }
     if (sceneRoaming) {
-        sceneRoaming.onclick = null
+        sceneRoaming.onclick = null;
     }
     if (searchBtn) {
-        searchBtn.onclick = null
+        searchBtn.onclick = null;
     }
-})
+});
 </script>
 
 <style lang="scss" scoped>
@@ -589,7 +591,6 @@ onUnmounted(() => {
             padding: 0.52083vw;
         }
     }
-
 
     .search-btn {
         width: 3.125vw;
