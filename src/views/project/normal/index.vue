@@ -1,37 +1,36 @@
 <template>
   <div class="p-2">
-    <transition :enter-active-class="proxy?.animate.searchAnimate.enter" :leave-active-class="proxy?.animate.searchAnimate.leave">
+    <transition :enter-active-class="proxy?.animate.searchAnimate.enter"
+      :leave-active-class="proxy?.animate.searchAnimate.leave">
       <div v-show="showSearch" class="mb-[10px]">
         <el-card shadow="hover">
           <el-form ref="queryFormRef" :model="queryParams" :inline="true">
             <el-form-item label="建设项目名称" prop="projectName">
-              <el-input v-model="queryParams.projectName" placeholder="请输入建设项目名称" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.projectName" placeholder="请输入建设项目名称" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="项目代码" prop="projectCode">
               <el-input v-model="queryParams.projectCode" placeholder="请输入项目代码" clearable @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="创建时间" style="width: 420px">
-              <el-date-picker
-                v-model="dateRangeCreateTime"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                type="daterange"
-                range-separator="-"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-              ></el-date-picker>
+              <el-date-picker v-model="dateRangeCreateTime" value-format="YYYY-MM-DD HH:mm:ss" type="daterange"
+                range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
             </el-form-item>
             <el-form-item label="所属行政区划" prop="administrativeRegion">
-              <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.administrativeRegion" placeholder="请输入所属行政区划" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <!-- <el-form-item label="涉及风景名胜区名称" prop="scenicArea">
               <el-input v-model="queryParams.scenicArea" placeholder="请输入涉及风景名胜区名称" clearable
                 @keyup.enter="handleQuery" />
             </el-form-item> -->
             <el-form-item label="建设单位名称" prop="constructionUnit">
-              <el-input v-model="queryParams.constructionUnit" placeholder="请输入建设单位名称" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.constructionUnit" placeholder="请输入建设单位名称" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="组织机构代码" prop="organizationCode">
-              <el-input v-model="queryParams.organizationCode" placeholder="请输入组织机构代码" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.organizationCode" placeholder="请输入组织机构代码" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <!-- <el-form-item label="经办人" prop="contactPerson">
               <el-input v-model="queryParams.contactPerson" placeholder="请输入经办人" clearable @keyup.enter="handleQuery" />
@@ -41,7 +40,8 @@
                 @keyup.enter="handleQuery" />
             </el-form-item> -->
             <el-form-item label="保护等级" prop="protectionLevel">
-              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级" clearable @keyup.enter="handleQuery" />
+              <el-input v-model="queryParams.protectionLevel" placeholder="请输入保护等级" clearable
+                @keyup.enter="handleQuery" />
             </el-form-item>
             <el-form-item label="状态" prop="status">
               <el-select v-model="queryParams.status" placeholder="请选择状态" clearable @keyup.enter="handleQuery">
@@ -66,7 +66,8 @@
       <template #header>
         <el-row :gutter="10" class="mb8">
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Plus" @click="handleAdd('normal-add')" v-hasPermi="['project:project:add']">创建项目</el-button>
+            <el-button type="primary" plain icon="Plus" @click="handleAdd('normal-add')"
+              v-hasPermi="['project:project:add']">创建项目</el-button>
           </el-col>
           <!-- <el-col :span="1.5">
             <el-button type="success" plain icon="Edit" :disabled="single" @click="handleUpdateBatch"
@@ -77,7 +78,8 @@
               v-hasPermi="['project:project:remove']">删除项目</el-button>
           </el-col> -->
           <el-col :span="1.5">
-            <el-button type="primary" plain icon="Download" @click="handleExport" v-hasPermi="['project:project:export']">批量数据下载</el-button>
+            <el-button type="primary" plain icon="Download" @click="handleExport"
+              v-hasPermi="['project:project:export']">批量数据下载</el-button>
           </el-col>
           <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
@@ -93,18 +95,15 @@
         <el-table-column label="单位或个人" align="center" prop="applicantType" />
         <el-table-column label="状态" align="center" prop="status" width="150">
           <template #default="scope">
-            <span
-              class="status-dot"
-              :style="{
-                backgroundColor: getStatusColor(scope.row.status),
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                marginRight: '6px',
-                verticalAlign: 'middle'
-              }"
-            ></span>
+            <span class="status-dot" :style="{
+              backgroundColor: getStatusColor(scope.row.status),
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              marginRight: '6px',
+              verticalAlign: 'middle'
+            }"></span>
             <span class="status-text" :style="{ verticalAlign: 'middle' }">{{ scope.row.status }}</span>
           </template>
         </el-table-column>
@@ -121,54 +120,35 @@
         </el-table-column>
         <el-table-column label="操作" fixed="right" width="280">
           <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              @click="handleUpdate(scope.row)"
-              v-hasPermi="['project:project:edit']"
-              v-if="scope.row.status === '填报中'"
-            >
+            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+              v-if="scope.row.status === '填报中'">
               信息填报
             </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="handleAudit(scope.row)"
-              v-hasPermi="['project:project:gwhApprove']"
-              v-if="scope.row.status === '管委会审批中'"
-            >
-              审核</el-button
-            >
-            <el-button
-              link
-              type="primary"
-              @click="handleUpdate(scope.row)"
-              v-hasPermi="['project:project:edit']"
-              v-if="scope.row.status === '管委会驳回'"
-            >
+            <el-button link type="primary" @click="handleAudit(scope.row)" v-hasPermi="['project:project:gwhApprove']"
+              v-if="scope.row.status === '管委会审批中'">
+              审核</el-button>
+            <el-button link type="primary" @click="handleUpdate(scope.row)" v-hasPermi="['project:project:edit']"
+              v-if="scope.row.status === '管委会驳回'">
               二次填报
             </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="handleShare(scope.row)"
-              v-hasPermi="['project:project:share']"
-              v-if="scope.row.status === '管委会通过'"
-            >
+            <el-button link type="primary" @click="handleShare(scope.row)" v-hasPermi="['project:project:share']"
+              v-if="scope.row.status === '管委会通过'">
               数据共享
             </el-button>
             <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
               查看
             </el-button> -->
             <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-              {{ currentUserRole === 'superadmin' || currentUserRole === 'sysadmin' ? '详情查看' : '查看' }}
+              {{ isSuperAdmin ? '详情查看' : '查看' }}
             </el-button>
-            <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']"> 删除 </el-button>
+            <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']"> 删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getList" />
+      <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+        v-model:limit="queryParams.pageSize" @pagination="getList" />
     </el-card>
   </div>
 </template>
@@ -178,11 +158,11 @@ import { useRouter } from 'vue-router';
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
-import { getInfo } from '@/api/login';
+import { useUserStore } from '@/store/modules/user'
 import { reactive, toRefs, getCurrentInstance } from 'vue';
 const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-
+const userStore = useUserStore()
 // 核心响应式变量
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
 const infoList = ref<InfoVO[]>([]);
@@ -192,7 +172,6 @@ const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
-const currentUserRole = ref<string>('');
 // 状态颜色映射
 const getStatusColor = (status: string) => {
   const statusMap: Record<string, string> = {
@@ -396,28 +375,17 @@ const handleExport = () => {
 const handleAudit = (row: InfoVO) => {
   router.push(`/project/normal/normal-review/${row.id}`);
 };
+const isSuperAdmin = computed(() => {
+  const roles = userStore.roles || [];
+  return roles.includes('sysadmin') || roles.includes('superadmin');
+});
 onMounted(async () => {
   try {
-    const userData = await getInfo();
-    currentUserRole.value = userData.data?.roles?.[0] || '';
+    await getList(); // 加await确保loading状态正确
   } catch (err) {
-    console.error('获取用户角色失败：', err);
-    currentUserRole.value = '';
-  } finally {
-    try {
-      await getList();
-    } catch (err) {
-      console.error('加载列表失败：', err);
-    }
+    console.error('获取项目列表失败：', err);
   }
 });
-// onMounted(async () => {
-//   try {
-//     await getList(); // 加await确保loading状态正确
-//   } catch (err) {
-//     console.error('获取项目列表失败：', err);
-//   }
-// });
 </script>
 
 <style lang="scss" scoped>

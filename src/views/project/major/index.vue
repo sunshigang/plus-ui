@@ -126,7 +126,7 @@
               数据共享
             </el-button>
             <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-              {{ currentUserRole === 'superadmin' || currentUserRole === 'sysadmin' ? '详情查看' : '查看' }}
+              {{ isSuperAdmin ? '详情查看' : '查看' }}
             </el-button>
             <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
               查看
@@ -149,7 +149,7 @@ import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick, reactive, toRefs, getCurrentInstance } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
-import { getInfo } from '@/api/login'
+import { useUserStore } from '@/store/modules/user'
 const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
@@ -160,7 +160,7 @@ const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
-const currentUserRole = ref<string>('');
+const userStore = useUserStore()
 // 状态颜色映射：返回对应Hex颜色值
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -292,28 +292,18 @@ const handleExport = async () => {
 const handleShare = async (row: InfoVO) => {
   router.push(`/project/major/major-share/${row.id}`);
 };
+const isSuperAdmin = computed(() => {
+  const roles = userStore.roles || [];
+  return roles.includes('sysadmin') || roles.includes('superadmin');
+});
 onMounted(async () => {
+
   try {
-    const userData = await getInfo();
-    currentUserRole.value = userData.data?.roles?.[0] || '';
+    await getList();
   } catch (err) {
-    console.error('获取用户角色失败：', err);
-    currentUserRole.value = '';
-  } finally {
-    try {
-      await getList();
-    } catch (err) {
-      console.error('加载列表失败：', err);
-    }
+    console.error('加载列表失败：', err);
   }
 });
-// onMounted(async () => { // 保留async关键字
-//   try {
-//     await getList();
-//   } catch (err) {
-//     console.error('加载列表失败：', err);
-//   }
-// });
 </script>
 <style lang="scss" scoped>
 :deep(.el-form--inline .el-form-item__label) {

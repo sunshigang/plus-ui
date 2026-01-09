@@ -136,6 +136,14 @@ const clickBack = async () => {
     if (isClicking.value) return;
     isClicking.value = true;
     try {
+        sendMsgUE({
+            "Command": "DeleteAssets",
+            "Args": { "ID": '2006169021575938049' }
+        });
+        sendMsgUE({
+            "Command": "DeleteAssets",
+            "Args": { "ID": '2007975797304672257' }
+        });
         // ========== 核心修改：精准判断是否需要删除模型 ==========
         const shouldDeleteModel = () => {
             if (projectMajorFlag.value === false) {
@@ -478,6 +486,7 @@ onUnmounted(() => {
     padding: 16px 32px;
     border-radius: 8px;
 }
+
 @keyframes spin {
     0% {
         transform: rotate(0deg);

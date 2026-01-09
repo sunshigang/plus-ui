@@ -805,14 +805,19 @@
           <div class="approval-info">
             <h3 class="section-title">审批信息</h3>
             <!-- 循环渲染审批记录 -->
-            <div v-for="(record, index) in form.approveRecords" :key="record.id || index" class="approval-record-item">
+            <div v-for="(record, index) in displayedApproveRecords" :key="record.id || index"
+              class="approval-record-item">
               <!-- 管委会审批 -->
               <div class="approval-item" v-if="record.gwhApproveResult">
                 <div class="approval-header">
                   <span :class="['status-icon', record.gwhApproveResult === '通过' ? 'success' : 'error']">
                     {{ record.gwhApproveResult === '通过' ? '✓' : '✗' }}
                   </span>
-                  <span class="approval-title">管委会审核（第{{ index + 1 }}次）</span>
+                  <span class="approval-title">
+                    管委会审核
+                    <span v-if="!isSuperAdmin"></span>
+                    <span v-else>（第{{ index + 1 }}次）</span>
+                  </span>
                   <span class="approval-time">审核时间：{{ record.gwhApproveTime || '暂无' }}</span>
                 </div>
                 <div class="approval-content">
@@ -841,7 +846,11 @@
                   <span :class="['status-icon', record.lyjApproveResult === '通过' ? 'success' : 'error']">
                     {{ record.lyjApproveResult === '通过' ? '✓' : '✗' }}
                   </span>
-                  <span class="approval-title">市林业局审核（第{{ index + 1 }}次）</span>
+                  <span class="approval-title">
+                    市林业局审核
+                    <span v-if="!isSuperAdmin"></span>
+                    <span v-else>（第{{ index + 1 }}次）</span>
+                  </span>
                   <span class="approval-time">审核时间：{{ record.lyjApproveTime || '暂无' }}</span>
                 </div>
                 <div class="approval-content">
@@ -865,8 +874,8 @@
               </div>
             </div>
             <!-- 空状态提示 -->
-            <div v-if="form.approveRecords.length === 0" class="empty-approval">
-              暂无审批记录
+            <div v-if="displayedApproveRecords.length === 0">
+              <p>暂无审批记录</p>
             </div>
           </div>
         </el-tab-pane>
@@ -1013,6 +1022,32 @@ const toggleBasicInfo = () => {
 const toggleConstructionInfo = () => {
   constructionInfoVisible.value = !constructionInfoVisible.value
 }
+// 判断是否为超级管理员
+const isSuperAdmin = computed(() => {
+  const roles = userStore.roles || [];
+  return roles.includes('sysadmin') || roles.includes('superadmin');
+});
+
+// 根据角色决定显示哪些审批记录
+const displayedApproveRecords = computed(() => {
+  if (isSuperAdmin.value) {
+    // 超管：显示全部
+    return form.approveRecords || [];
+  } else {
+    // 普通用户：只显示最新一条
+    const records = form.approveRecords || [];
+    if (records.length === 0) return [];
+    return [records[records.length - 1]]; // 包装成数组，便于 v-for
+  }
+});
+
+// 项目用途白名单（严格匹配你的要求）
+const projectUsageWhiteList = [
+  '公路', '铁路', '机场', '水利水电', '电力通讯', '油气管网',
+  '科技、教育', '公用设施', '乡村道路', '保障性住房或移民搬迁',
+  '农民自建基本生产生活房舍', '商业服务业', '物流仓储', '旅游开发',
+  '养殖', '滑雪场', '林业生产经营、科研科普服务设施', '其他'
+]
 // 表单验证规则
 const rules = reactive({
   projectName: [{ required: true, message: '请输入建设项目名称', trigger: 'blur' }],
@@ -1044,7 +1079,22 @@ const rules = reactive({
     }
   ],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
-  projectUsage: [{ required: true, message: '请输入项目用途', trigger: 'blur' }],
+  projectUsage: [
+    { required: true, message: '请输入项目用途', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        // 去除首尾空格后判断是否在白名单中
+        const inputValue = value ? value.trim() : ''
+        if (inputValue && !projectUsageWhiteList.includes(inputValue)) {
+          callback(new Error(
+            '项目用途只能输入：公路、铁路、机场、水利水电、电力通讯、油气管网、科技、教育、公用设施、乡村道路、保障性住房或移民搬迁、农民自建基本生产生活房舍、商业服务业、物流仓储、旅游开发、养殖、滑雪场、林业生产经营、科研科普服务设施、其他'
+          ))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change']
+    }],
   projectPurpose: [{ required: true, message: '请输入拟选位置', trigger: 'blur' }],
   projectInvestment: [
     { required: true, message: '请输入建设项目拟投资额', trigger: 'blur' },
@@ -1149,7 +1199,7 @@ const rules = reactive({
     { required: true, message: '请输入模型坐标', trigger: 'blur' },
     {
       pattern: /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/,
-      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数',
+      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数，注意逗号需要用英文格式',
       trigger: 'blur'
     }
   ]
@@ -1371,36 +1421,72 @@ const handleUploadSuccess = (res, file, type) => {
   // 优先处理SHP（redLineCoordinate）类型的验证逻辑
   if (type === 'redLineCoordinate') {
     try {
-      const validationResult = res.data?.validationResult || {}
-      dialogTitle.value = validationResult.message || 'SHP数据验证结果'
-      dialogErrors.value = validationResult.fieldErrors || []
-      dialogVisible.value = true
-      // 只有验证通过（无错误）且后端返回了资源信息，才添加到文件列表
-      if (res.code === 200 && dialogErrors.value.length === 0) {
+      const validationResult = res.data?.validationResult; // 👈 不再默认 {}
+
+      let isValid = false;
+      let errorsToShow = [];
+      let message = 'SHP数据验证结果';
+
+      // 情况1：后端返回了 validationResult
+      if (validationResult != null) {
+        isValid = validationResult.valid === true;
+        message = validationResult.message || message;
+
+        if (!isValid) {
+          if (Array.isArray(validationResult.fieldErrors) && validationResult.fieldErrors.length > 0) {
+            errorsToShow = validationResult.fieldErrors;
+          } else if (validationResult.message) {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: validationResult.message
+            }];
+          } else {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: 'SHP数据验证失败，请检查文件内容'
+            }];
+          }
+        }
+      }
+      // 情况2：validationResult 为 null，但 code 200 → 视为验证通过（兼容后端缺陷）
+      else if (res.code === 200) {
+        isValid = true;
+        message = 'SHP数据上传成功';
+        errorsToShow = []; // 空数组 → 显示“✅ 验证通过”
+      }
+      // 情况3：其他异常
+      else {
+        isValid = false;
+        errorsToShow = [{
+          fieldName: 'redLineCoordinate',
+          errorMessage: '系统未返回验证结果，请重新上传'
+        }];
+      }
+
+      dialogTitle.value = message;
+      dialogErrors.value = errorsToShow;
+      dialogVisible.value = true;
+
+      // 只有真正成功才添加文件
+      if (res.code === 200 && isValid) {
         const fileItem = {
-          // 兜底：后端未返回fileName时用前端上传的文件名
           name: res.data.fileName || file.name,
           url: res.data.url || '',
           ossId: res.data.ossId || ''
-        }
-        redLineCoordinateFileList.value.push(fileItem)
-        ElMessage.success('SHP文件上传并验证通过')
-      } else {
-        // 验证失败：不添加到文件列表，仅提示
-        ElMessage.warning('SHP数据验证失败，请查看弹窗详情')
+        };
+        redLineCoordinateFileList.value.push(fileItem);
       }
-    } catch (err) { // 捕获解析错误
+    } catch (err) {
       console.error('redLineCoordinate上传解析失败：', err);
-      ElMessage.error('SHP数据解析失败：' + err.message);
+      ElMessage.error('SHP数据解析失败：' + (err.message || '未知错误'));
       dialogTitle.value = '解析失败';
-      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message }];
+      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message || '解析异常' }];
       dialogVisible.value = true;
     }
-    return // 终止后续通用逻辑
+    return;
   }
   // 通用上传成功逻辑（其他文件类型）
   if (res.code === 200) {
-    console.log("🚀 ~ handleUploadSuccess ~ res:", res)
     const fileItem = {
       name: res.data.fileName,
       url: res.data.url,
@@ -1922,7 +2008,6 @@ const submitForm = () => {
   color: white;
   font-weight: bold;
   margin-top: 10px;
-  margin-left: 10px;
 }
 
 .status-icon.success {
@@ -2117,6 +2202,12 @@ const submitForm = () => {
   line-height: 32px;
   min-width: 0;
   flex-direction: column;
+}
+
+:deep(.el-form-item--default) {
+  --font-size: 14px;
+  --el-form-label-font-size: var(--font-size);
+  margin-bottom: 24px;
 }
 
 .upload-progress-container {

@@ -479,6 +479,14 @@ bus.on('function-panel-clicked', data => {
 const clickBack = () => {
     if (isLeaving.value) return; // 防止重复点击
     isLeaving.value = true;
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": '2006169021575938049' }
+    });
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": '2007975797304672257' }
+    });
     // 原有清理指令
     sendMsgUE({
         "Command": "StartRoaming",
@@ -553,11 +561,6 @@ const clickBack = () => {
         "Args": {
             "Type": "2025"
         }
-    });
-    // 固定删除默认模型（1991914379260149762）
-    sendMsgUE({
-        "Command": "DeleteAssets",
-        "Args": { "ID": "1991914379260149762" }
     });
     // 核心：精准判断是否删除业务模型
     const shouldDeleteBusinessModel = () => {

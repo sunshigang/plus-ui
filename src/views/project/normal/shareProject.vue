@@ -7,7 +7,8 @@
         <el-tab-pane v-for="tab in approvalTabs" :key="tab.name" :name="tab.name">
           <template #label>
             <span class="tab-label-wrapper">
-              <img :src="activeTab === tab.name ? approvaled : approval" class="tab-status-icon" alt="审批状态" style="width:14px; height:13px;" />
+              <img :src="activeTab === tab.name ? approvaled : approval" class="tab-status-icon" alt="审批状态"
+                style="width:14px; height:13px;" />
               {{ tab.label }}
             </span>
           </template>
@@ -28,13 +29,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">建设活动（建设项目）名称：</span>
-                        <span class="value">{{ form.projectName || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.projectName || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目代码：</span>
-                        <span class="value">{{ form.projectCode || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.projectCode || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -42,13 +43,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">所属行政区划：</span>
-                        <span class="value">{{ form.administrativeRegion || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.administrativeRegion || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">涉及风景名胜区名称：</span>
-                        <span class="value">{{ form.scenicArea || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.scenicArea || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -56,13 +57,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">单位建设/个人建设：</span>
-                        <span class="value">{{ form.applicantType || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.applicantType || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">一般/重点项目：</span>
-                        <span class="value">{{ form.majorFlag ? '重大项目' : '一般项目' }}</span>
+                        <span class="value">{{ currentTabSnapshot.majorFlag ? '重大项目' : '一般项目' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -89,13 +90,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">建设单位名称：</span>
-                        <span class="value">{{ form.constructionUnit || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.constructionUnit || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">组织机构代码：</span>
-                        <span class="value">{{ form.organizationCode || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.organizationCode || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -103,13 +104,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">经办人：</span>
-                        <span class="value">{{ form.contactPerson || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.contactPerson || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">经办人联系方式：</span>
-                        <span class="value">{{ form.contactPhone || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.contactPhone || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -117,13 +118,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">保护区等级：</span>
-                        <span class="value">{{ formatMultiSelectValue(form.protectionLevel) }}</span>
+                        <span class="value">{{ formatMultiSelectValue(currentTabSnapshot.protectionLevel) }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目占用类型：</span>
-                        <span class="value">{{ formatMultiSelectValue(form.projectType) }}</span>
+                        <span class="value">{{ formatMultiSelectValue(currentTabSnapshot.projectType) }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -131,13 +132,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">涉及风景区地上建筑面积(㎡)：</span>
-                        <span class="value">{{ form.scenicGroundArea || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.scenicGroundArea || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">涉及风景区地下建筑面积(㎡)：</span>
-                        <span class="value">{{ form.scenicUndergroundArea || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.scenicUndergroundArea || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -145,13 +146,13 @@
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">项目用途：</span>
-                        <span class="value">{{ form.projectUsage || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.projectUsage || '暂无' }}</span>
                       </div>
                     </el-col>
                     <el-col :span="12">
                       <div class="info-item">
                         <span class="label">拟选位置：</span>
-                        <span class="value">{{ form.projectPurpose || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.projectPurpose || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -159,7 +160,7 @@
                     <el-col :span="24">
                       <div class="info-item">
                         <span class="label">建设项目拟投资额（万元）：</span>
-                        <span class="value">{{ form.projectInvestment || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.projectInvestment || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -167,7 +168,7 @@
                     <el-col :span="24">
                       <div class="info-item">
                         <span class="label">规划依据：</span>
-                        <span class="value">{{ form.planningBasis || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.planningBasis || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -175,7 +176,7 @@
                     <el-col :span="24">
                       <div class="info-item">
                         <span class="label">建设内容涉及规模：</span>
-                        <span class="value">{{ form.constructionContent || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.constructionContent || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -183,7 +184,7 @@
                     <el-col :span="24">
                       <div class="info-item">
                         <span class="label">其他需要说明的情况：</span>
-                        <span class="value">{{ form.otherExplanations || '暂无' }}</span>
+                        <span class="value">{{ currentTabSnapshot.otherExplanations || '暂无' }}</span>
                       </div>
                     </el-col>
                   </el-row>
@@ -195,8 +196,8 @@
                         <span class="label">选址方案：</span>
                         <div class="file-list">
                           <template v-if="locationPlanFileList.length">
-                            <el-link v-for="file in locationPlanFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.locationPlanFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -209,8 +210,8 @@
                         <span class="label">专家评审意见：</span>
                         <div class="file-list">
                           <template v-if="expertOpinionsFileList.length">
-                            <el-link v-for="file in expertOpinionsFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.expertOpinionsFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -225,8 +226,8 @@
                         <span class="label">公示材料：</span>
                         <div class="file-list">
                           <template v-if="meetingMaterialsFileList.length">
-                            <el-link v-for="file in meetingMaterialsFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.meetingMaterialsFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -239,8 +240,8 @@
                         <span class="label">选址方案核准申报表：</span>
                         <div class="file-list">
                           <template v-if="siteSelectionReportFileList.length">
-                            <el-link v-for="file in siteSelectionReportFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.siteSelectionReportFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -255,8 +256,8 @@
                         <span class="label">立项文件：</span>
                         <div class="file-list">
                           <template v-if="approvalDocumentsFileList.length">
-                            <el-link v-for="file in approvalDocumentsFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.approvalDocumentsFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -269,8 +270,8 @@
                         <span class="label">项目用地红线图：</span>
                         <div class="file-list">
                           <template v-if="projectRedLineFileList.length">
-                            <el-link v-for="file in projectRedLineFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.projectRedLineFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -283,8 +284,8 @@
                     <span class="label">项目红线矢量数据：</span>
                     <div class="file-list">
                       <template v-if="redLineCoordinateFileList.length">
-                        <el-link v-for="file in redLineCoordinateFileList" :key="file.ossId" :href="file.url"
-                          :underline="false" target="_blank">
+                        <el-link v-for="file in currentTabSnapshot.redLineCoordinateFileList" :key="file.ossId"
+                          :href="file.url" :underline="false" target="_blank">
                           <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                         </el-link>
                       </template>
@@ -297,8 +298,8 @@
                         <span class="label">项目三维模型：</span>
                         <div class="file-list">
                           <template v-if="threeDModelFileList.length">
-                            <el-link v-for="file in threeDModelFileList" :key="file.ossId" :href="file.url"
-                              :underline="false" target="_blank">
+                            <el-link v-for="file in currentTabSnapshot.threeDModelFileList" :key="file.ossId"
+                              :href="file.url" :underline="false" target="_blank">
                               <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                             </el-link>
                           </template>
@@ -310,7 +311,7 @@
                       <div class="info-item">
                         <span class="label">模型坐标：</span>
                         <div class="file-list">
-                          <el-input v-model="form.modelCoordinate" disabled />
+                          <el-input v-model="currentTabSnapshot.modelCoordinate" disabled />
                         </div>
                       </div>
                     </el-col>
@@ -564,6 +565,95 @@ const handleTabChange = (tabName) => {
   }
 };
 
+function parseJsonField (str) {
+  if (!str || str === '[]') return [];
+  try {
+    return typeof str === 'string' ? JSON.parse(str) : str;
+  } catch (e) {
+    console.warn('JSON parse failed:', str, e);
+    return [];
+  }
+}
+const currentTabSnapshot = computed(() => {
+  const tabIndex = approvalTabs.value.findIndex(tab => tab.name === activeTab.value);
+  const record = form.approveRecords?.[tabIndex];
+
+  // 如果没有对应的审批记录或 projectInfoDetail，返回空对象（显示“暂无”）
+  if (!record?.projectInfoDetail) {
+    return {
+      projectName: null,
+      projectCode: null,
+      administrativeRegion: null,
+      scenicArea: null,
+      applicantType: null,
+      majorFlag: false,
+      constructionUnit: null,
+      organizationCode: null,
+      contactPerson: null,
+      contactPhone: null,
+      protectionLevel: [],
+      projectType: [],
+      scenicGroundArea: null,
+      scenicUndergroundArea: null,
+      projectUsage: null,
+      projectPurpose: null,
+      projectInvestment: null,
+      planningBasis: null,
+      constructionContent: null,
+      otherExplanations: null,
+      modelCoordinate: null,
+
+      // 文件列表为空
+      locationPlanFiles: [],
+      siteSelectionReportFiles: [],
+      projectRedLineFiles: [],
+      expertOpinionsFiles: [],
+      meetingMaterialsFiles: [],
+      approvalDocumentsFiles: [],
+      threeDModelFiles: [],
+      redLineCoordinateFiles: [],
+    };
+  }
+
+  const detail = record.projectInfoDetail;
+
+  // 处理多选字段
+  const protectionLevel = typeof detail.protectionLevel === 'string'
+    ? detail.protectionLevel.split(',').filter(Boolean)
+    : Array.isArray(detail.protectionLevel) ? detail.protectionLevel : [];
+
+  const projectType = typeof detail.projectType === 'string'
+    ? detail.projectType.split(',').filter(Boolean)
+    : Array.isArray(detail.projectType) ? detail.projectType : [];
+
+  // 解析文件字段
+  const locationPlanFiles = parseJsonField(detail.locationPlan);
+  const siteSelectionReportFiles = parseJsonField(detail.siteSelectionReport);
+  const projectRedLineFiles = parseJsonField(detail.projectRedLine);
+  const expertOpinionsFiles = parseJsonField(detail.expertOpinions);
+  const meetingMaterialsFiles = parseJsonField(detail.meetingMaterials);
+  const approvalDocumentsFiles = parseJsonField(detail.approvalDocuments);
+  const threeDModelFiles = parseJsonField(detail.threeDModel);
+  const redLineCoordinateFiles = parseJsonField(detail.redLineCoordinate);
+
+  return {
+    ...detail,
+    protectionLevel,
+    projectType,
+    majorFlag: Boolean(detail.majorFlag),
+    projectInvestment: detail.projectInvestment ?? null,
+
+    // 文件列表
+    locationPlanFileList: locationPlanFiles,
+    expertOpinionsFileList: expertOpinionsFiles,
+    meetingMaterialsFileList: meetingMaterialsFiles,
+    siteSelectionReportFileList: siteSelectionReportFiles,
+    approvalDocumentsFileList: approvalDocumentsFiles,
+    projectRedLineFileList: projectRedLineFiles,
+    redLineCoordinateFileList: redLineCoordinateFiles,
+    threeDModelFileList: threeDModelFiles,
+  };
+});
 // 初始化加载数据
 onMounted(async () => {
   const projectId = route.params.id
@@ -820,7 +910,7 @@ const clickDataShare = async () => {
 }
 
 .info-item .label {
-  min-width: 180px;
+  min-width: 240px;
   font-weight: 500;
   color: #666;
 }

@@ -38,6 +38,7 @@
 import { reactive, toRefs, onMounted, onUnmounted, getCurrentInstance, ref, computed } from 'vue';
 import bus from '../../libs/eventbus';
 import { getInfo } from '@/api/login';
+import { useUserStore } from '@/store/modules/user'
 // 定义响应式数据
 const sceneRoamingShow = ref(true);
 const { proxy } = getCurrentInstance();
@@ -46,10 +47,10 @@ const schemeReviewStyle = ref(false);
 const planningAchievementStyle = ref(false);
 const vectorLayerStyle = ref(false);
 const sceneRoamingStart = ref(false);
-const currentUserRole = ref('');
 // 选中值改为绑定id（数字），初始值为空字符串
 const selectedValues = ref('');
 const searchQuery = ref('');
+const userStore = useUserStore()
 // 核心修改：移除value/label，id从1开始编号
 const allOptionsPoi = ref([
     { id: 1, name: '五峰书院' },
@@ -169,7 +170,11 @@ const allOptionsPoi = ref([
     { id: 115, name: '云谷洞' },
     { id: 116, name: '万成庙' }
 ]);
-
+// 判断是否为超级管理员
+const isSuperAdmin = computed(() => {
+    const roles = userStore.roles || [];
+    return roles.includes('sysadmin') || roles.includes('superadmin');
+});
 // 模糊搜索逻辑：匹配name字段
 const filteredOptionsPoi = computed(() => {
     if (!searchQuery.value) return allOptionsPoi.value;
@@ -242,25 +247,15 @@ const handleSearch = () => {
 };
 
 onMounted(async () => {
-    const userData = await getInfo();
-    currentUserRole.value = userData.data?.roles?.[0] || '';
-    if (currentUserRole.value == 'superadmin' || currentUserRole.value == 'sysadmin') {
+    if (isSuperAdmin.value) {
         superadminShowOrHide.value = false
+    } else {
+        superadminShowOrHide.value = true
     }
-    const handleVisScreenClick = (isShow) => {
-        superadminShowOrHide.value = isShow;
-    };
-    bus.on('vis-screen-clicked', handleVisScreenClick);
-
-    // 3. 缓存监听函数，用于销毁时移除
-    window.handleVisScreenClick = handleVisScreenClick;
     filteredOptionsPoi.value = [...allOptionsPoi.value];
 });
 
 onUnmounted(() => {
-    if (window.handleVisScreenClick) {
-        bus.off('vis-screen-clicked', window.handleVisScreenClick);
-    }
     // 重置所有响应式状态
     sceneRoamingShow.value = true;
     schemeReviewStyle.value = false;

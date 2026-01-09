@@ -13,7 +13,7 @@
           <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId">
           </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select> -->
+</el-select> -->
         <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']" v-if="showScreen"
           class="screen-link-btn">可视化大屏</el-button>
         <search-menu ref="searchMenuRef" />
@@ -136,12 +136,6 @@ const openSearchMenu = () => {
 const handle3DScreen = () => {
   router.push({
     path: '/screen/screen',
-  }).then(() => {
-    // 路由跳转成功后，延迟发送事件（确保大屏组件已挂载）
-    setTimeout(() => {
-      bus.emit('vis-screen-clicked', false)
-      console.log("事件已发送：vis-screen-clicked -> false")
-    }, 100); // 100ms 延迟足够组件挂载
   })
 }
 // 动态切换
@@ -233,7 +227,7 @@ onMounted(async () => {
   noticeStore.fetchUnreadCount();
   // 原有 initTenantList 等逻辑保留
   const res = await getUserInfo();
-  if (res.data.roles[0] == 'sysadmin'||res.data.roles[0] == 'superadmin') {
+  if (res.data.roles[0] == 'sysadmin' || res.data.roles[0] == 'superadmin') {
     showScreen.value = true
   } else {
     showScreen.value = false

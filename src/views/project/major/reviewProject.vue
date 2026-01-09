@@ -73,7 +73,7 @@
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
-            <el-form :model="form" label-width="230px" >
+            <el-form :model="form" label-width="230px">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设单位名称">
@@ -283,12 +283,12 @@
                     <span class="el-icon-info"> 暂无文件 </span>
                   </li>
                 </transition-group>
-                <div class="operation-group">
+                <!-- <div class="operation-group">
                   <el-button link type="primary" @click="handleDownloadTemplate('instructions')">填写说明</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polygonTemplate')">面模板下载</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polylineTemplate')">线模板下载</el-button>
                   <div>（使用前，请删除模板中的实例数据）</div>
-                </div>
+                </div> -->
               </el-form-item>
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -306,10 +306,10 @@
                         <span class="el-icon-info"> 暂无文件 </span>
                       </li>
                     </transition-group>
-                    <div class="operation-group">
+                    <!-- <div class="operation-group">
                       <el-button link type="primary" icon="Download"
                         @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
-                    </div>
+                    </div> -->
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -322,51 +322,46 @@
           </div>
         </div>
         <!-- 审批信息（多记录循环展示） -->
-        <div class="project-documents" v-if="showApprovalSection && !!form.approveRecords?.[0]?.gwhApproveResult">
+        <div class="project-documents" v-if="showApprovalSection">
           <h3 class="section-title">审批信息</h3>
           <!-- 循环渲染每一条审批记录 -->
-          <div v-for="(record, index) in form.approveRecords" :key="record.id || `approval-record-${index}`"
-            class="approval-record-item">
-            <div class="approval-record-header" v-if="record.gwhApproveResult">
-              <span class="approval-record-index">审批记录 {{ index + 1 }}</span>
-            </div>
-
+          <div class="approval-record-item">
             <!-- 管委会审批信息 -->
-            <el-form label-width="230px" disabled class="approval-form" v-if="record.gwhApproveResult">
+            <el-form label-width="230px" disabled class="approval-form" v-if="latestApprovalRecord.gwhApproveResult">
               <el-form-item label="管委会审批状态">
                 <div class="approval-item">
                   <span :class="['status-icon',
-                    record.gwhApproveResult === '通过' ? 'success' :
-                      record.gwhApproveResult === '驳回' ? 'error' : 'pending'
+                    latestApprovalRecord.gwhApproveResult === '通过' ? 'success' :
+                      latestApprovalRecord.gwhApproveResult === '驳回' ? 'error' : 'pending'
                   ]">
                     {{
-                      record.gwhApproveResult === '通过' ? '✓' :
-                        record.gwhApproveResult === '驳回' ? '✗' : '-'
+                      latestApprovalRecord.gwhApproveResult === '通过' ? '✓' :
+                        latestApprovalRecord.gwhApproveResult === '驳回' ? '✗' : '-'
                     }}
                   </span>
                   <span class="status-text">
-                    {{ record.gwhApproveResult || '待审批' }}
+                    {{ latestApprovalRecord.gwhApproveResult || '待审批' }}
                   </span>
                 </div>
               </el-form-item>
               <el-form-item label="审批时间">
-                <span>{{ record.gwhApproveTime || '暂无时间' }}</span>
+                <span>{{ latestApprovalRecord.gwhApproveTime || '暂无时间' }}</span>
               </el-form-item>
               <el-form-item label="审批反馈">
-                <el-input type="textarea" :value="record.gwhApprovalReason || '暂无反馈'" :rows="2"
+                <el-input type="textarea" :value="latestApprovalRecord.gwhApprovalReason || '暂无反馈'" :rows="2"
                   style="background: #fff;" disabled />
               </el-form-item>
               <el-form-item label="反馈文件">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, fileIndex) in parseFileList(record.gwhApprovalAttachment)"
+                  <li v-for="(file, fileIndex) in parseFileList(latestApprovalRecord.gwhApprovalAttachment)"
                     :key="file.ossId || fileIndex" class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="file.url" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                     </el-link>
                   </li>
-                  <li v-if="!record.gwhApprovalAttachment || parseFileList(record.gwhApprovalAttachment).length === 0"
-                    class="el-upload-list__item" key="'empty-gwhFeedback-' + index">
+                  <li v-if="!latestApprovalRecord.gwhApprovalAttachment || parseFileList(latestApprovalRecord.gwhApprovalAttachment).length === 0"
+                    class="el-upload-list__item" key="'empty-gwhFeedback'">
                     <span class="el-icon-info"> 暂无反馈文件 </span>
                   </li>
                 </transition-group>
@@ -375,48 +370,46 @@
 
             <!-- 市林业局审批信息（有数据才显示） -->
             <el-form label-width="230px" disabled class="approval-form"
-              v-if="record.lyjApproveResult || record.lyjApproveTime || record.lyjApprovalReason || record.lyjApprovalAttachment">
+              v-if="latestApprovalRecord.lyjApproveResult || latestApprovalRecord.lyjApproveTime || latestApprovalRecord.lyjApprovalReason || latestApprovalRecord.lyjApprovalAttachment">
               <el-form-item label="市林业局审批状态">
                 <div class="approval-item">
                   <span :class="['status-icon',
-                    record.lyjApproveResult === '通过' ? 'success' :
-                      record.lyjApproveResult === '驳回' ? 'error' : 'pending'
+                    latestApprovalRecord.lyjApproveResult === '通过' ? 'success' :
+                      latestApprovalRecord.lyjApproveResult === '驳回' ? 'error' : 'pending'
                   ]">
                     {{
-                      record.lyjApproveResult === '通过' ? '✓' :
-                        record.lyjApproveResult === '驳回' ? '✗' : '-'
+                      latestApprovalRecord.lyjApproveResult === '通过' ? '✓' :
+                        latestApprovalRecord.lyjApproveResult === '驳回' ? '✗' : '-'
                     }}
                   </span>
                   <span class="status-text">
-                    {{ record.lyjApproveResult || '待审批' }}
+                    {{ latestApprovalRecord.lyjApproveResult || '待审批' }}
                   </span>
                 </div>
               </el-form-item>
               <el-form-item label="审批时间">
-                <span>{{ record.lyjApproveTime || '暂无时间' }}</span>
+                <span>{{ latestApprovalRecord.lyjApproveTime || '暂无时间' }}</span>
               </el-form-item>
               <el-form-item label="审批反馈">
-                <el-input type="textarea" :value="record.lyjApprovalReason || '暂无反馈'" :rows="2"
+                <el-input type="textarea" :value="latestApprovalRecord.lyjApprovalReason || '暂无反馈'" :rows="2"
                   style="background: #fff;" disabled />
               </el-form-item>
               <el-form-item label="反馈文件">
                 <transition-group class="upload-file-list el-upload-list el-upload-list--text" name="el-fade-in-linear"
                   tag="ul">
-                  <li v-for="(file, fileIndex) in parseFileList(record.lyjApprovalAttachment)"
+                  <li v-for="(file, fileIndex) in parseFileList(latestApprovalRecord.lyjApprovalAttachment)"
                     :key="file.ossId || fileIndex" class="el-upload-list__item ele-upload-list__item-content">
                     <el-link :href="file.url" :underline="false" target="_blank">
                       <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                     </el-link>
                   </li>
-                  <li v-if="!record.lyjApprovalAttachment || parseFileList(record.lyjApprovalAttachment).length === 0"
-                    class="el-upload-list__item" key="'empty-lyjFeedback-' + index">
+                  <li v-if="!latestApprovalRecord.lyjApprovalAttachment || parseFileList(latestApprovalRecord.lyjApprovalAttachment).length === 0"
+                    class="el-upload-list__item" key="'empty-lyjFeedback'">
                     <span class="el-icon-info"> 暂无反馈文件 </span>
                   </li>
                 </transition-group>
               </el-form-item>
             </el-form>
-
-            <div class="approval-record-divider" v-if="index < form.approveRecords.length - 1"></div>
           </div>
         </div>
         <!-- 审核区域 -->
@@ -557,6 +550,25 @@ const showApprovalSection = computed(() => {
   const currentStatus = typeof form.status === 'string' ? form.status.trim() : '';
   const validStatuses = ['管委会审批中', '管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
   return validStatuses.includes(currentStatus);
+});
+const latestApprovalRecord = computed(() => {
+  // 从后往前找第一条 gwhApproveResult 不为 null/undefined/空字符串 的记录
+  const records = form.approveRecords || [];
+  for (let i = records.length - 1; i >= 0; i--) {
+    const record = records[i];
+    if (record.gwhApproveResult && record.gwhApproveResult.trim()) {
+      return record;
+    }
+  }
+  // 如果没有管委会审批记录，再尝试找林业局的（可选）
+  for (let i = records.length - 1; i >= 0; i--) {
+    const record = records[i];
+    if (record.lyjApproveResult && record.lyjApproveResult.trim()) {
+      return record;
+    }
+  }
+  // 都没有则返回 null
+  return null;
 });
 // 审核文件上传配置
 const feedbackFileList = ref([])
@@ -1180,11 +1192,13 @@ onMounted(async () => {
   width: 100%;
   box-sizing: border-box;
 }
+
 .ele-upload-list__item-content:hover {
   background-color: rgba(129, 195, 253, 0.2);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+
 .ele-upload-list__item-content .el-link {
   flex: 1;
   min-width: 0;
@@ -1233,11 +1247,5 @@ onMounted(async () => {
 
 .approval-form {
   margin-bottom: 16px;
-}
-
-.approval-record-divider {
-  height: 1px;
-  background-color: #e5e7eb;
-  margin: 20px 0;
 }
 </style>

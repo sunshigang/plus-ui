@@ -175,7 +175,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click.stop="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click.stop="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -204,7 +205,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click.stop="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click.stop="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -235,7 +237,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -264,7 +267,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -295,7 +299,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -323,7 +328,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -357,7 +363,8 @@
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                   <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                    <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
+                    <el-button type="danger" link icon="Delete"
+                      @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
                     <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                   </div>
                 </li>
@@ -404,7 +411,8 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link icon="Delete" @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
                         <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
@@ -714,7 +722,7 @@ const rules = reactive({
     { required: true, message: '请输入模型坐标', trigger: 'blur' },
     {
       pattern: /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/,
-      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数',
+      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数，注意逗号需要用英文格式',
       trigger: 'blur'
     }
   ]
@@ -913,36 +921,72 @@ const handleUploadSuccess = (res, file, type) => {
   // 优先处理SHP（redLineCoordinate）类型的验证逻辑
   if (type === 'redLineCoordinate') {
     try {
-      const validationResult = res.data?.validationResult || {}
-      dialogTitle.value = validationResult.message || 'SHP数据验证结果'
-      dialogErrors.value = validationResult.fieldErrors || []
-      dialogVisible.value = true
-      // 只有验证通过（无错误）且后端返回了资源信息，才添加到文件列表
-      if (res.code === 200 && dialogErrors.value.length === 0) {
+      const validationResult = res.data?.validationResult; // 👈 不再默认 {}
+
+      let isValid = false;
+      let errorsToShow = [];
+      let message = 'SHP数据验证结果';
+
+      // 情况1：后端返回了 validationResult
+      if (validationResult != null) {
+        isValid = validationResult.valid === true;
+        message = validationResult.message || message;
+
+        if (!isValid) {
+          if (Array.isArray(validationResult.fieldErrors) && validationResult.fieldErrors.length > 0) {
+            errorsToShow = validationResult.fieldErrors;
+          } else if (validationResult.message) {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: validationResult.message
+            }];
+          } else {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: 'SHP数据验证失败，请检查文件内容'
+            }];
+          }
+        }
+      }
+      // 情况2：validationResult 为 null，但 code 200 → 视为验证通过（兼容后端缺陷）
+      else if (res.code === 200) {
+        isValid = true;
+        message = 'SHP数据上传成功';
+        errorsToShow = []; // 空数组 → 显示“✅ 验证通过”
+      }
+      // 情况3：其他异常
+      else {
+        isValid = false;
+        errorsToShow = [{
+          fieldName: 'redLineCoordinate',
+          errorMessage: '系统未返回验证结果，请重新上传'
+        }];
+      }
+
+      dialogTitle.value = message;
+      dialogErrors.value = errorsToShow;
+      dialogVisible.value = true;
+
+      // 只有真正成功才添加文件
+      if (res.code === 200 && isValid) {
         const fileItem = {
-          // 兜底：后端未返回fileName时用前端上传的文件名
           name: res.data.fileName || file.name,
           url: res.data.url || '',
           ossId: res.data.ossId || ''
-        }
-        redLineCoordinateFileList.value.push(fileItem)
-        ElMessage.success('SHP文件上传并验证通过')
-      } else {
-        // 验证失败：不添加到文件列表，仅提示
-        ElMessage.warning('SHP数据验证失败，请查看弹窗详情')
+        };
+        redLineCoordinateFileList.value.push(fileItem);
       }
-    } catch (err) { // 捕获解析错误
+    } catch (err) {
       console.error('redLineCoordinate上传解析失败：', err);
-      ElMessage.error('SHP数据解析失败：' + err.message);
+      ElMessage.error('SHP数据解析失败：' + (err.message || '未知错误'));
       dialogTitle.value = '解析失败';
-      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message }];
+      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message || '解析异常' }];
       dialogVisible.value = true;
     }
-    return // 终止后续通用逻辑
+    return;
   }
   // 通用上传成功逻辑（其他文件类型）
   if (res.code === 200) {
-    console.log("🚀 ~ handleUploadSuccess ~ res:", res)
     const fileItem = {
       name: res.data.fileName,
       url: res.data.url,
@@ -1495,6 +1539,12 @@ const handleModelPreview = () => {
   flex: none !important;
   width: auto !important;
   margin-left: 8px !important;
+}
+
+:deep(.el-form-item--default) {
+  --font-size: 14px;
+  --el-form-label-font-size: var(--font-size);
+  margin-bottom: 24px;
 }
 
 .upload-container {

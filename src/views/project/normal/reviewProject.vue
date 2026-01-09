@@ -18,7 +18,7 @@
             <div class="section-title-text">基础信息</div>
           </div>
           <div class="section-content" v-if="basicInfoVisible">
-            <el-form :model="form" label-width="230px" >
+            <el-form :model="form" label-width="230px">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设活动（建设项目）名称">
@@ -73,7 +73,7 @@
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
-            <el-form :model="form" label-width="230px" >
+            <el-form :model="form" label-width="230px">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设单位名称">
@@ -283,12 +283,12 @@
                     <span class="el-icon-info"> 暂无文件 </span>
                   </li>
                 </transition-group>
-                <div class="operation-group">
+                <!-- <div class="operation-group">
                   <el-button link type="primary" @click="handleDownloadTemplate('instructions')">填写说明</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polygonTemplate')">面模板下载</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polylineTemplate')">线模板下载</el-button>
                   <div>（使用前，请删除模板中的实例数据）</div>
-                </div>
+                </div> -->
               </el-form-item>
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -306,10 +306,10 @@
                         <span class="el-icon-info"> 暂无文件 </span>
                       </li>
                     </transition-group>
-                    <div class="operation-group">
+                    <!-- <div class="operation-group">
                       <el-button link type="primary" icon="Download"
                         @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
-                    </div>
+                    </div> -->
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -322,33 +322,33 @@
           </div>
         </div>
         <!-- 审批信息（按状态显示） -->
-        <div class="project-documents" v-if="showApprovalSection && !!form.approveRecords?.[0]?.gwhApproveResult"">
-          <h3 class="section-title">审批信息</h3>
+        <div class="project-documents" v-if="showApprovalSection && !!latestApproveRecord">
+          <h3 class=" section-title">审批信息</h3>
           <el-form label-width="230px" disabled>
             <!-- 管委会审批信息 -->
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
-                  form.approveRecords[0]?.gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecords[0]?.gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  latestApproveRecord.gwhApproveResult === '通过' ? 'success' :
+                    latestApproveRecord.gwhApproveResult === '驳回' ? 'error' : 'pending'
                 ]">
                   {{
-                    form.approveRecords[0]?.gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecords[0]?.gwhApproveResult === '驳回' ? '✗' : '-'
+                    latestApproveRecord.gwhApproveResult === '通过' ? '✓' :
+                      latestApproveRecord.gwhApproveResult === '驳回' ? '✗' : '-'
                   }}
                 </span>
                 <span class="status-text">
-                  {{ form.approveRecords[0]?.gwhApproveResult || '待审批' }}
+                  {{ latestApproveRecord.gwhApproveResult || '待审批' }}
                 </span>
               </div>
             </el-form-item>
 
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecords[0]?.gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ latestApproveRecord.gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
 
             <el-form-item label="审批反馈">
-              <el-input type="textarea" :value="form.approveRecords[0].gwhApprovalReason || '暂无反馈'" :rows="2"
+              <el-input type="textarea" :value="latestApproveRecord.gwhApprovalReason || '暂无反馈'" :rows="2"
                 style="background: #fff;" disabled />
             </el-form-item>
 
@@ -367,7 +367,6 @@
                 </li>
               </transition-group>
             </el-form-item>
-
           </el-form>
         </div>
         <!-- 审核区域 -->
@@ -522,6 +521,16 @@ const showApprovalSection = computed(() => {
   return validStatuses.includes(currentStatus);
 
 })
+// 获取最新的有效管委会审批记录（忽略 result 为 null 的记录）
+const latestApproveRecord = computed(() => {
+  // 过滤出有审批结果的记录（通过/驳回）
+  const validRecords = (form.approveRecords || []).filter(
+    record => record.gwhApproveResult === '通过' || record.gwhApproveResult === '驳回'
+  );
+
+  // 返回最后一条（最新）
+  return validRecords.length > 0 ? validRecords[validRecords.length - 1] : null;
+});
 // 审核文件上传配置
 const feedbackFileList = ref([])
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
@@ -816,8 +825,13 @@ const loadProjectData = async (projectId) => {
     // 处理三维模型文件列表
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 处理审批反馈文件
-    const firstRecord = form.approveRecords[0] || {};
-    managementFeedbackFileList.value = parseFileList(firstRecord.gwhApprovalAttachment)
+    const validRecords = (form.approveRecords || []).filter(
+      record => record.gwhApproveResult === '通过' || record.gwhApproveResult === '驳回'
+    );
+    const latestRecord = validRecords.length > 0 ? validRecords[validRecords.length - 1] : null;
+    managementFeedbackFileList.value = latestRecord
+      ? parseFileList(latestRecord.gwhApprovalAttachment)
+      : [];
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/normal')
