@@ -51,8 +51,8 @@ const { t } = useI18n();
 
 const loginForm = ref<LoginData>({
   tenantId: '000000',
-  username: 'admin',
-  password: '123456',
+  username: '',
+  password: '',
   rememberMe: false,
   code: '',
   uuid: ''
