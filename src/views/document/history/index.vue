@@ -1,7 +1,7 @@
 <template>
   <div class="history-container">
     <div class="history-content">
-      <div class="back-normal" @click="handleBack"><img src="../../../assets/images/arrow-left.png" />创建项目</div>
+      <div class="back-normal" @click="handleBack"><img src="../../../assets/images/arrow-left.png" />历史版本</div>
       <div class="page-header mb-6 flex justify-between items-center">
         <h2 class="text-xl font-bold">《{{ fileName }}》历史版本</h2>
       </div>

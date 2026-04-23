@@ -13,15 +13,15 @@
           <el-option v-for="item in tenantList" :key="item.tenantId" :label="item.companyName" :value="item.tenantId">
           </el-option>
           <template #prefix><svg-icon icon-class="company" class="el-input__icon input-icon" /></template>
-        </el-select> -->
+</el-select> -->
         <el-button link type="primary" @click="handle3DScreen()" v-hasPermi="['screen:screen:3d']" v-if="showScreen"
           class="screen-link-btn">可视化大屏</el-button>
         <search-menu ref="searchMenuRef" />
-        <el-tooltip content="搜索" effect="dark" placement="bottom">
+        <!-- <el-tooltip content="搜索" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect" @click="openSearchMenu">
             <svg-icon class-name="search-icon" icon-class="search" />
           </div>
-        </el-tooltip>
+        </el-tooltip> -->
         <!-- 消息 -->
         <el-tooltip :content="proxy.$t('navbar.message')" effect="dark" placement="bottom">
           <div>
@@ -92,6 +92,7 @@ import notice from './notice/index.vue';
 import router from '@/router';
 import { ElMessageBox, ElMessageBoxOptions } from 'element-plus';
 import { getInfo as getUserInfo } from '@/api/login';
+import bus from '../../libs/eventbus';
 // 声明自定义 proxy 类型
 interface CustomProxy {
   $router: {
@@ -174,7 +175,7 @@ const toggleSideBar = () => {
 };
 
 const logout = async () => {
-  await ElMessageBox.confirm('确定注销并退出系统吗？', '提示', {
+  await ElMessageBox.confirm('您确定要退出当前账号吗？项目操作数据将自动保存。', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -226,7 +227,7 @@ onMounted(async () => {
   noticeStore.fetchUnreadCount();
   // 原有 initTenantList 等逻辑保留
   const res = await getUserInfo();
-  if (res.data.roles[0] == 'sysadmin'||res.data.roles[0] == 'superadmin') {
+  if (res.data.roles[0] == 'sysadmin' || res.data.roles[0] == 'superadmin') {
     showScreen.value = true
   } else {
     showScreen.value = false

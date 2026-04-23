@@ -27,7 +27,7 @@
         <p style="margin-top: 10px; font-size: 17px; color: #666;">
           数据说明：表格展示了各类用地的现状与规划面积及占比，总面积保持147.08km²不变
         </p>
-        <div ref="landUseBar" class="chart-container"></div>
+        <div ref="landUseBar" class="chart-container1"></div>
         <h3>方岩国家级风景名胜区游客规模预测一览表</h3>
         <div ref="touristLine" class="chart-container"></div>
         <h3>主要景点轮播图</h3>
@@ -297,7 +297,9 @@ const initLandUseBar = () => {
       data: landUseData.map(item => item.name),
       axisLabel: {
         interval: 0,
-        fontSize: 12
+        fontSize: 12,
+        rotate: 45, // 倾斜45度
+        margin: 15 // 根据需要调整标签间距
       }
     },
     yAxis: {
@@ -680,6 +682,7 @@ const goTarget = (url: string) => {
     }
   }
 }
+
 .chart-container {
   width: 100%; // 宽度占满父容器
   min-width: 300px; // 最小宽度兜底，避免过窄
@@ -692,6 +695,20 @@ const goTarget = (url: string) => {
   box-sizing: border-box;
   display: block; // 确保是块级元素，避免 inline 导致尺寸异常
 }
+
+.chart-container1 {
+  width: 100%; // 宽度占满父容器
+  min-width: 300px; // 最小宽度兜底，避免过窄
+  height: 350px; // 固定高度，确保初始化时有高度
+  min-height: 200px; // 最小高度兜底
+  margin-top: 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  box-sizing: border-box;
+  display: block; // 确保是块级元素，避免 inline 导致尺寸异常
+}
+
 // 图表容器样式
 .carousel-container {
   width: 100%;

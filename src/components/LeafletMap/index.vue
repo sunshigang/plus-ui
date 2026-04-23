@@ -85,7 +85,7 @@ const initMap = () => {
     edit: { marker: true }
   });
 
-  L.tileLayer.wms('http://127.0.0.1:8080/geoserver/fangyan/wms?', {
+  L.tileLayer.wms('http://frp5.ccszxc.site:38089/geoserver/fangyan/wms?', {
     layers: 'fangyan:dom',
     format: 'image/png',
     maxZoom: 21,

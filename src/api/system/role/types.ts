@@ -29,6 +29,7 @@ export interface RoleVO extends BaseEntity {
   menuIds?: Array<string | number>;
   deptIds?: Array<string | number>;
   admin: boolean;
+  nickName?: string;
 }
 export interface ProjectVO extends BaseEntity {
   projectName: string;

@@ -126,8 +126,11 @@
               数据共享
             </el-button>
             <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
-              查看
+              {{ isSuperAdmin ? '详情查看' : '查看' }}
             </el-button>
+            <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+              查看
+            </el-button> -->
             <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
               删除
             </el-button>
@@ -146,6 +149,7 @@ import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick, reactive, toRefs, getCurrentInstance } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
+import { useUserStore } from '@/store/modules/user'
 const router = useRouter()
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
@@ -156,6 +160,7 @@ const ids = ref<string>('');
 const single = ref(true);
 const multiple = ref(true);
 const total = ref(0);
+const userStore = useUserStore()
 // 状态颜色映射：返回对应Hex颜色值
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -281,13 +286,18 @@ const handleExport = async () => {
     proxy?.$modal.msgWarning('请选择要导出的项目');
     return;
   }
-  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
+  const exportUrl = `/project/download/${ids.value}`;
   await proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
 };
 const handleShare = async (row: InfoVO) => {
   router.push(`/project/major/major-share/${row.id}`);
 };
-onMounted(async () => { // 保留async关键字
+const isSuperAdmin = computed(() => {
+  const roles = userStore.roles || [];
+  return roles.includes('sysadmin') || roles.includes('superadmin');
+});
+onMounted(async () => {
+
   try {
     await getList();
   } catch (err) {

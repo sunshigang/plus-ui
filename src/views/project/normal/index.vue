@@ -95,8 +95,15 @@
         <el-table-column label="单位或个人" align="center" prop="applicantType" />
         <el-table-column label="状态" align="center" prop="status" width="150">
           <template #default="scope">
-            <span class="status-dot"
-              :style="{ backgroundColor: getStatusColor(scope.row.status), display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', marginRight: '6px', verticalAlign: 'middle' }"></span>
+            <span class="status-dot" :style="{
+              backgroundColor: getStatusColor(scope.row.status),
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              marginRight: '6px',
+              verticalAlign: 'middle'
+            }"></span>
             <span class="status-text" :style="{ verticalAlign: 'middle' }">{{ scope.row.status }}</span>
           </template>
         </el-table-column>
@@ -128,11 +135,13 @@
               v-if="scope.row.status === '管委会通过'">
               数据共享
             </el-button>
-            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+            <!-- <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
               查看
+            </el-button> -->
+            <el-button link type="primary" @click="handleView(scope.row)" v-hasPermi="['project:project:query']">
+              {{ isSuperAdmin ? '详情查看' : '查看' }}
             </el-button>
-            <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']">
-              删除
+            <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['project:project:remove']"> 删除
             </el-button>
           </template>
         </el-table-column>
@@ -145,14 +154,15 @@
 </template>
 
 <script setup name="Info" lang="ts">
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 import { ref, onMounted, nextTick } from 'vue';
 import { listInfo, delInfo } from '@/api/project/normal/index';
 import { InfoVO, InfoQuery, InfoForm } from '@/api/project/normal/types';
+import { useUserStore } from '@/store/modules/user'
 import { reactive, toRefs, getCurrentInstance } from 'vue';
-const router = useRouter()
+const router = useRouter();
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-
+const userStore = useUserStore()
 // 核心响应式变量
 const dateRangeCreateTime = ref<[string, string]>(['', '']);
 const infoList = ref<InfoVO[]>([]);
@@ -210,7 +220,7 @@ const initFormData: InfoForm = {
   threeDModel: undefined,
   modelCoordinate: undefined,
   modelPreview: undefined,
-  majorFlag: false,
+  majorFlag: false
 };
 
 // 分页查询参数
@@ -236,12 +246,12 @@ const data = reactive<{
     status: undefined,
     createTimeFrom: undefined,
     createTimeTo: undefined,
-    majorFlag: false,
+    majorFlag: false
   },
   rules: {
-    projectName: [{ required: true, message: "建设项目名称不能为空", trigger: "blur" }],
-    administrativeRegion: [{ required: true, message: "所属行政区划不能为空", trigger: "blur" }],
-    scenicArea: [{ required: true, message: "涉及风景名胜区名称不能为空", trigger: "blur" }],
+    projectName: [{ required: true, message: '建设项目名称不能为空', trigger: 'blur' }],
+    administrativeRegion: [{ required: true, message: '所属行政区划不能为空', trigger: 'blur' }],
+    scenicArea: [{ required: true, message: '涉及风景名胜区名称不能为空', trigger: 'blur' }]
   }
 });
 
@@ -283,7 +293,7 @@ const resetQuery = () => {
 
 /** 选择项变化 */
 const handleSelectionChange = (selection: InfoVO[]) => {
-  const selectedIds = selection.map(item => item.id);
+  const selectedIds = selection.map((item) => item.id);
   ids.value = selectedIds.join(',');
   single.value = selection.length !== 1;
   multiple.value = !selection.length;
@@ -317,7 +327,7 @@ const handleUpdateBatch = () => {
   // 从选中项中取第一个进行编辑
   const firstId = ids.value.split(',')[0];
   if (firstId) {
-    const firstRow = infoList.value.find(item => item.id === firstId);
+    const firstRow = infoList.value.find((item) => item.id === firstId);
     if (firstRow) handleUpdate(firstRow);
   }
 };
@@ -327,11 +337,11 @@ const handleDelete = async (row: InfoVO) => {
   try {
     await proxy?.$modal.confirm('是否确认删除建设项目？');
     await delInfo(row.id);
-    proxy?.$modal.msgSuccess("删除成功");
+    proxy?.$modal.msgSuccess('删除成功');
     getList();
   } catch (err) {
     if (err !== 'cancel') {
-      proxy?.$modal.msgError("删除失败：" + (err as Error).message || "未知错误");
+      proxy?.$modal.msgError('删除失败：' + (err as Error).message || '未知错误');
     }
   }
 };
@@ -342,11 +352,11 @@ const handleDeleteBatch = async () => {
   try {
     await proxy?.$modal.confirm('是否确认删除选中的建设项目？');
     await delInfo(ids.value);
-    proxy?.$modal.msgSuccess("删除成功");
+    proxy?.$modal.msgSuccess('删除成功');
     getList();
   } catch (err) {
     if (err !== 'cancel') {
-      proxy?.$modal.msgError("删除失败：" + (err as Error).message || "未知错误");
+      proxy?.$modal.msgError('删除失败：' + (err as Error).message || '未知错误');
     }
   }
 };
@@ -357,7 +367,7 @@ const handleExport = () => {
     proxy?.$modal.msgWarning('请先选择要导出的项目');
     return;
   }
-  const exportUrl = `${import.meta.env.VITE_APP_BASE_API}/project/download/${ids.value}`;
+  const exportUrl = `/project/download/${ids.value}`;
   proxy?.download(exportUrl, {}, `info_${new Date().getTime()}.zip`);
 };
 
@@ -365,7 +375,10 @@ const handleExport = () => {
 const handleAudit = (row: InfoVO) => {
   router.push(`/project/normal/normal-review/${row.id}`);
 };
-
+const isSuperAdmin = computed(() => {
+  const roles = userStore.roles || [];
+  return roles.includes('sysadmin') || roles.includes('superadmin');
+});
 onMounted(async () => {
   try {
     await getList(); // 加await确保loading状态正确

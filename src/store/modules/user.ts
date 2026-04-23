@@ -5,6 +5,8 @@ import { LoginData } from '@/api/types';
 import defAva from '@/assets/images/profile.jpg';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+// ========== 新增：导入appStore ==========
+import { useAppStore } from './app';
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(getToken());
@@ -27,6 +29,11 @@ export const useUserStore = defineStore('user', () => {
       const data = res.data;
       setToken(data.access_token);
       token.value = data.access_token;
+
+      // ========== 新增：登录成功后清空URL传入的clientId ==========
+      const appStore = useAppStore();
+      appStore.clearUrlClientId();
+
       return Promise.resolve();
     }
     return Promise.reject(err);
@@ -64,6 +71,10 @@ export const useUserStore = defineStore('user', () => {
     roles.value = [];
     permissions.value = [];
     removeToken();
+
+    // ========== 新增：退出登录后清空URL传入的clientId ==========
+    const appStore = useAppStore();
+    appStore.clearUrlClientId();
   };
 
   const setAvatar = (value: string) => {

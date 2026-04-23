@@ -1,6 +1,43 @@
+<template>
+    <div class="screen-page">
+        <div v-if="isIframeLoading" class="iframe-loading">加载 3D 模型中...</div>
+        <iframe v-if="mapSwitch" id="iframe" ref="iframeRef" frameborder="0" :src="iframeUrl"
+            style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"
+            @error="handleIframeError"></iframe>
+        <LeafletMap v-else></LeafletMap>
+        <my-mask>
+            <template v-slot:main>
+                <topHeader></topHeader>
+                <leftColum></leftColum>
+                <rightColum></rightColum>
+                <NotesPopup />
+                <bottom />
+                <mapTitle />
+            </template>
+        </my-mask>
+        <div class="backButton" v-if="!projectData?.shareFlag">
+            <div class="back-line left-line">
+                <div class="dash-line dash1"></div>
+                <div class="solid-circle"></div>
+                <div class="dash-line dash2"></div>
+                <div class="hollow-circle"></div>
+                <div class="dash-line dash3"></div>
+            </div>
+            <div class="backImg" @click="clickBack"></div>
+            <div class="back-line right-line">
+                <div class="dash-line dash1"></div>
+                <div class="solid-circle"></div>
+                <div class="dash-line dash2"></div>
+                <div class="hollow-circle"></div>
+                <div class="dash-line dash3"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { toRefs, reactive, ref, onMounted, computed, onUnmounted, watch } from 'vue'
+import { toRefs, reactive, ref, onMounted, computed, onUnmounted, watch, nextTick } from 'vue'
 import bus from '@/libs/eventbus'
 import TopHeader from '@/components/TopHeader'
 import myMask from '@/components/mask'
@@ -35,14 +72,20 @@ const isLeaving = ref(false) // 新增：离开页面标记（修复未定义问
 // ========== 核心新增：模型ID防重集合 ==========
 const loadedModelIds = ref(new Set()); // 存储已加载的模型ID，避免重复加载
 
-// ===================== 原有状态保留 =====================
+// ===================== 原有状态保留 + 新增projectData响应式变量 =====================
 const projectIdCheck = ref('')
 const projectmMdelCoordinate = ref('')
 const projectMajorFlag = ref(false)
 const projectThreeDModelList = ref([])
 const projectIds = ref('')
-// const iframeUrl = "http://127.0.0.1:46150/";
-const iframeUrl = "http://frp5.ccszxc.site:38082/";
+const projectData = ref({}); // 新增：存储完整项目数据（用于获取shareFlag）
+const projectStatus = ref(null);
+const projectName = ref('');
+const projectPointLayerId = ref('');
+const projectPointCreated = ref(false);
+const pendingHighlightModelId = ref('');
+const iframeUrl = "http://61.164.167.246:46150/";
+// const iframeUrl = "http://frp5.ccszxc.site:38082/";
 const mapSwitch = ref(true)
 const iframeRef = ref(null);
 const isIframeLoaded = ref(false);
@@ -75,11 +118,97 @@ const attractionTypeMap = {
 };
 const msgQueue = ref([]);
 
-// ===================== 1. 修复sendMsgUE（兼容WebRTC状态） =====================
+const shouldKeepPointIcon = () => {
+    if (projectMajorFlag.value === false) {
+        return projectStatus.value === "管委会通过";
+    }
+    return projectStatus.value === "省林业局通过";
+};
+
+const getProjectPointId = () => {
+    const id = String(projectIdCheck.value || '');
+    return id ? `ProjVec_${id}` : '';
+};
+
+const showProjectPointLayers = (pointId) => {
+    sendMsgUE({
+        "Command": "ShowVectorLayer",
+        "Args": {
+            "ID": pointId,
+            "Show": true,
+            "Type": "Point"
+        }
+    });
+};
+
+const lastProjectPointSig = ref('');
+const lastProjectPointAt = ref(0);
+const projectPointShowTimers = ref([]);
+
+const createProjectPointIcon = (location, hasValidModel) => {
+    const nameEmpty = !String(projectName.value || '').trim();
+    if (nameEmpty && String(projectIdCheck.value ?? '') === '0') return;
+
+    const pointId = getProjectPointId();
+    if (!pointId || !location) return;
+    const parts = String(location).split(',').map((coord) => {
+        const num = parseFloat(String(coord ?? '').trim());
+        return Number.isFinite(num) ? Number.parseFloat(num.toFixed(6)) : NaN;
+    });
+    const lng = parts[0];
+    const lat = parts[1];
+    const elev = parts[2];
+    const zIcon = hasValidModel && Number.isFinite(elev) ? elev : 0;
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+    const sig = `${pointId}|${lng}|${lat}|${zIcon}`;
+    const now = Date.now();
+    if (sig === lastProjectPointSig.value && now - lastProjectPointAt.value < 800) {
+        return;
+    }
+    lastProjectPointSig.value = sig;
+    lastProjectPointAt.value = now;
+    projectPointShowTimers.value.forEach(clearTimeout);
+    projectPointShowTimers.value = [];
+
+    const pointName = projectName.value || String(projectIdCheck.value || '') || pointId;
+    projectPointLayerId.value = pointId;
+    sendMsgUE({
+        "Command": "CreateVectorLayer_Point",
+        "Args": {
+            "ID": pointId,
+            "Name": pointName,
+            "CoordType": 0,
+            "Locations": [`${lng},${lat},${zIcon}`],
+            "Color": "FFEC00FF"
+        }
+    });
+    showProjectPointLayers(pointId);
+    projectPointShowTimers.value.push(
+        setTimeout(() => showProjectPointLayers(pointId), 300),
+        setTimeout(() => showProjectPointLayers(pointId), 800)
+    );
+    projectPointCreated.value = true;
+};
+
+const deleteProjectPointIcon = () => {
+    projectPointShowTimers.value.forEach(clearTimeout);
+    projectPointShowTimers.value = [];
+    const pointId = projectPointLayerId.value || getProjectPointId();
+    if (!pointId) return;
+    sendMsgUE({
+        "Command": "DeleteVectorLayer",
+        "Args": {
+            "ID": pointId,
+            "Type": "Point"
+        }
+    });
+    projectPointCreated.value = false;
+};
+
+// ===================== 1. 修复sendMsgUE（按 UE 文档：WEB->UE 用 postMessage，iframe 就绪即可发送） =====================
 const sendMsgUE = (data) => {
-    // WebRTC未连接时加入队列
-    if (!isWebRtcConnected.value || !mapSwitch.value || !iframeRef.value || !isIframeLoaded.value) {
-        console.warn('iframe/WebRTC 未就绪，消息加入队列', data);
+    // iframe 未加载时加入队列，加载完成后会 flush
+    if (!mapSwitch.value || !iframeRef.value || !isIframeLoaded.value || !iframeRef.value?.contentWindow) {
         msgQueue.value.push(data);
         return;
     }
@@ -106,36 +235,72 @@ const sendMsgUE = (data) => {
     }
 };
 
-// ===================== 2. WebRTC连接捕获（参考preview.vue） =====================
-const captureWebRtcConnected = () => {
-    // 方案1：重写console.log捕获连接日志
-    // const originalLog = console.log;
-    // console.log = function (...args) {
-    //     originalLog.apply(console, args);
-    //     // 🔴 修复：安全拼接console.log参数（处理对象类型）
-    //     const logContent = args.map(item => {
-    //         // 对对象/数组用JSON.stringify，基础类型直接转字符串
-    //         return typeof item === 'object' ? JSON.stringify(item) : String(item);
-    //     }).join('');
-
-    //     if (logContent.includes('WebRTC 已连接 ✅')) {
-    //         console.log('✅ 捕获到WebRTC连接成功（console.log）');
-    //         isWebRtcConnected.value = true;
-    //         clearTimeout(loadModelTimer.value); // 清除超时定时器
-    //         console.log = originalLog; // 恢复原始log
-    //     }
-    // };
-    // 方案2：5秒轮询兜底
-    const pollTimer = setInterval(() => {
-        if (isWebRtcConnected.value) {
-            clearInterval(pollTimer);
-            return;
-        }
-        console.log('✅ 轮询兜底：标记WebRTC连接成功');
+// ===================== 2. 监听 UE 就绪消息（先 UE「延迟1s后再连接」，再父页发消息；含心跳 OnPingPongMsg Pong） =====================
+const onUeReady = (e) => {
+    if (!iframeRef.value?.contentWindow || e.source !== iframeRef.value.contentWindow) return;
+    let data = e.data;
+    if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (_) { return; }
+    }
+    const isReady =
+        data?.type === 'UE_READY' ||
+        data?.Command === 'OnUEReady' ||
+        (data?.Command === 'OnPingPongMsg' && data?.Args?.ID === 'Pong') ||
+        data?.Args?.State === 'WebRTC 已连接 ✅' ||
+        data?.State === 'WebRTC 已连接 ✅';
+    if (isReady && !isWebRtcConnected.value) {
+        console.log('✅ 收到 UE 就绪消息，开始发送指令');
         isWebRtcConnected.value = true;
         clearTimeout(loadModelTimer.value);
-        clearInterval(pollTimer);
-    }, 2000);
+        window.removeEventListener('message', onUeReady);
+    }
+};
+
+// ===================== 3. WebRTC连接捕获（参考preview.vue） =====================
+const captureWebRtcConnected = () => {
+    // 方案：监听 UE 发送的 WebRTC 连接消息（替代轮询兜底）
+    const webRtcListener = (event) => {
+        try {
+            const { data } = event;
+            // 匹配 UE 发送的 WebRTC 连接成功消息
+            if (typeof data === 'string') {
+                const parsedData = JSON.parse(data);
+                if (parsedData?.State === 'WebRTC 协商失败 ❌') {
+                    console.error('❌ WebRTC协商失败');
+                    ElMessage.error('3D模型连接失败，请检查网络或刷新页面');
+                    isWebRtcConnected.value = false;
+                    window.removeEventListener('message', webRtcListener);
+                }
+                if (parsedData?.State === 'WebRTC 已连接 ✅') {
+                    console.log('✅ 真实捕获WebRTC连接成功（UE主动推送）');
+                    isWebRtcConnected.value = true;
+                    window.removeEventListener('message', webRtcListener); // 移除监听
+                }
+            } else if (data?.State === 'WebRTC 已连接 ✅') {
+                console.log('✅ 真实捕获WebRTC连接成功（UE主动推送）');
+                isWebRtcConnected.value = true;
+                window.removeEventListener('message', webRtcListener); // 移除监听
+            }
+        } catch (e) {
+            // 解析失败，忽略
+        }
+    };
+    window.addEventListener('message', webRtcListener);
+
+    // 兜底轮询（仅当UE未主动推送时触发，延迟至5秒）
+    const pollTimer = setTimeout(() => {
+        if (!isWebRtcConnected.value) {
+            console.log('✅ 轮询兜底：标记WebRTC连接成功');
+            isWebRtcConnected.value = true;
+            window.removeEventListener('message', webRtcListener);
+        }
+    }, 10000); // 延长轮询兜底时间，给UE足够初始化时间
+
+    // 卸载时清理监听和定时器
+    onUnmounted(() => {
+        window.removeEventListener('message', webRtcListener);
+        clearTimeout(pollTimer);
+    });
 };
 
 // ===================== 3. 处理OnLoadAssets（覆盖所有7种State状态） =====================
@@ -162,7 +327,7 @@ const handleOnLoadAssets = (args) => {
     processedAssetStates.value.set(stateKey, true); // 标记已处理
 
     loadAssetsStatus.value = state; // 覆盖为最新状态
-    // 防抖：延长至1000ms，确保UE推送完所有状态后只处理最后一次
+    // 防抖：延长至1500ms，确保UE推送完所有状态后只处理最后一次
     clearTimeout(loadAssetsDebounceTimer.value);
     loadAssetsDebounceTimer.value = setTimeout(() => {
         const finalState = loadAssetsStatus.value;
@@ -185,6 +350,18 @@ const handleOnLoadAssets = (args) => {
                 isIframeLoading.value = false;
                 ElMessage.success('3D模型加载成功！');
                 completedModelIds.value.add(modelId); // 标记该ID已完成，后续忽略
+                if (pendingHighlightModelId.value) {
+                    sendMsgUE({
+                        "Command": "ActiveAssetObj",
+                        "Args": {
+                            "ID": pendingHighlightModelId.value,
+                            "Active": true
+                        }
+                    });
+                }
+                if (!projectPointCreated.value) {
+                    createProjectPointIcon(projectmMdelCoordinate.value, true);
+                }
                 break;
             case '文件挂载失败':
                 isIframeLoading.value = false;
@@ -194,114 +371,170 @@ const handleOnLoadAssets = (args) => {
                 isIframeLoading.value = false;
                 ElMessage.warning('模型ID重复，已加载现有模型！');
                 completedModelIds.value.add(modelId); // 标记该ID已完成，后续忽略
+                if (pendingHighlightModelId.value) {
+                    sendMsgUE({
+                        "Command": "ActiveAssetObj",
+                        "Args": {
+                            "ID": pendingHighlightModelId.value,
+                            "Active": true
+                        }
+                    });
+                }
+                if (!projectPointCreated.value) {
+                    createProjectPointIcon(projectmMdelCoordinate.value, true);
+                }
                 break;
             default:
+                // 兜底：若15秒仍未收到最终状态，强制关闭加载提示
+                const timeout兜底 = setTimeout(() => {
+                    if (isIframeLoading.value) {
+                        isIframeLoading.value = false;
+                        ElMessage.warning('模型加载状态未知，若未显示请刷新页面');
+                    }
+                }, 15000);
                 break;
         }
-    }, 1000); // 延长防抖时间至1秒，适配UE频繁推送
+    }, 1500); // 延长防抖时间至1.5秒，适配UE频繁推送
 };
 
-// ===================== 4. 加载3D模型（核心：新增ID防重逻辑） =====================
-const loadThreeDModel = async () => {
-    // 防重判断：已加载/无ID/WebRTC未连接 → 直接返回
-    if (isModelLoaded.value || !projectIdCheck.value || !isWebRtcConnected.value) {
-        console.log('📌 模型加载防重触发，跳过执行');
+// ===================== 新增：通用场景初始化（无论有无模型都执行） =====================
+const initializeCameraAndScene = () => {
+    // 判断是否有有效模型（用于决定是否使用高程Z）
+    const hasValidModel = Array.isArray(projectThreeDModelList.value) &&
+        projectThreeDModelList.value.length > 0 &&
+        projectThreeDModelList.value[0]?.ossId;
+    let modelLocation = projectmMdelCoordinate.value || "120.187549,28.924376,0,0";
+    const coordsArr = modelLocation.split(',').map(coord => {
+        const num = parseFloat(coord.trim());
+        return isNaN(num) ? 0 : num.toFixed(6);
+    });
+    const [xVal, yVal, zRaw, angleVal = 0] = coordsArr;
+    // 👇 关键修改：无模型时强制 Z = 0（贴近地面）
+    const targetZ = hasValidModel ? zRaw : 0;
+    const cameraZ = hasValidModel ? 30000 : 22000; // 无模型时拉近一点，看得更清楚
+    sendMsgUE({
+        "Command": "SetCameraMove_Geo",
+        "Args": {
+            "CoordType": 0,
+            "TargetLocation": `X=${xVal} Y=${yVal} Z=${targetZ}`,
+            "CameraLocation": `X=${xVal} Y=${yVal} Z=${cameraZ}`,
+            "Duration": 1.0
+        }
+    });
+
+    // 可选：清理其他图层/POI（确保干净初始状态）
+    sendMsgUE({
+        "Command": "ShowVectorLayerWithType",
+        "Args": { "Show": false, "Type": "Line", "Tag": "All" }
+    });
+    sendMsgUE({
+        "Command": "ShowVectorLayerWithType",
+        "Args": { "Show": false, "Type": "Area", "Tag": "All" }
+    });
+    sendMsgUE({
+        "Command": "ShowPOIWithType",
+        "Args": { "Show": false, "Type": ["All"] }
+    });
+    sendMsgUE({ "Command": "SwitchSplitScreenState", "Args": { "State": false } });
+    sendMsgUE({ "Command": "SwitchSpaceTime", "Args": { "Type": "2025" } });
+    if (!hasValidModel) {
+        createProjectPointIcon(modelLocation, false);
+    }
+
+    // 关闭加载提示（因为场景已初始化）
+    isIframeLoading.value = false;
+};
+
+// ===================== 新增：仅当有模型时加载 =====================
+const loadModelIfAvailable = async () => {
+    if (!projectIdCheck.value || projectIdCheck.value === '0') {
+        console.log('📌 项目ID为0或无效，跳过模型加载');
         return;
     }
-    const model = projectThreeDModelList.value[0];
+
+    const modelList = projectThreeDModelList.value;
+    if (!Array.isArray(modelList) || modelList.length === 0) {
+        console.log('📌 无三维模型数据，跳过加载');
+        return;
+    }
+
+    const model = modelList[0];
     const currentModelId = model.ossId || '';
     if (!currentModelId) {
-        ElMessage.error('模型OSS ID为空，无法加载！');
-        isIframeLoading.value = false;
-        isModelLoaded.value = false; // 重置标记
+        console.log('📌 模型OSS ID为空，跳过加载');
         return;
     }
-    isModelLoaded.value = true; // 标记已加载，防止重复
-    console.log('📌 WebRTC已连接，开始加载3D模型（仅执行一次）');
 
-    try {
-        if (projectThreeDModelList.value.length === 0) {
-            ElMessage.warning('未找到3D模型数据');
-            isIframeLoading.value = false;
-            return;
-        }
-        projectThreeDModelOssId.value = currentModelId; // 存储OSS ID用于删除
-        // ========== 核心新增：ID重复校验 ==========
-        if (loadedModelIds.value.has(currentModelId)) {
-            console.log('📌 模型ID已存在，跳过重复加载');
-            isIframeLoading.value = false;
-            ElMessage.warning('模型ID重复，已加载现有模型！');
-            completedModelIds.value.add(currentModelId); // 标记为已完成
-            return; // 终止加载逻辑，不发送任何UE指令
-        }
-
-        // 处理模型URL
-        if (model?.url) {
-            const path = model.url.replace(/^https?:\/\/[^\/]+\//, '');
-            resultModel.value = path.replace(/^fangyan\//, '');
-        } else {
-            console.warn('模型数据缺少url字段');
-            isIframeLoading.value = false;
-            return;
-        }
-        // 处理坐标
-        let modelLocation = projectmMdelCoordinate.value || "120.187549,28.924376,110,2";
-        const coordsArr = modelLocation.split(',').map(coord => {
-            const num = parseFloat(coord.trim());
-            return isNaN(num) ? 0 : num.toFixed(6);
-        });
-        const [xVal, yVal, zVal, angleVal] = coordsArr;
-        x.value = xVal;
-        y.value = yVal;
-        z.value = zVal;
-        angle.value = angleVal;
-
-        // ========== 新增：将ID加入防重集合 ==========
-        loadedModelIds.value.add(currentModelId);
-
-        // 发送加载模型指令
-        sendMsgUE({
-            "Command": "SetCameraMove_Geo",
-            "Args": {
-                "CoordType": 0,
-                "TargetLocation": `X=${xVal} Y=${yVal} Z=${zVal}`,
-                "CameraLocation": `X=${xVal} Y=${yVal} Z=30000.000`,
-                "Duration": 1.0
-            }
-        });
-        sendMsgUE({
-            "Command": "LoadAssets",
-            "Args": {
-                "ID": currentModelId,
-                "Name": resultModel.value,
-                "State": 1,
-                "Angle": angleVal,
-                "CoordType": 0,
-                "Location": `${xVal},${yVal},0`,
-                "Scale": "1,1,1",
-                "OffsetVec": `X=0.0 Y=0.0 Z=${(Number(zVal) * 100).toFixed(3)}`
-            }
-        });
-    } catch (err) {
-        ElMessage.error(`模型加载失败：${err.message || '未知错误'}`);
-        isIframeLoading.value = false;
-        isModelLoaded.value = false; // 失败时重置标记
-        //加载失败移除ID缓存
-        if (projectThreeDModelOssId.value) {
-            loadedModelIds.value.delete(projectThreeDModelOssId.value);
-            processedAssetStates.value.delete(`${projectThreeDModelOssId.value}_*`); // 清空该ID的状态缓存
-        }
+    // 防重：已加载过该ID
+    if (loadedModelIds.value.has(currentModelId)) {
+        console.log('📌 模型ID已存在，跳过重复加载');
+        ElMessage.warning('模型ID重复，已加载现有模型！');
+        completedModelIds.value.add(currentModelId);
+        return;
     }
+
+    // 标记为已加载
+    loadedModelIds.value.add(currentModelId);
+    projectThreeDModelOssId.value = currentModelId;
+    pendingHighlightModelId.value = currentModelId;
+
+    // 处理模型URL
+    let modelUrl = '';
+    if (model?.url) {
+        modelUrl = model.url.replace(/^https?:\/\/[^\/]+\//, '').replace(/^fangyan\//, '');
+    } else {
+        console.warn('模型缺少url字段');
+        return;
+    }
+
+    // 坐标处理（复用已有逻辑）
+    let modelLocation = projectmMdelCoordinate.value || "120.187549,28.924376,110,0";
+    const coordsArr = modelLocation.split(',').map(coord => {
+        const num = parseFloat(coord.trim());
+        return isNaN(num) ? 0 : num.toFixed(6);
+    });
+    const [xVal, yVal, zVal, angleVal = 0] = coordsArr;
+
+    // 发送加载指令
+    sendMsgUE({
+        "Command": "LoadAssets",
+        "Args": {
+            "ID": currentModelId,
+            "Name": modelUrl,
+            "State": 1,
+            "Angle": angleVal,
+            "CoordType": 0,
+            "Location": `${xVal},${yVal},0`,
+            "Scale": "1,1,1",
+            "OffsetVec": `X=0.0 Y=0.0 Z=${(Number(zVal) * 100).toFixed(3)}`
+        }
+    });
+    projectPointCreated.value = false;
 };
 
-// ===================== 原有方法保留 + 修复 =====================
+// ===================== 替换原有的 loadThreeDModel =====================
+const handleWebRtcConnected = () => {
+    if (isModelLoaded.value) return; // 防重
+    isModelLoaded.value = true;
+
+    // 1. 无论有无模型，先初始化相机和场景
+    initializeCameraAndScene();
+
+    // 2. 如果有模型，再加载模型
+    loadModelIfAvailable();
+};
+
+// ===================== 原有方法保留 + 修复（与 preview.vue 一致：等 UE 就绪后再发消息，不固定 2s） =====================
+// iframe 加载后不再固定 2s 发消息，改为等 UE（player.js）「延迟1s后再连接」完成并通知父页后再发
+const startConnectionDelay = () => {
+    console.log('✅ iframe加载完成，等待 UE 端「延迟1s后再连接」完成并通知后再发送消息');
+    clearTimeout(loadModelTimer.value);
+};
+
 const handleIframeLoad = () => {
     isIframeLoaded.value = true;
     console.log('iframe加载完成，可发送消息');
-    while (msgQueue.value.length > 0) {
-        const queuedData = msgQueue.value.shift();
-        iframeRef.value.contentWindow.postMessage(JSON.stringify(queuedData), "*");
-    }
+    startConnectionDelay();
 };
 
 const handleIframeError = () => {
@@ -332,16 +565,23 @@ function transformWKT (wktStr) {
     }
     return result;
 }
-
+const hasValidBusinessModel = computed(() => {
+    return Array.isArray(projectThreeDModelList.value) &&
+        projectThreeDModelList.value.length > 0 &&
+        projectThreeDModelList.value[0]?.ossId;
+});
 // ===================== 5. 修复function-panel-clicked（去掉index===1的加载模型代码） =====================
 bus.on('function-panel-clicked', data => {
+    // 👇 动态决定目标Z值
+    const targetZ = hasValidBusinessModel.value ? z.value : 0;
+    const cameraZ = hasValidBusinessModel.value ? 30000 : 22000; // 相机高度也适配
     if (data.index === 0) {
         sendMsgUE({
             "Command": "SetCameraMove_Geo",
             "Args": {
                 "CoordType": 0,
-                "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
-                "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
+                "TargetLocation": `X=${x.value} Y=${y.value} Z=${targetZ}`,
+                "CameraLocation": `X=${x.value} Y=${y.value} Z=${cameraZ}`,
                 "Duration": 1.0
             }
         });
@@ -360,8 +600,8 @@ bus.on('function-panel-clicked', data => {
                 "Command": "SwitchSplitCamera",
                 "Args": {
                     "CoordType": 0,
-                    "TargetLocation": `X=${x.value} Y=${y.value} Z=${z.value}`,
-                    "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
+                    "TargetLocation": `X=${x.value} Y=${y.value} Z=${targetZ}`,
+                    "CameraLocation": `X=${x.value} Y=${y.value} Z=${cameraZ}`,
                     "Duration": 1.0
                 }
             });
@@ -373,20 +613,17 @@ bus.on('function-panel-clicked', data => {
         console.log("🚀 ~ data:", data)
         if (data.isSelected) {
             bus.on('time-change', year => {
-                // if (coords.value.length >= 3) {
-                console.log("🚀 ~ x.value:", x.value)
-                console.log("🚀 ~ y.value:", y.value)
-                console.log("🚀 ~ z.value:", z.value)
+                const timeTargetZ = hasValidBusinessModel.value ? 100 : 0;
+                const timeCameraZ = hasValidBusinessModel.value ? 30000 : 22000;
                 sendMsgUE({
                     "Command": "SetCameraMove_Geo",
                     "Args": {
                         "CoordType": 0,
-                        "TargetLocation": `X=${x.value} Y=${y.value} Z=100`,
-                        "CameraLocation": `X=${x.value} Y=${y.value} Z=30000.000`,
+                        "TargetLocation": `X=${x.value} Y=${y.value} Z=${timeTargetZ}`,
+                        "CameraLocation": `X=${x.value} Y=${y.value} Z=${timeCameraZ}`,
                         "Duration": 1.0
                     }
                 });
-                // }
                 sendMsgUE({
                     "Command": "SwitchSpaceTime",
                     "Args": {
@@ -405,26 +642,20 @@ bus.on('function-panel-clicked', data => {
     }
 });
 
-// ===================== 6. 修复clickBack（删除加载的模型 + 移除防重ID） =====================
 const clickBack = () => {
     if (isLeaving.value) return; // 防止重复点击
     isLeaving.value = true;
+    projectPointShowTimers.value.forEach(clearTimeout);
+    projectPointShowTimers.value = [];
     sendMsgUE({
         "Command": "DeleteAssets",
-        "Args": { "ID": "1991914379260149762" }
+        "Args": { "ID": '2006169021575938049' }
     });
-    // 核心：删除加载的模型（使用存储的OSS ID）
-    if (projectThreeDModelOssId.value) {
-        sendMsgUE({
-            "Command": "DeleteAssets",
-            "Args": { "ID": projectThreeDModelOssId.value }
-        });
-        // 清空该ID的去重缓存
-        completedModelIds.value.delete(projectThreeDModelOssId.value);
-        processedAssetStates.value.clear();
-        loadedModelIds.value.delete(projectThreeDModelOssId.value);
-    }
-    // 原有逻辑保留
+    sendMsgUE({
+        "Command": "DeleteAssets",
+        "Args": { "ID": '2007975797304672257' }
+    });
+    // 原有清理指令
     sendMsgUE({
         "Command": "StartRoaming",
         "Args": {
@@ -499,8 +730,44 @@ const clickBack = () => {
             "Type": "2025"
         }
     });
-    // 延迟跳转
+    // 核心：精准判断是否删除业务模型
+    const shouldDeleteBusinessModel = () => !shouldKeepPointIcon();
+
+    // 执行业务模型删除（需确保OSS ID非空）
+    if (shouldDeleteBusinessModel() && projectThreeDModelOssId.value) {
+        sendMsgUE({
+            "Command": "DeleteAssets",
+            "Args": { "ID": projectThreeDModelOssId.value }
+        });
+    }
+    if (shouldDeleteBusinessModel()) {
+        deleteProjectPointIcon();
+    }
+
+    // 重置所有状态
+    isModelLoaded.value = false;
+    isWebRtcConnected.value = false;
+    isIframeLoading.value = false;
+    loadedModelIds.value.clear();
+    processedAssetStates.value.clear();
+    completedModelIds.value.clear();
+    projectThreeDModelOssId.value = '';
+    projectPointCreated.value = false;
+    pendingHighlightModelId.value = '';
+    loadAssetsStatus.value = '';
+    clearTimeout(loadAssetsDebounceTimer.value);
+    clearTimeout(loadModelTimer.value);
+
+
+
+    // 延迟跳转 + 销毁iframe
     setTimeout(() => {
+        // 销毁iframe，强制断开UE连接
+        if (iframeRef.value) {
+            iframeRef.value.src = 'about:blank';
+            iframeRef.value = null;
+        }
+        // 跳转逻辑
         if (projectIdCheck.value == '0') {
             router.push(`/project/major/`)
         } else {
@@ -722,6 +989,9 @@ onMounted(async () => {
     // 捕获WebRTC连接状态
     captureWebRtcConnected();
 
+    // 监听 UE 就绪（OnPingPongMsg Pong / UE_READY / WebRTC 已连接 ✅）后再发消息
+    window.addEventListener('message', onUeReady);
+
     messageHandler.onCommand('OnStartRoaming', () => { });
     messageHandler.onCommand('OnSwitchCamera', () => { });
 
@@ -729,11 +999,16 @@ onMounted(async () => {
     const projectId = route.query.id;
     if (projectId) {
         const response = await getInfo(projectId);
-        const projectData = response.data;
-        projectIdCheck.value = projectData.id;
-        projectmMdelCoordinate.value = projectData.modelCoordinate || '';
-        projectMajorFlag.value = projectData.majorFlag;
-        projectThreeDModelList.value = JSON.parse(projectData.threeDModel || '[]');
+        projectData.value = response.data; // 存储完整项目数据（关键：用于shareFlag）
+        console.log("🚀 ~ projectData:", projectData.value)
+
+        // 赋值基础数据
+        projectIdCheck.value = projectData.value.id;
+        projectmMdelCoordinate.value = projectData.value.modelCoordinate || '';
+        projectMajorFlag.value = projectData.value.majorFlag;
+        projectStatus.value = projectData.value.status;
+        projectName.value = projectData.value.projectName || '';
+        projectThreeDModelList.value = JSON.parse(projectData.value.threeDModel || '[]');
 
         // 处理坐标
         if (projectmMdelCoordinate.value) {
@@ -761,6 +1036,7 @@ onMounted(async () => {
             isIframeLoading.value = false; // 无模型关闭加载提示
         }
     } else {
+        // 无项目ID时的默认配置
         projectIdCheck.value = '0';
         projectmMdelCoordinate.value = '120.187622,28.923433,2,0';
         coords.value = projectmMdelCoordinate.value.split(',').map(coord => {
@@ -769,34 +1045,49 @@ onMounted(async () => {
         });
         [x.value, y.value, z.value, angle.value = 0] = coords.value;
         projectMajorFlag.value = false;
-        projectThreeDModelList.value = JSON.parse('[{"name":"gelou.pak","url":"http://47.96.251.128:9000/fangyan/2025/11/22/f45e982131be4c84a3b0cef8e2eedb67.pak","ossId":"1991914379260149762","uid":1763946397744,"status":"success"}]');
-        modelData.value = projectThreeDModelList.value[0];
-        const path = modelData.value.url.replace(/^https?:\/\/[^\/]+\//, '');
-        resultModel.value = path.replace(/^fangyan\//, '');
+        projectThreeDModelList.value = [];
+        modelData.value = null;
+        resultModel.value = '';
+        isIframeLoading.value = false;
     }
 
     // 监听WebRTC连接状态，连接成功后加载模型（仅一次）
     const unwatch = watch(isWebRtcConnected, (connected) => {
         if (connected) {
-            loadThreeDModel();
-            unwatch(); // 取消监听，防止重复触发
+            handleWebRtcConnected(); // ✅ 使用新函数
+            unwatch();
         }
     }, { immediate: false });
 
-    // 超时兜底：8秒未连接则强制加载
+    // 超时兜底：8秒未连接则强制标记并触发场景初始化
     clearTimeout(loadModelTimer.value);
     loadModelTimer.value = setTimeout(() => {
         if (!isWebRtcConnected.value) {
             console.warn('⚠️ WebRTC连接超时，强制加载模型');
             isWebRtcConnected.value = true;
-            loadThreeDModel();
+            handleWebRtcConnected();
         }
     }, 8000);
+
+    // 若 iframe 已加载完成（如缓存），@load 可能已错过，补一次就绪等待
+    nextTick(() => {
+        try {
+            if (iframeRef.value && mapSwitch.value && !isIframeLoaded.value && iframeRef.value.contentDocument?.readyState === 'complete') {
+                isIframeLoaded.value = true;
+                startConnectionDelay();
+            }
+        } catch (_) {
+            // 跨域时 contentDocument 可能不可访问，仅依赖 @load
+        }
+    });
 });
 
 onUnmounted(() => {
+    window.removeEventListener('message', onUeReady);
     clearTimeout(loadAssetsDebounceTimer.value);
-    // 清理监听
+    projectPointShowTimers.value.forEach(clearTimeout);
+    projectPointShowTimers.value = [];
+    // 清理所有bus监听
     bus.off('cultureTypeMessage');
     bus.off('attractionTypeMessage');
     bus.off('scene-roaming-clicked');
@@ -814,53 +1105,27 @@ onUnmounted(() => {
     messageHandler.offCommand('OnLoadAssets', handleOnLoadAssets);
     messageHandler.offCommand('OnStartRoaming', () => { });
     messageHandler.offCommand('OnSwitchCamera', () => { });
-    // 重置状态
+
+    // 重置所有响应式状态
     isLeaving.value = false;
     isModelLoaded.value = false;
-    // 清空所有去重缓存
+    isWebRtcConnected.value = false;
+    isIframeLoading.value = true;
+    isIframeLoaded.value = false;
+    projectThreeDModelOssId.value = '';
     loadedModelIds.value.clear();
-    processedAssetStates.value.clear(); // 新增
-    completedModelIds.value.clear(); // 新增
+    processedAssetStates.value.clear();
+    completedModelIds.value.clear();
+    loadAssetsStatus.value = '';
+    msgQueue.value = [];
+
+    // 销毁iframe
+    if (iframeRef.value) {
+        iframeRef.value.src = 'about:blank';
+        iframeRef.value = null;
+    }
 });
 </script>
-
-<template>
-    <div class="screen-page">
-        <div v-if="isIframeLoading" class="iframe-loading">加载 3D 模型中...</div>
-        <iframe v-if="mapSwitch" id="iframe" ref="iframeRef" frameborder="0" :src="iframeUrl"
-            style="width: 100%; height: 100%" allow="xr-spatial-tracking *" @load="handleIframeLoad"
-            @error="handleIframeError"></iframe>
-        <LeafletMap v-else></LeafletMap>
-        <my-mask>
-            <template v-slot:main>
-                <top-header></top-header>
-                <left-colum></left-colum>
-                <right-colum></right-colum>
-                <NotesPopup />
-                <bottom />
-                <mapTitle />
-            </template>
-        </my-mask>
-        <div class="backButton">
-            <div class="back-line left-line">
-                <div class="dash-line dash1"></div>
-                <div class="solid-circle"></div>
-                <div class="dash-line dash2"></div>
-                <div class="hollow-circle"></div>
-                <div class="dash-line dash3"></div>
-            </div>
-            <div class="backImg" @click="clickBack"></div>
-            <div class="back-line right-line">
-                <div class="dash-line dash1"></div>
-                <div class="solid-circle"></div>
-                <div class="dash-line dash2"></div>
-                <div class="hollow-circle"></div>
-                <div class="dash-line dash3"></div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <style lang="scss" scoped>
 .screen-page {
     width: 100%;
@@ -868,11 +1133,10 @@ onUnmounted(() => {
     background: url(../../../static/image/map/map.png) no-repeat;
     background-size: 100% 100%;
     position: relative;
-    /* 新增：为加载提示定位 */
     overflow: hidden;
 }
 
-/* 新增：加载提示样式（参考preview.vue） */
+/* 加载提示样式 */
 .iframe-loading {
     position: absolute;
     top: 50%;

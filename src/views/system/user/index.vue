@@ -46,8 +46,7 @@
               @click="handleExport">导出</el-button>
           </el-col>
           <el-col :span="1.5">
-            <el-button  type="primary" plain icon="Download"
-              @click="importTemplate">下载模板</el-button>
+            <el-button type="primary" plain icon="Download" @click="importTemplate">下载模板</el-button>
             <!-- <el-dropdown class="mt-[1px]">
               <el-button plain type="info">
                 更多
@@ -57,7 +56,7 @@
                   <el-dropdown-item icon="Download" @click="importTemplate">下载模板</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
-            </el-dropdown> -->
+</el-dropdown> -->
           </el-col>
           <right-toolbar v-model:show-search="showSearch" :columns="columns" :search="true"
             @query-table="getList"></right-toolbar>
@@ -87,13 +86,19 @@
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center" width="200">
+        <!-- <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center" width="200">
           <template #default="scope">
             <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
               @change="handleStatusChange(scope.row)"></el-switch>
           </template>
+        </el-table-column> -->
+        <el-table-column v-if="columns[5].visible" key="status" label="状态" align="center" width="200">
+          <template #default="scope">
+            <el-switch v-model="scope.row.status" active-value="0" inactive-value="1"
+              :disabled="isSuperAdmin(scope.row)" @change="handleStatusChange(scope.row)"></el-switch>
+          </template>
         </el-table-column>
-        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="250"/>
+        <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="250" />
         <!-- <el-table-column v-if="columns[6].visible" label="创建时间" align="center" prop="createTime" width="200">
           <template #default="scope">
             <span>{{ scope.row.createTime ? scope.row.createTime.slice(0, 10) : '' }}</span>
@@ -104,14 +109,20 @@
           <template #default="scope">
             <el-button v-hasPermi="['system:user:view']" link type="primary"
               @click="handleView(scope.row)">查看</el-button>
-            <el-button v-hasPermi="['system:user:edit']" link type="primary"
+            <el-button v-if="!isSuperAdmin(scope.row)" v-hasPermi="['system:user:edit']" link type="primary"
               @click="handleUpdate(scope.row)">编辑</el-button>
+            <!-- <el-button v-hasPermi="['system:user:edit']" link type="primary"
+              @click="handleUpdate(scope.row)">编辑</el-button> -->
             <el-button v-hasPermi="['system:user:resetPwd']" link type="primary"
               @click="handleResetPwd(scope.row)">重置密码</el-button>
             <!-- <el-button v-hasPermi="['system:user:edit']" link type="primary"
                   @click="handleAuthRole(scope.row)">分配角色</el-button> -->
-            <el-button v-hasPermi="['system:user:remove']" link type="danger"
-              @click="handleDelete(scope.row)">删除</el-button>
+            <!-- <el-button v-hasPermi="['system:user:remove']" link type="danger"
+              @click="handleDelete(scope.row)">删除</el-button> -->
+            <el-button v-if="!isSuperAdmin(scope.row)" v-has-permi="['system:user:remove']" link type="danger"
+              @click="handleDelete(scope.row)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -132,7 +143,7 @@
         </el-form-item>
 
         <el-form-item label="所属角色" prop="roleIds" v-if="dialog.isView == false">
-          <el-select v-model="form.roleIds" filterable multiple placeholder="请选择" :disabled="dialog.isView">
+          <el-select v-model="form.roleIds" filterable multiple clearable placeholder="请选择" :disabled="dialog.isView">
             <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName"
               :value="String(item.roleId)" :disabled="item.status == '1'"></el-option>
           </el-select>
@@ -141,8 +152,8 @@
           <el-input v-model="joinedRoleNames" placeholder="无角色" :disabled="true" />
         </el-form-item>
         <el-form-item label="项目权限" prop="projectIds">
-          <el-select v-model="form.projectIds" filterable multiple clearable collapse-tags placeholder="请选择项目"
-            :max-collapse-tags="1" popper-class="custom-header" :disabled="dialog.isView">
+          <el-select v-model="form.projectIds" filterable multiple clearable placeholder="请选择项目"
+            popper-class="custom-header" :disabled="dialog.isView">
             <template #header>
               <el-checkbox v-model="checkAll" :indeterminate="indeterminate" @change="handleCheckAll"
                 :disabled="dialog.isView">
@@ -466,7 +477,19 @@ const handleNodeClick = (data: DeptVO) => {
   queryParams.value.deptId = data.id;
   handleQuery();
 };
+// 判断是否为超级管理员（admin + superadmin 角色）
+const isSuperAdmin = (user: UserVO): boolean => {
+  console.log("🚀 ~ isSuperAdmin ~ user:", user)
+  // 账号名为 'admin' 且拥有 roleName 为 '超级管理员' 或 roleKey 为 'superadmin' 的角色
+  if (user.userName !== 'admin') return false;
 
+  const hasSuperRole = user.roles?.some(
+    role =>
+      role.roleName === '超级管理员' ||
+      role.nickName === '超级管理员'
+  );
+  return !!hasSuperRole;
+};
 
 /** 辅助函数：根据部门ID获取部门名称 */
 const getDeptNameById = (deptId: number | string | undefined, deptList: DeptTreeVO[]): string => {

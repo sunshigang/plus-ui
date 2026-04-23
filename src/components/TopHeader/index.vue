@@ -171,7 +171,7 @@ onUnmounted(() => {
 <style lang="scss">
 #top-header {
     width: 100%;
-    height: 100px;
+    height: 5.2083vw;
     position: absolute;
     top: 0;
     left: 0;
@@ -179,11 +179,11 @@ onUnmounted(() => {
 
     .time {
         position: absolute;
-        left: 300px;
-        top: 35px;
+        left: 15.625vw;
+        top: 1.8229vw;
         font-family: 'ZCOOL QingKe HuangYou';
         font-weight: 400;
-        font-size: 20px;
+        font-size: 1.042vw;
         color: #FCFCED;
         text-align: left;
         font-style: normal;
@@ -194,20 +194,20 @@ onUnmounted(() => {
     .top-right {
         position: absolute;
         right: 12%;
-        top: 36px;
-        height: 30px;
-        font-size: 20px;
+        top: 1.875vw;
+        height: 1.5625vw;
+        font-size: 1.042vw;
         font-weight: 400;
         font-family: 'ZCOOL QingKe HuangYou';
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 0.5208vw;
 
         .todayWeatherIcon {
-            width: 30px;
-            height: 30px;
+            width: 1.5625vw;
+            height: 1.5625vw;
         }
 
         .todayWeatherMain,
@@ -220,19 +220,19 @@ onUnmounted(() => {
 .attractionBody {
     pointer-events: auto;
     position: absolute;
-    width: 400px;
-    height: 35px;
+    width: 20.833vw;
+    height: 1.83vw;
     left: 76%;
     top: 10%;
     z-index: 2;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    font-size: 17px;
+    font-size: 0.8854vw;
 
     .mainShot, .wuFengShot, .filmShot, .huGongShot {
         cursor: pointer;
-        height: 32px;
+        height: 1.667vw;
         background: url(../../static/image/home/lens.png) no-repeat;
         background-size: 100% 100%;
         display: flex;
@@ -241,10 +241,10 @@ onUnmounted(() => {
         color: white;
     }
 
-    .mainShot { width: 72px; }
-    .wuFengShot { width: 72px; }
-    .filmShot { width: 120px; }
-    .huGongShot { width: 72px; }
+    .mainShot { width: 3.75vw; }
+    .wuFengShot { width: 3.75vw; }
+    .filmShot { width: 6.25vw; }
+    .huGongShot { width: 3.75vw; }
 
     .mainShoted, .wuFengShoted, .filmShoted, .huGongShoted {
         background: url(../../static/image/home/lensed.png) no-repeat;

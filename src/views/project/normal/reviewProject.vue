@@ -18,7 +18,7 @@
             <div class="section-title-text">基础信息</div>
           </div>
           <div class="section-content" v-if="basicInfoVisible">
-            <el-form :model="form" label-width="230px" disabled>
+            <el-form :model="form" label-width="230px">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设活动（建设项目）名称">
@@ -73,7 +73,7 @@
             <div class="section-title-text">建设信息</div>
           </div>
           <div class="section-content" v-if="constructionInfoVisible">
-            <el-form :model="form" label-width="230px" disabled>
+            <el-form :model="form" label-width="230px">
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="建设单位名称">
@@ -101,7 +101,7 @@
               <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="保护区等级" prop="protectionLevel">
-                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple >
+                    <el-select v-model="form.protectionLevel" placeholder="请选择涉及到的保护区等级，可多选" multiple>
                       <el-option label="一级保护区" value="一级保护区"></el-option>
                       <el-option label="二级保护区" value="二级保护区"></el-option>
                       <el-option label="三级保护区" value="三级保护区"></el-option>
@@ -115,6 +115,18 @@
                       <el-option label="长期" value="长期"></el-option>
                       <el-option label="临时" value="临时"></el-option>
                     </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地上建筑面积(㎡)">
+                    <el-input v-model="form.scenicGroundArea" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="涉及风景区地下建筑面积(㎡)">
+                    <el-input v-model="form.scenicUndergroundArea" disabled />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -271,12 +283,12 @@
                     <span class="el-icon-info"> 暂无文件 </span>
                   </li>
                 </transition-group>
-                <div class="operation-group">
+                <!-- <div class="operation-group">
                   <el-button link type="primary" @click="handleDownloadTemplate('instructions')">填写说明</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polygonTemplate')">面模板下载</el-button>
                   <el-button link type="primary" @click="handleDownloadTemplate('polylineTemplate')">线模板下载</el-button>
                   <div>（使用前，请删除模板中的实例数据）</div>
-                </div>
+                </div> -->
               </el-form-item>
               <el-row :gutter="20">
                 <el-col :span="12">
@@ -294,10 +306,10 @@
                         <span class="el-icon-info"> 暂无文件 </span>
                       </li>
                     </transition-group>
-                    <div class="operation-group">
+                    <!-- <div class="operation-group">
                       <el-button link type="primary" icon="Download"
                         @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
-                    </div>
+                    </div> -->
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
@@ -310,33 +322,32 @@
           </div>
         </div>
         <!-- 审批信息（按状态显示） -->
-        <div class="project-documents" v-if="showApprovalSection">
-          <h3 class="section-title">审批信息</h3>
+        <!-- <div class="project-documents" v-if="showApprovalSection && !!latestApproveRecord">
+          <h3 class=" section-title">审批信息</h3>
           <el-form label-width="230px" disabled>
-            <!-- 管委会审批信息 -->
             <el-form-item label="管委会审批状态">
               <div class="approval-item">
                 <span :class="['status-icon',
-                  form.approveRecords[0]?.gwhApproveResult === '通过' ? 'success' :
-                    form.approveRecords[0]?.gwhApproveResult === '驳回' ? 'error' : 'pending'
+                  latestApproveRecord.gwhApproveResult === '通过' ? 'success' :
+                    latestApproveRecord.gwhApproveResult === '驳回' ? 'error' : 'pending'
                 ]">
                   {{
-                    form.approveRecords[0]?.gwhApproveResult === '通过' ? '✓' :
-                      form.approveRecords[0]?.gwhApproveResult === '驳回' ? '✗' : '-'
+                    latestApproveRecord.gwhApproveResult === '通过' ? '✓' :
+                      latestApproveRecord.gwhApproveResult === '驳回' ? '✗' : '-'
                   }}
                 </span>
                 <span class="status-text">
-                  {{ form.approveRecords[0]?.gwhApproveResult || '待审批' }}
+                  {{ latestApproveRecord.gwhApproveResult || '待审批' }}
                 </span>
               </div>
             </el-form-item>
 
             <el-form-item label="审批时间">
-              <span>{{ form.approveRecords[0]?.gwhApproveTime || '暂无时间' }}</span>
+              <span>{{ latestApproveRecord.gwhApproveTime || '暂无时间' }}</span>
             </el-form-item>
 
             <el-form-item label="审批反馈">
-              <el-input type="textarea" :value="form.approveRecords[0].gwhApprovalReason || '暂无反馈'" :rows="2"
+              <el-input type="textarea" :value="latestApproveRecord.gwhApprovalReason || '暂无反馈'" :rows="2"
                 style="background: #fff;" disabled />
             </el-form-item>
 
@@ -355,10 +366,9 @@
                 </li>
               </transition-group>
             </el-form-item>
-
           </el-form>
-        </div>
-        <!-- 审核区域 -->
+        </div> -->
+
         <div class="audit-section">
           <div class="audit-title">审核</div>
           <el-form ref="auditFormRef" :model="auditForm" label-width="230px">
@@ -483,7 +493,9 @@ const form = reactive({
     lyjApproveTime: '',
     lyjApprovalReason: '',
     lyjApprovalAttachment: '',
-  }]
+  }],
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
 
 // 文件列表（与viewProject保持一致）
@@ -504,10 +516,20 @@ const auditForm = reactive({
 })
 const showApprovalSection = computed(() => {
   const currentStatus = (form.status || '').trim();
-  const validStatuses = ['管委会通过', '管委会驳回', '林业局通过', '林业局驳回'];
+  const validStatuses = ['管委会审批中', , '管委会通过', '管委会驳回'];
   return validStatuses.includes(currentStatus);
 
 })
+// 获取最新的有效管委会审批记录（忽略 result 为 null 的记录）
+const latestApproveRecord = computed(() => {
+  // 过滤出有审批结果的记录（通过/驳回）
+  const validRecords = (form.approveRecords || []).filter(
+    record => record.gwhApproveResult === '通过' || record.gwhApproveResult === '驳回'
+  );
+
+  // 返回最后一条（最新）
+  return validRecords.length > 0 ? validRecords[validRecords.length - 1] : null;
+});
 // 审核文件上传配置
 const feedbackFileList = ref([])
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
@@ -557,10 +579,10 @@ const approvalReasonRules = computed(() => {
 })
 // 三维场景方案审核
 const handleModelReview = () => {
-  if (threeDModelFileList.value.length === 0) {
-    ElMessage.warning('暂无三维模型文件，无法审核')
-    return
-  }
+  // if (threeDModelFileList.value.length === 0) {
+  //   ElMessage.warning('暂无三维模型文件，无法审核')
+  //   return
+  // }
   router.push({
     path: '/screen/screen',
     query: {
@@ -802,33 +824,87 @@ const loadProjectData = async (projectId) => {
     // 处理三维模型文件列表
     threeDModelFileList.value = parseFileList(projectData.threeDModel)
     // 处理审批反馈文件
-    const firstRecord = form.approveRecords[0] || {};
-    managementFeedbackFileList.value = parseFileList(firstRecord.gwhApprovalAttachment)
+    const validRecords = (form.approveRecords || []).filter(
+      record => record.gwhApproveResult === '通过' || record.gwhApproveResult === '驳回'
+    );
+    const latestRecord = validRecords.length > 0 ? validRecords[validRecords.length - 1] : null;
+    managementFeedbackFileList.value = latestRecord
+      ? parseFileList(latestRecord.gwhApprovalAttachment)
+      : [];
   } catch (err) {
     ElMessage.error('加载项目数据失败：' + (err.message || '未知错误'))
     router.push('/project/normal')
   }
 }
 const handleDownloadTemplate = (type) => {
-  if (!proxy || !proxy.$download) {
-    ElMessage.error('下载功能初始化失败，请刷新页面重试');
-    return;
+  try {
+    // 1. 定义模板文件映射：type -> { fileName: 下载后的文件名, filePath: assets内的路径 }
+    const templateMap = {
+      instructions: {
+        fileName: '风景名胜区质检数据填写规则.xlsx',
+        filePath: '/风景名胜区质检数据填写规则.xlsx' // 请根据实际文件路径调整
+      },
+      polylineTemplate: {
+        fileName: '线模板.zip',
+        filePath: '/线模板.zip' // 请根据实际文件路径调整
+      },
+      polygonTemplate: {
+        fileName: '面模板.zip',
+        filePath: '/面模板.zip' // 请根据实际文件路径调整
+      },
+      threeD: {
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
+      }
+    };
+
+    // 2. 校验模板类型
+    const template = templateMap[type];
+    if (!template) {
+      ElMessage.warning('无效的模板类型');
+      return;
+    }
+
+    // 3. Vite中获取assets文件的正确URL（关键：兼容开发/生产环境）
+    const fileUrl = new URL(template.filePath, import.meta.url).href;
+
+    // 4. 创建临时a标签触发下载
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = template.fileName; // 设置下载后的文件名
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); // 触发点击下载
+
+    // 5. 清理临时标签
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // 释放URL对象
+    ElMessage.success(`「${template.fileName}」下载成功`);
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+    console.error('下载模板异常：', err);
   }
-  const ossMap = {
-    instructions: '1987829892356124674',
-    polylineTemplate: '1987829924379635713',
-    polygonTemplate: '1987829950501761026',
-    threeD: '1987830717459607554'
-  };
-  const ossId = ossMap[type];
-  if (ossId) {
-    proxy.$download.oss(ossId).catch(err => {
-      ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
-    });
-  } else {
-    ElMessage.warning('暂无对应模板可下载');
-  }
-}
+};
+// const handleDownloadTemplate = (type) => {
+//   if (!proxy || !proxy.$download) {
+//     ElMessage.error('下载功能初始化失败，请刷新页面重试');
+//     return;
+//   }
+//   const ossMap = {
+//     instructions: '1987829892356124674',
+//     polylineTemplate: '1987829924379635713',
+//     polygonTemplate: '1987829950501761026',
+//     threeD: '1987830717459607554'
+//   };
+//   const ossId = ossMap[type];
+//   if (ossId) {
+//     proxy.$download.oss(ossId).catch(err => {
+//       ElMessage.error(`模板下载失败：${err.message || '未知错误'}`);
+//     });
+//   } else {
+//     ElMessage.warning('暂无对应模板可下载');
+//   }
+// }
 </script>
 <style scoped>
 .add-content-container {
@@ -1119,21 +1195,24 @@ const handleDownloadTemplate = (type) => {
 .ele-upload-list__item-content {
   display: flex;
   align-items: center;
-  border: 1px solid #e5e7eb;
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
 }
 
+.ele-upload-list__item-content:hover {
+  background-color: rgba(129, 195, 253, 0.2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
 .ele-upload-list__item-content .el-link {
   flex: 1;
-  /* 占满剩余空间 */
   min-width: 0;
-  /* 允许宽度小于内容宽度 */
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 10px;
-  /* 与删除按钮保持距离 */
+  color: #409eff;
 }
 
 .ele-upload-list__item-content .el-icon-document {

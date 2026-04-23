@@ -4,7 +4,7 @@
       <div class="back-normal" @click="cancel"><img src="@/assets/images/arrow-left.png" />信息填报</div>
       <div class="project-basic-info">
         <h3 class="section-title">项目基础信息</h3>
-        <el-form ref="basicFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="basicFormRef" :model="form" label-width="240px" :rules="rules" status-icon>
           <!-- 基础信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -59,7 +59,7 @@
             <img class="imgModel" src="@/assets/images/model.png" />三维场景效果预览
           </el-button>
         </div>
-        <el-form ref="infoFormRef" :model="form" label-width="230px" :rules="rules" status-icon>
+        <el-form ref="infoFormRef" :model="form" label-width="240px" :rules="rules" status-icon>
           <!-- 建设信息字段不变 -->
           <el-row :gutter="20">
             <el-col :span="12">
@@ -107,6 +107,18 @@
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
+              <el-form-item label="涉及风景区地上建筑面积(㎡)" prop="scenicGroundArea">
+                <el-input v-model="form.scenicGroundArea" placeholder="请输入风景区地上建筑面积" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="涉及风景区地下建筑面积(㎡)" prop="scenicUndergroundArea">
+                <el-input v-model="form.scenicUndergroundArea" placeholder="请输入风景区地下建筑面积" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
               <el-form-item label="项目用途" prop="projectUsage">
                 <el-input v-model="form.projectUsage"
                   placeholder="请输入项目用途，例如：旅游开发、公路、铁路、机场、水利水电、电力通讯、防灾减灾、公用设施、其他......" />
@@ -132,12 +144,19 @@
           <el-form-item label="其他需要说明的情况" prop="otherExplanations">
             <el-input v-model="form.otherExplanations" type="textarea" placeholder="请输入其他需要说明的情况" />
           </el-form-item>
-
-          <!-- 文件上传区域（添加 ref 和 @change 事件） -->
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="选址方案" prop="locationPlan">
                 <div class="upload-container">
+                  <!-- <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
+                    :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')"
+                    :file-list="locationPlanFileList" :limit="props.limit" :accept="getFileAccept()"
+                    :on-error="(err, file) => handleUploadError(err, file, 'locationPlan')" :on-exceed="handleExceed"
+                    :on-success="(res, file) => handleUploadSuccess(res, file, 'locationPlan')"
+                    :on-remove="(file, fileList) => handleLocationPlanRemove(file, fileList)" :headers="headers"
+                    class="upload-file-uploader" :disabled="props.compDisabled">
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload> -->
                   <el-upload ref="locationPlanUploadRef" multiple :action="uploadFileUrl"
                     :before-upload="(file) => handleBeforeUpload(file, 'locationPlan')"
                     :file-list="locationPlanFileList" :limit="props.limit" :accept="getFileAccept()"
@@ -156,9 +175,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click.stop="handleDeleteUploadFile(index, 'locationPlan')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click.stop="handleDeleteUploadFile(index, 'locationPlan')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -186,9 +205,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click.stop="handleDeleteUploadFile(index, 'expertOpinions')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click.stop="handleDeleteUploadFile(index, 'expertOpinions')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -218,9 +237,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'meetingMaterials')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'meetingMaterials')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -248,9 +267,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'siteSelectionReport')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'siteSelectionReport')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -270,7 +289,7 @@
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'approvalDocuments')"
                     :show-file-list="false" :headers="headers" class="upload-file-uploader"
                     :disabled="props.compDisabled">
-                    <el-button type="primary">点击上传</el-button>
+                    <el-button type="primary"> 点击上传</el-button>
                   </el-upload>
                   <transition-group class="upload-file-list el-upload-list el-upload-list--text"
                     name="el-fade-in-linear" tag="ul">
@@ -280,9 +299,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'approvalDocuments')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'approvalDocuments')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -309,9 +328,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'projectRedLine')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'projectRedLine')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -321,9 +340,9 @@
           </el-row>
           <el-form-item label="项目红线矢量数据" prop="redLineCoordinate">
             <div class="upload-container">
-              <el-upload ref="redLineCoordinateUploadRef" multiple :action="uploadFileUrl"
+              <el-upload ref="redLineCoordinateUploadRef" multiple :action="redLineUploadUrl"
                 :before-upload="(file) => handleBeforeUpload(file, 'redLineCoordinate')"
-                :file-list="redLineCoordinateFileList" :limit="props.limit" :accept="getFileAccept()"
+                :file-list="redLineCoordinateFileList" :limit="props.limit" accept=".zip"
                 :on-error="(err, file) => handleUploadError(err, file, 'redLineCoordinate')" :on-exceed="handleExceed"
                 :on-success="(res, file) => handleUploadSuccess(res, file, 'redLineCoordinate')"
                 :on-remove="() => handleFileRemove('redLineCoordinate')" :show-file-list="false" :headers="headers"
@@ -344,9 +363,9 @@
                     <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                   </el-link>
                   <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                    <el-button type="danger" link @click="handleDeleteUploadFile(index, 'redLineCoordinate')">
-                      删除
-                    </el-button>
+                    <el-button type="danger" link icon="Delete"
+                      @click="handleDeleteUploadFile(index, 'redLineCoordinate')"></el-button>
+                    <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                   </div>
                 </li>
               </transition-group>
@@ -356,10 +375,11 @@
             <el-col :span="12">
               <el-form-item label="项目三维模型" prop="threeDModel">
                 <div class="upload-container">
-                  <el-upload ref="threeDModelUploadRef" multiple :action="uploadFileUrl"
+                  <el-upload ref="threeDModelUploadRef" :multiple="false" :action="uploadFileUrl"
                     :before-upload="(file) => handleBeforeUpload(file, 'threeDModel')" :file-list="threeDModelFileList"
-                    :limit="props.limit" :accept="getFileAccept()"
-                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')" :on-exceed="handleExceed"
+                    :limit="props.limit1" :accept="getFileAccept1()"
+                    :on-error="(err, file) => handleUploadError(err, file, 'threeDModel')"
+                    :on-exceed="handleExceedThreeDModel"
                     :on-success="(res, file) => handleUploadSuccess(res, file, 'threeDModel')"
                     :on-remove="() => handleFileRemove('threeDModel')" :show-file-list="false" :headers="headers"
                     class="upload-file-uploader" :disabled="props.compDisabled"
@@ -370,14 +390,19 @@
                     <el-button link type="primary" icon="Download"
                       @click="handleDownloadTemplate('threeD')">模型规范与模板下载</el-button>
                   </div>
+                  <el-tooltip content="项目三维模型只能上传pak格式并且只能上传一个pak文件" placement="top">
+                    <el-icon>
+                      <question-filled />
+                    </el-icon>
+                  </el-tooltip>
                   <!-- 三维模型上传进度条 -->
-                  <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
+                  <!-- <div v-for="(item, index) in threeDModelUploadProgress" :key="`progress-${index}-${item.fileName}`"
                     class="upload-progress-container">
                     <div class="progress-file-name">{{ item.fileName }}<span v-if="item.progressText"
                         class="progress-text">{{ item.progressText }}</span></div>
                     <el-progress :percentage="item.progress" :status="item.status" :stroke-width="6"
                       class="upload-progress-bar" />
-                  </div>
+                  </div> -->
                   <transition-group class="upload-file-list el-upload-list el-upload-list--text"
                     name="el-fade-in-linear" tag="ul">
                     <li v-for="(file, index) in threeDModelFileList" :key="file.ossId"
@@ -386,9 +411,9 @@
                         <span class="el-icon-document"> {{ getFileName(file.name) }} </span>
                       </el-link>
                       <div class="ele-upload-list__item-content-action" v-if="!props.compDisabled">
-                        <el-button type="danger" link @click="handleDeleteUploadFile(index, 'threeDModel')">
-                          删除
-                        </el-button>
+                        <el-button type="danger" link icon="Delete"
+                          @click="handleDeleteUploadFile(index, 'threeDModel')"></el-button>
+                        <el-button type="primary" link icon="Download" @click="handleFilePreview(file.url)"></el-button>
                       </div>
                     </li>
                   </transition-group>
@@ -406,6 +431,21 @@
         </el-form>
       </div>
     </div>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="800px" center class="validation-dialog"
+      destroy-on-close>
+      <div class="validation-content">
+        <!-- 验证通过提示 -->
+        <div v-if="dialogErrors.length === 0" class="success-tip">
+          ✅ 数据验证通过，无错误信息
+        </div>
+        <!-- 验证失败错误列表 -->
+        <div v-else class="error-list">
+          <div v-for="(error, index) in dialogErrors" :key="index" class="error-item">
+            {{ index + 1 }}. 报错字段【{{ error.fieldName || '未知字段' }}】报错信息：{{ error.errorMessage }}
+          </div>
+        </div>
+      </div>
+    </el-dialog>
     <div class="add-footer">
       <el-button @click="cancel">取消</el-button>
       <el-button type="warning" @click="resetForm">重置</el-button>
@@ -447,6 +487,7 @@ const threeDModelUploadProgress = ref([])
 const props = defineProps({
   // 数量限制
   limit: propTypes.number.def(15),
+  limit1: propTypes.number.def(1),
   // 大小限制(MB)
   fileSize: propTypes.number.def(500),
   // 文件类型
@@ -455,12 +496,17 @@ const props = defineProps({
     'dwg', 'dxf', 'jpg', 'jpeg', 'png', 'cpg', 'dbf', 'prj', 'sbn', 'sbx',
     'shp', 'shp.xml', 'shx', 'FBX', 'fbm', 'obj', 'pak'
   ]),
+  fileType1: propTypes.array.def(['pak']),
   compDisabled: {
     type: Boolean,
     default: false
   }
 });
-
+// ========== 新增：SHP验证弹窗相关数据 ==========
+const dialogVisible = ref(false) // 弹窗显隐
+const dialogTitle = ref('')      // 弹窗标题
+const dialogErrors = ref([])     // 验证错误列表
+// ==============================================
 const basicFormRef = ref(null)
 const infoFormRef = ref(null)
 // 按钮加载状态
@@ -473,7 +519,7 @@ const form = reactive({
   projectCode: undefined,
   administrativeRegion: undefined,
   scenicArea: undefined,
-  applicantType: undefined,
+  applicantType: '单位',
   constructionUnit: undefined,
   organizationCode: undefined,
   contactPerson: undefined,
@@ -498,11 +544,13 @@ const form = reactive({
   redLineCoordinate: '',
   threeDModel: '',
   modelCoordinate: undefined,
-  modelPreview: undefined,
   majorFlag: false,
-
+  scenicGroundArea: undefined,
+  scenicUndergroundArea: undefined,
 })
-
+const handleExceedThreeDModel = (files, fileList) => {
+  ElMessage.warning('项目三维模型仅支持上传1个.pak格式文件！');
+};
 // 文件列表（用于校验是否上传）
 const locationPlanFileList = ref([])
 const expertOpinionsFileList = ref([])
@@ -512,7 +560,13 @@ const approvalDocumentsFileList = ref([])
 const projectRedLineFileList = ref([])
 const redLineCoordinateFileList = ref([])
 const threeDModelFileList = ref([])
-
+// 项目用途白名单（严格匹配你的要求）
+const projectUsageWhiteList = [
+  '公路', '铁路', '机场', '水利水电', '电力通讯', '油气管网',
+  '科技、教育', '公用设施', '乡村道路', '保障性住房或移民搬迁',
+  '农民自建基本生产生活房舍', '商业服务业', '物流仓储', '旅游开发',
+  '养殖', '滑雪场', '林业生产经营、科研科普服务设施', '其他'
+]
 // 表单验证规则（核心：添加文件上传自定义校验）
 const rules = reactive({
   projectName: [{ required: true, message: '请输入建设项目名称', trigger: 'blur' }],
@@ -532,11 +586,42 @@ const rules = reactive({
   ],
   protectionLevel: [{ required: true, message: '请选择保护区等级', trigger: 'change' }],
   projectType: [{ required: true, message: '请选择项目占用类型', trigger: 'change' }],
-  projectUsage: [{ required: true, message: '请输入项目用途', trigger: 'blur' }],
+  scenicGroundArea: [
+    { required: true, message: '请输入风景区地上建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  scenicUndergroundArea: [
+    { required: true, message: '请输入风景区地下建筑面积', trigger: 'blur' },
+    {
+      pattern: /^\d+(\.\d+)?$/, // 支持正整数/正小数（面积不能为负）
+      message: '请输入有效的数字（支持整数或小数）',
+      trigger: 'blur'
+    }
+  ],
+  projectUsage: [
+    { required: true, message: '请输入项目用途', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        // 去除首尾空格后判断是否在白名单中
+        const inputValue = value ? value.trim() : ''
+        if (inputValue && !projectUsageWhiteList.includes(inputValue)) {
+          callback(new Error(
+            '项目用途只能输入：公路、铁路、机场、水利水电、电力通讯、油气管网、科技、教育、公用设施、乡村道路、保障性住房或移民搬迁、农民自建基本生产生活房舍、商业服务业、物流仓储、旅游开发、养殖、滑雪场、林业生产经营、科研科普服务设施、其他'
+          ))
+        } else {
+          callback()
+        }
+      },
+      trigger: ['blur', 'change']
+    }],
   projectPurpose: [{ required: true, message: '请输入拟选位置', trigger: 'blur' }],
   projectInvestment: [
     { required: true, message: '请输入建设项目拟投资额', trigger: 'blur' },
-    { pattern: /^[0-9]+(\.[0-9]{1,2})?$/, message: '请输入有效的数字（支持整数或两位小数）', trigger: 'blur' }
+    { pattern: /^\d+(\.\d+)?$/, message: '请输入有效的数字（支持整数或小数，金额不能为负）', trigger: 'blur' }
   ],
   planningBasis: [{ required: true, message: '请输入规划依据', trigger: 'blur' }],
   constructionContent: [{ required: true, message: '请输入建设内容涉及规模', trigger: 'blur' }],
@@ -608,7 +693,7 @@ const rules = reactive({
     }
   ],
   redLineCoordinate: [
-    { required: true, message: '请上传项目红线矢量数据', trigger: ['change', 'blur'] },
+    { required: true, message: '请上传项目红线矢量数据，只能上传zip文件', trigger: ['change', 'blur'] },
     {
       validator: (rule, value, callback) => {
         if (redLineCoordinateFileList.value.length > 0) {
@@ -620,8 +705,8 @@ const rules = reactive({
       trigger: ['change', 'blur']
     }
   ],
-  threeDModel: [
-    { required: true, message: '请上传项目三维模型', trigger: ['change', 'blur'] },
+  /*threeDModel: [
+    { required: true, message: '请上传项目三维模型，只能上传一个pak文件', trigger: ['change', 'blur'] },
     {
       validator: (rule, value, callback) => {
         if (threeDModelFileList.value.length > 0) {
@@ -632,12 +717,12 @@ const rules = reactive({
       },
       trigger: ['change', 'blur']
     }
-  ],
+  ],*/
   modelCoordinate: [
     { required: true, message: '请输入模型坐标', trigger: 'blur' },
     {
       pattern: /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/,
-      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数',
+      message: '请输入正确格式（经度,纬度,高度,旋转方向），支持正负小数，注意逗号需要用英文格式',
       trigger: 'blur'
     }
   ]
@@ -652,13 +737,16 @@ const getFileName = (name) => {
 
 // 上传相关配置
 const uploadFileUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/upload'
+const redLineUploadUrl = import.meta.env.VITE_APP_BASE_API + '/resource/oss/uploadShp'
 const headers = computed(() => globalHeaders())
 
 // 获取文件接受类型
 const getFileAccept = () => {
   return props.fileType.map(type => `.${type.toLowerCase()}`).join(',')
 }
-
+const getFileAccept1 = () => {
+  return props.fileType1.map(type => `.${type.toLowerCase()}`).join(',')
+}
 // 生命周期：初始化时加载数据
 onMounted(async () => {
   const projectId = route.params.id
@@ -700,14 +788,17 @@ onMounted(async () => {
       threeDModelFileList.value = JSON.parse(projectData.threeDModel)
       if (threeDModelFileList.value.length > 0) {
         form.threeDModel = threeDModelFileList.value[0].url
-        // 初始化已上传文件的进度条状态（直接显示成功）
-        threeDModelUploadProgress.value = threeDModelFileList.value.map(file => ({
-          fileName: getFileName(file.name),
-          progress: 100,
-          status: 'success',
-          fileId: file.ossId,
-          progressText: '' // 新增：默认空字符串
-        }))
+        // 优化：清空旧进度条，重新初始化（避免重复）
+        threeDModelUploadProgress.value = []
+        threeDModelFileList.value.forEach(file => {
+          threeDModelUploadProgress.value.push({
+            fileName: getFileName(file.name),
+            progress: 100,
+            status: 'success',
+            fileId: file.ossId,
+            progressText: ''
+          })
+        })
       }
     }
   } catch (err) {
@@ -715,7 +806,14 @@ onMounted(async () => {
     router.push('/project/normal')
   }
 })
-
+const handleFilePreview = (fileUrl) => {
+  if (!fileUrl) {
+    ElMessage.warning('文件链接无效，无法预览');
+    return;
+  }
+  // 新窗口打开文件链接，实现预览功能
+  window.open(fileUrl, '_blank');
+};
 // 上传前置校验
 const handleBeforeUpload = (file, type) => {
   const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
@@ -735,7 +833,20 @@ const handleBeforeUpload = (file, type) => {
     ElMessage.error(`文件大小不能超过 ${props.fileSize}MB!`)
     return false
   }
+  // 核心修改3：单独校验项目红线矢量数据仅允许zip格式
+  if (type === 'redLineCoordinate') {
+    if (fileExt !== 'zip') {
+      ElMessage.error('项目红线矢量数据仅支持上传ZIP格式文件！')
+      return false
+    }
+    return true // 跳过通用类型校验
+  }
   if (type === 'threeDModel') {
+    // 1. 强制校验仅为pak格式
+    if (fileExt !== 'pak') {
+      ElMessage.error('项目三维模型仅支持上传.pak格式文件！');
+      return false;
+    }
     const fileName = getFileName(file.name)
     // 防止重复添加
     const exists = threeDModelUploadProgress.value.some(item => item.fileName === fileName)
@@ -743,7 +854,7 @@ const handleBeforeUpload = (file, type) => {
       threeDModelUploadProgress.value.push({
         fileName,
         progress: 0,
-        status: '', // 上传中
+        status: undefined, // 上传中
         fileId: '',
         fileObj: file, // 保存文件对象，用于后续匹配
         progressText: '（上传中...）' // 初始化进度文本
@@ -755,6 +866,12 @@ const handleBeforeUpload = (file, type) => {
 
 // 上传错误处理
 const handleUploadError = (err, file, type) => {
+  // 针对SHP上传的错误弹窗处理
+  if (type === 'redLineCoordinate') {
+    dialogTitle.value = 'SHP数据上传失败'
+    dialogErrors.value = [{ fieldName: '上传流程', errorMessage: err.message || '上传过程中发生网络/服务器错误' }]
+    dialogVisible.value = true // 强制显示弹窗
+  }
   ElMessage.error(`上传失败: ${err.message || '未知错误'}`)
   // 三维模型上传失败时更新进度条状态
   if (type === 'threeDModel') {
@@ -782,7 +899,7 @@ const handleUploadProgress = (progressEvent, file, type) => {
     item => item.fileName === fileName
   )
   if (existingIndex > -1) {
-    const status = '' // 始终使用合法的空状态
+    const status = undefined // 始终使用合法的空状态
     const progressText = percent === 100
       ? '（服务器处理中...）'
       : '（上传中...）'
@@ -801,8 +918,75 @@ const handleExceed = (files, fileList) => {
 
 // 上传成功处理
 const handleUploadSuccess = (res, file, type) => {
+  // 优先处理SHP（redLineCoordinate）类型的验证逻辑
+  if (type === 'redLineCoordinate') {
+    try {
+      const validationResult = res.data?.validationResult; // 👈 不再默认 {}
+
+      let isValid = false;
+      let errorsToShow = [];
+      let message = 'SHP数据验证结果';
+
+      // 情况1：后端返回了 validationResult
+      if (validationResult != null) {
+        isValid = validationResult.valid === true;
+        message = validationResult.message || message;
+
+        if (!isValid) {
+          if (Array.isArray(validationResult.fieldErrors) && validationResult.fieldErrors.length > 0) {
+            errorsToShow = validationResult.fieldErrors;
+          } else if (validationResult.message) {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: validationResult.message
+            }];
+          } else {
+            errorsToShow = [{
+              fieldName: 'redLineCoordinate',
+              errorMessage: 'SHP数据验证失败，请检查文件内容'
+            }];
+          }
+        }
+      }
+      // 情况2：validationResult 为 null，但 code 200 → 视为验证通过（兼容后端缺陷）
+      else if (res.code === 200) {
+        isValid = true;
+        message = 'SHP数据上传成功';
+        errorsToShow = []; // 空数组 → 显示“✅ 验证通过”
+      }
+      // 情况3：其他异常
+      else {
+        isValid = false;
+        errorsToShow = [{
+          fieldName: 'redLineCoordinate',
+          errorMessage: '系统未返回验证结果，请重新上传'
+        }];
+      }
+
+      dialogTitle.value = message;
+      dialogErrors.value = errorsToShow;
+      dialogVisible.value = true;
+
+      // 只有真正成功才添加文件
+      if (res.code === 200 && isValid) {
+        const fileItem = {
+          name: res.data.fileName || file.name,
+          url: res.data.url || '',
+          ossId: res.data.ossId || ''
+        };
+        redLineCoordinateFileList.value.push(fileItem);
+      }
+    } catch (err) {
+      console.error('redLineCoordinate上传解析失败：', err);
+      ElMessage.error('SHP数据解析失败：' + (err.message || '未知错误'));
+      dialogTitle.value = '解析失败';
+      dialogErrors.value = [{ fieldName: 'redLineCoordinate', errorMessage: err.message || '解析异常' }];
+      dialogVisible.value = true;
+    }
+    return;
+  }
+  // 通用上传成功逻辑（其他文件类型）
   if (res.code === 200) {
-    console.log("🚀 ~ handleUploadSuccess ~ res:", res)
     const fileItem = {
       name: res.data.fileName,
       url: res.data.url,
@@ -818,6 +1002,8 @@ const handleUploadSuccess = (res, file, type) => {
       case 'projectRedLine': projectRedLineFileList.value.push(fileItem); break
       case 'redLineCoordinate': redLineCoordinateFileList.value.push(fileItem); break
       case 'threeDModel':
+        threeDModelFileList.value = [];
+        threeDModelUploadProgress.value = [];
         threeDModelFileList.value.push(fileItem);
         form.threeDModel = res.data.url;
         // 更新进度条状态为成功
@@ -838,6 +1024,8 @@ const handleUploadSuccess = (res, file, type) => {
         break
     }
     ElMessage.success('上传成功')
+    if (basicFormRef.value) basicFormRef.value.validateField(type);
+    if (infoFormRef.value) infoFormRef.value.validateField(type);
   } else {
     if (type === 'threeDModel') {
       const fileName = getFileName(file.name)
@@ -856,7 +1044,21 @@ const handleUploadSuccess = (res, file, type) => {
     ElMessage.error(res.msg || '上传失败')
   }
 }
+const handleLocationPlanRemove = (file, fileList) => {
+  // 1. 找到当前删除文件在locationPlanFileList中的索引（优先匹配ossId，无则匹配name+uid）
+  const index = locationPlanFileList.value.findIndex(item => {
+    return item.ossId === file.ossId || (item.name === file.name && item.uid === file.uid);
+  });
 
+  // 2. 调用自定义删除函数（删除文件+调用后端接口）
+  if (index > -1) {
+    handleDeleteUploadFile(index, 'locationPlan');
+  }
+
+  // 3. 触发表单校验（保留原handleFileRemove的校验逻辑）
+  if (basicFormRef.value) basicFormRef.value.validateField('locationPlan');
+  if (infoFormRef.value) infoFormRef.value.validateField('locationPlan');
+};
 // 删除上传文件（修复：使用 ossId 而非 id）
 const handleDeleteUploadFile = async (index, type) => {
   let fileList = []
@@ -866,35 +1068,35 @@ const handleDeleteUploadFile = async (index, type) => {
   switch (type) {
     case 'locationPlan':
       fileList = locationPlanFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'expertOpinions':
       fileList = expertOpinionsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'meetingMaterials':
       fileList = meetingMaterialsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'siteSelectionReport':
       fileList = siteSelectionReportFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'approvalDocuments':
       fileList = approvalDocumentsFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'projectRedLine':
       fileList = projectRedLineFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'redLineCoordinate':
       fileList = redLineCoordinateFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       break
     case 'threeDModel':
       fileList = threeDModelFileList.value;
-      fileId = fileList[index].ossId;
+      fileId = fileList[index]?.ossId;
       fileName = getFileName(fileList[index].name);
       // 移除对应的进度条（多重匹配确保准确）
       const progressIndex = threeDModelUploadProgress.value.findIndex(
@@ -905,10 +1107,9 @@ const handleDeleteUploadFile = async (index, type) => {
       }
       break
   }
-
-  // 删除文件列表中的项
-  fileList.splice(index, 1)
-  // 调用OSS删除接口
+  if (fileList.length > index) {
+    fileList.splice(index, 1);
+  }
   if (fileId) {
     try {
       await delOss(fileId)
@@ -917,30 +1118,89 @@ const handleDeleteUploadFile = async (index, type) => {
       ElMessage.warning('文件删除请求失败，可能需要手动清理')
     }
   }
+
   // 更新三维模型URL
   if (type === 'threeDModel' && threeDModelFileList.value.length === 0) {
     form.threeDModel = ''
   }
+  if (basicFormRef.value) basicFormRef.value.validateField(type);
+  if (infoFormRef.value) infoFormRef.value.validateField(type);
 }
 
 // 文件删除时触发校验（用于ElUpload的on-remove事件）
 const handleFileRemove = (type) => {
-  infoFormRef.value.validateField(type)
+  basicFormRef.value?.validateField(type)
+  infoFormRef.value?.validateField(type)
 }
-
-// 下载模板
 const handleDownloadTemplate = (type) => {
-  if (type === 'instructions') {
-    proxy?.$download.oss('1987829892356124674');
-  } else if (type === 'polylineTemplate') {
-    proxy?.$download.oss('1987829924379635713');
-  } else if (type === 'polygonTemplate') {
-    proxy?.$download.oss('1987829950501761026');
-  } else if (type === 'threeD') {
-    proxy?.$download.oss('1987830717459607554');
-  }
-}
+  try {
+    // 1. 定义模板文件映射：type -> { fileName: 下载后的文件名, filePath: assets内的路径 }
+    const templateMap = {
+      instructions: {
+        fileName: '风景名胜区质检数据填写规则.xlsx',
+        filePath: '/风景名胜区质检数据填写规则.xlsx' // 请根据实际文件路径调整
+      },
+      polylineTemplate: {
+        fileName: '线模板.zip',
+        filePath: '/线模板.zip' // 请根据实际文件路径调整
+      },
+      polygonTemplate: {
+        fileName: '面模板.zip',
+        filePath: '/面模板.zip' // 请根据实际文件路径调整
+      },
+      threeD: {
+        fileName: '模型制作标准和案例.zip',
+        filePath: '/模型制作标准和案例.zip' // 请根据实际文件路径调整
+      }
+    };
 
+    // 2. 校验模板类型
+    const template = templateMap[type];
+    if (!template) {
+      ElMessage.warning('无效的模板类型');
+      return;
+    }
+
+    // 3. Vite中获取assets文件的正确URL（关键：兼容开发/生产环境）
+    const fileUrl = new URL(template.filePath, import.meta.url).href;
+
+    // 4. 创建临时a标签触发下载
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = template.fileName; // 设置下载后的文件名
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click(); // 触发点击下载
+
+    // 5. 清理临时标签
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // 释放URL对象
+    ElMessage.success(`「${template.fileName}」下载成功`);
+  } catch (err) {
+    ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+    console.error('下载模板异常：', err);
+  }
+};
+// 下载模板
+// const handleDownloadTemplate = (type) => {
+//   if (!proxy?.$download) {
+//     ElMessage.error('下载功能初始化失败，请刷新页面重试');
+//     return;
+//   }
+//   try {
+//     let ossId = '';
+//     switch (type) {
+//       case 'instructions': ossId = '1987829892356124674'; break;
+//       case 'polylineTemplate': ossId = '1987829924379635713'; break;
+//       case 'polygonTemplate': ossId = '1987829950501761026'; break;
+//       case 'threeD': ossId = '1987830717459607554'; break;
+//       default: ElMessage.warning('无效的模板类型'); return;
+//     }
+//     proxy.$download.oss(ossId);
+//   } catch (err) {
+//     ElMessage.error('模板下载失败：' + (err.message || '未知错误'));
+//   }
+// };
 // 返回列表
 const handleBackToList = () => {
   router.push('/project/normal')
@@ -994,7 +1254,7 @@ const resetForm = async () => {
       progressText: ''
     }))
     basicFormRef.value?.clearValidate()
-    infoFormRef.value.clearValidate()
+    infoFormRef.value?.clearValidate()
     ElMessage.success('已重置为原始数据')
   } catch (err) {
     ElMessage.error('重置失败：' + (err.message || '未知错误'))
@@ -1016,7 +1276,6 @@ const temporarilyForm = async () => {
     redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
     threeDModel: JSON.stringify(threeDModelFileList.value),
   }
-  console.log("🚀 ~ temporarilyForm ~ submitData:", submitData)
   await stageInfo(submitData)
   proxy?.$modal.msgSuccess("暂存成功")
   isTemporarilySaved.value = true
@@ -1045,8 +1304,8 @@ const submitForm = () => {
             redLineCoordinate: JSON.stringify(redLineCoordinateFileList.value),
             threeDModel: JSON.stringify(threeDModelFileList.value),
           }
-          console.log("🚀 ~ submitForm ~ submitData:", submitData)
           await submitInfo(submitData)
+          ElMessage.success('申报信息提交成功！');
           declartionInformation.value = false
         } catch (err) {
           proxy?.$modal.msgError("提交失败：" + (err).message || "未知错误")
@@ -1061,10 +1320,10 @@ const submitForm = () => {
 }
 // 三维模型预览
 const handleModelPreview = () => {
-  if (threeDModelFileList.value.length === 0) {
-    ElMessage.warning('请先上传三维模型文件')
-    return
-  }
+  // if (threeDModelFileList.value.length === 0) {
+  //   ElMessage.warning('请先上传三维模型文件')
+  //   return
+  // }
   // 2. 校验模型坐标是否填写且格式正确
   if (!form.modelCoordinate) {
     ElMessage.warning('请输入模型坐标')
@@ -1114,6 +1373,12 @@ const handleModelPreview = () => {
   width: 100%;
   max-height: calc(100vh - 60px);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.add-content::-webkit-scrollbar {
+  display: none;
 }
 
 .popup-content {
@@ -1215,13 +1480,13 @@ const handleModelPreview = () => {
 .modelPreview {
   display: flex;
   align-items: center;
+}
 
-  .imgModel {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
+.modelPreview .imgModel {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
 }
 
 .add-footer el-button+el-button {
@@ -1234,7 +1499,6 @@ const handleModelPreview = () => {
   align-items: center;
   flex-wrap: wrap;
   margin: 0;
-  /* 去掉原有上下边距 */
 }
 
 .operation-group div {
@@ -1275,6 +1539,12 @@ const handleModelPreview = () => {
   flex: none !important;
   width: auto !important;
   margin-left: 8px !important;
+}
+
+:deep(.el-form-item--default) {
+  --font-size: 14px;
+  --el-form-label-font-size: var(--font-size);
+  margin-bottom: 24px;
 }
 
 .upload-container {
@@ -1349,28 +1619,51 @@ const handleModelPreview = () => {
   white-space: nowrap;
   font-size: 14px;
 }
-</style>
-<style>
-body {
-  overflow: auto;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+
+/* ========== 新增：SHP验证弹窗样式 ========== */
+.validation-dialog {
+  --el-dialog-width: 800px !important;
 }
 
-body::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+/* 弹窗主体高度控制（总高600px = 标题栏~100px + 内容区500px） */
+.validation-dialog :deep(.el-dialog__body) {
+  height: 500px;
+  padding: 24px;
+  overflow-y: auto;
+  /* 错误多的时候滚动 */
+  box-sizing: border-box;
 }
 
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+.validation-content {
+  width: 100%;
+  height: 100%;
 }
 
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+.success-tip {
+  font-size: 16px;
+  color: #67c23a;
+  text-align: center;
+  margin-top: 40px;
 }
+
+.error-list {
+  width: 100%;
+}
+
+.error-item {
+  font-size: 14px;
+  color: #f56c6c;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background-color: #fef0f0;
+  border-radius: 4px;
+  border-left: 4px solid #f56c6c;
+}
+
+.error-item .field-name {
+  font-weight: bold;
+  color: #e64942;
+}
+
+/* ========================================== */
 </style>
