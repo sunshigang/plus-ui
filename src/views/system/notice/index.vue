@@ -139,7 +139,6 @@ import { NoticeForm, NoticeQuery, NoticeVO } from '@/api/system/notice/types';
 import { useRouter } from 'vue-router'
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const { sys_notice_status, sys_notice_type } = toRefs<any>(proxy?.useDict('sys_notice_status', 'sys_notice_type'));
-
 const noticeList = ref<NoticeVO[]>([]);
 const loading = ref(true);
 const showSearch = ref(true);

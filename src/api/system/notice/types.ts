@@ -19,7 +19,9 @@ export interface NoticeQuery extends PageQuery {
   status: string;
   noticeType: string;
   read: boolean;
-  isAsc:string
+  /** 排序方向，与后端分页参数一致；不传时由接口默认排序 */
+  isAsc?: string;
+  orderByColumn?: string;
 }
 
 export interface NoticeForm {

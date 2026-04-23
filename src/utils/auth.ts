@@ -13,3 +13,8 @@ export const removeToken = () => (tokenStorage.value = null);
 
 // export const setClientId = (clientId: string) => (clientIdStorage.value = clientId);
 // export const removeClientId = () => (clientIdStorage.value = null);
+
+// export const getClientId = () => clientIdStorage.value;
+
+// export const setClientId = (clientId: string) => (clientIdStorage.value = clientId);
+// export const removeClientId = () => (clientIdStorage.value = null);

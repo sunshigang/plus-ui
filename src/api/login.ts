@@ -1,9 +1,11 @@
 import request from '@/utils/request';
 import { AxiosPromise } from 'axios';
 // import { getToken, setToken,getClientId,setClientId } from '@/utils/auth';
+import { getToken, setToken,getClientId,setClientId } from '@/utils/auth';
 import { LoginData, LoginResult, VerifyCodeResult, TenantInfo } from './types';
 import { UserInfo } from '@/api/system/user/types';
 // import { set } from 'nprogress';
+import { set } from 'nprogress';
 
 // pc端固定客户端授权id
 const clientId = import.meta.env.VITE_APP_CLIENT_ID;
